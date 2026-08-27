@@ -1,5 +1,5 @@
 /* ============================================================
-   game.js — оркестраторът на двете части
+   game.js — оркестраторът на четирите части
    ============================================================ */
 import {
   S, save, saveNow, reset, useAct, currentAct, hasSaveFor, peek,
@@ -51,11 +51,11 @@ function boot() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
 }
 
-/* ---------- началните карти на двете части ---------- */
+/* ---------- началните карти на частите ---------- */
 function renderActs() {
   const box = $('#acts');
   box.innerHTML = '';
-  [1, 2, 3].forEach(n => box.appendChild(actCard(n)));
+  [1, 2, 3, 4].forEach(n => box.appendChild(actCard(n)));
 }
 
 function actCard(n) {
@@ -93,7 +93,7 @@ function actCard(n) {
       <p class="ac-tag">${A.tagline}</p>
       <div class="ac-req">
         <div class="ac-req-title">заключено</div>
-        <p>Отваря се само за онзи, който е минал <b>${prev.numeral === 'I' ? 'Първа' : 'Втора'} част
+        <p>Отваря се само за онзи, който е минал <b>${ORD[n - 1]} част
         с оценка «Изключителна»</b> — цялата, за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
         ${b ? `<div class="ac-progress">
                  <div class="ac-pb"><i style="width:${Math.min(100, Math.round(OUTSTANDING_MS / b.ms * 100))}%"></i></div>
@@ -147,13 +147,14 @@ function confirmRestart(n) {
 
 function wipeAll() {
   UI.openModal(`<h2>Да изтрия ли всичко?</h2>
-    <p>И двете части, всички резултати и бележките ще изчезнат като спомен под <em>Обливиате</em>.</p>
+    <p>И четирите части, всички резултати и бележките ще изчезнат като спомен под <em>Обливиате</em>.</p>
     <div class="flex flex-center mt">
       <button class="btn btn-primary btn-sm" id="w-yes" style="background:linear-gradient(180deg,#c4382f,#7d1f1a);border-color:#e0625d;color:#fff">Изтрий всичко</button>
       <button class="btn btn-ghost btn-sm" id="w-no">Върни ме</button>
     </div>`);
   $('#w-yes').addEventListener('click', () => {
-    ['hogwarts_escape_v1', 'hogwarts_escape_act2_v1', 'hogwarts_records_v1']
+    ['hogwarts_escape_v1', 'hogwarts_escape_act2_v1', 'hogwarts_escape_act3_v1',
+     'hogwarts_escape_act4_v1', 'hogwarts_records_v1']
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     location.reload();
   });
@@ -173,9 +174,9 @@ async function startAct(n, fresh) {
   ROOMS = mods;
   RUNE_ROOMS = ROOMS.filter(r => r.meta.rune);
 
-  if (n === 2 && !webglAvailable()) {
+  if (n >= 2 && !webglAvailable()) {
     UI.openModal(`<h2>Тази част иска 3D</h2>
-      <p>Почти всяка загадка във Втора част е триизмерна, а браузърът ти не дава WebGL.
+      <p>Почти всяка загадка тук е триизмерна, а браузърът ти не дава WebGL.
       Пробвай друг браузър или включи хардуерното ускорение — иначе ще виждаш само бутоните.</p>
       <div class="flex flex-center mt"><button class="btn btn-ghost btn-sm" id="wg-ok">Разбрах, продължавам</button></div>`);
     $('#wg-ok').addEventListener('click', UI.closeModal);
@@ -203,9 +204,9 @@ function showPrologue(n, needSorting) {
   UI.showScreen('screen-story');
   $('#story-numeral').textContent = A.numeral;
   $('#story-title').textContent = A.title;
-  $('#story-body').innerHTML = { 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3 }[n];
+  $('#story-body').innerHTML = { 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4 }[n];
   $('#story-go').querySelector('span').textContent =
-    { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата' }[n];
+    { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата', 4: 'Слез в лодката' }[n];
   const go = $('#story-go');
   go.replaceWith(go.cloneNode(true));
   $('#story-go').addEventListener('click', () => {
@@ -329,7 +330,7 @@ function showSolvedFooter(room, silent, msg) {
     <div class="flex flex-center mt">
       ${current > 0 ? '<button class="btn btn-ghost btn-sm" id="go-prev"><span>Предишна зала</span></button>' : ''}
       <button class="btn btn-primary" id="go-next"><span>${last
-        ? { 1: 'Излез от Хогуортс', 2: 'Затвори шева', 3: 'Тръгни след елена' }[act]
+        ? { 1: 'Излез от Хогуортс', 2: 'Затвори шева', 3: 'Тръгни след елена', 4: 'Излез през портата' }[act]
         : 'Продължи към следващата зала'}</span></button>
     </div>`;
   root.appendChild(box);
@@ -347,6 +348,16 @@ function showSolvedFooter(room, silent, msg) {
 /* ============================================================
    Край
    ============================================================ */
+const TIMEOUT_LINE = {
+  1: 'Печатът на Основателите се стяга.',
+  2: 'Пясъкът тече все по-бързо.',
+  3: 'Дърветата се приближават с една крачка.',
+  4: 'Студът е стигнал до последното стъпало.',
+};
+const DOOR_LINE = {
+  1: 'Портата се отваря', 2: 'Пясъкът спира',
+  3: 'Дърветата се разстъпват', 4: 'Морето се отдръпва',
+};
 let timedOut = false;
 function onTimeout() {
   if (timedOut) return;
@@ -356,7 +367,7 @@ function onTimeout() {
   FX.shakeScreen(18, 900);
   UI.openModal(`
     <h2>Шестдесетте минути изтекоха</h2>
-    <p>${act === 1 ? 'Печатът на Основателите се стяга.' : 'Пясъкът тече все по-бързо.'}
+    <p>${TIMEOUT_LINE[act] || TIMEOUT_LINE[1]}
     Портретите по стените са спрели да дишат.</p>
     <p class="muted">Можеш да продължиш — но вече <b>в допълнително време</b>, и то ще личи в оценката ти.</p>
     <div class="flex flex-center mt">
@@ -384,7 +395,7 @@ function finishAct() {
   UI.stopTimer();
   sfx.victory();
   FX.celebrate(6);
-  UI.doorTransition(act === 1 ? 'Портата се отваря' : 'Пясъкът спира').then(() => showEnd(rec, g));
+  UI.doorTransition(DOOR_LINE[act] || DOOR_LINE[1]).then(() => showEnd(rec, g));
 }
 
 function showEnd(rec, g) {
@@ -392,7 +403,7 @@ function showEnd(rec, g) {
   setBgMode('candles');
   const A = ACTS[act];
   const house = HOUSES[S.house] || { name: 'Хогуортс' };
-  const justUnlocked = act === 1 && rec.outstanding;
+  const justUnlocked = act < 4 && rec.outstanding;
 
   $('#end-wrap').innerHTML = `
     <div class="end-badge">${crestSVG(S.house)}</div>
@@ -414,11 +425,11 @@ function showEnd(rec, g) {
       <p class="muted">${g.note}</p>
     </div>
 
-    ${act < 3 ? unlockBlock(rec) : `
+    ${act < 4 ? unlockBlock(rec) : `
       <div class="epilogue">
-        <p>Никой в замъка няма да си спомни, че си слизал. Портретите ще те гледат учтиво и
-        празно, а Голямата зала ще мирише на препечен хляб, все едно нищо не е било.</p>
-        <p><b>Тайната е в теб. Точно както поиска.</b></p>
+        <p>Крепостта остава зад теб — сива, търпелива и напълно безразлична. Дименторите вече
+        не те усещат. За тях си празно място, което върви по вода.</p>
+        <p><b>Всичко, което си бил, е още в теб. Само че сега вратата е от твоята страна.</b></p>
       </div>`}
 
     <div class="runes-final">
@@ -436,17 +447,23 @@ function showEnd(rec, g) {
   if (justUnlocked) setTimeout(() => FX.celebrate(4), 600);
 }
 
+const ORD = { 1: 'Първа', 2: 'Втора', 3: 'Трета', 4: 'Четвърта' };
+const UNLOCK_LINE = {
+  1: 'Печатът обаче не беше ключалка, а <b>шев</b>. И ти току-що го разпра.',
+  2: 'Замъкът те забрави. Гората обаче помни всичко — и я чака да ѝ обясниш кой си.',
+  3: 'Патронусът светна над гората като фар. И нещо в Северно море го видя.',
+};
+
 function unlockBlock(rec) {
   const nextAct = ACTS[act + 1];
   if (!nextAct) return '';
-  const ordinal = act === 1 ? 'Втора' : 'Трета';
+  const ordinal = ORD[act + 1];
   if (rec.outstanding) {
     return `<div class="unlock-card open">
       <div class="uc-icon">${keySVG()}</div>
       <div class="uc-title">${ordinal} част е отключена</div>
       <p>Мина за <b>${fmtTime(rec.ms)}</b> — под ${fmtTime(OUTSTANDING_MS)}.
-      ${act === 1 ? 'Печатът обаче не беше ключалка, а <b>шев</b>. И ти току-що го разпра.'
-                  : 'Замъкът те забрави. Гората обаче помни всичко — и я чака да ѝ обясниш кой си.'}</p>
+      ${UNLOCK_LINE[act] || ''}</p>
       <p class="muted">«${nextAct.title}» те чака на началния екран.</p>
     </div>`;
   }
@@ -521,5 +538,20 @@ const PROLOGUE_3 = `
   <p>За да те пусне, гората иска доказателство, че в теб е останало нещо твое. Не тайна — а
   <strong>спомен</strong>, толкова светъл, че да добие форма.</p>
   <p class="whisper">„Гората не мрази никого. Просто не забравя нищо.“</p>`;
+
+const PROLOGUE_4 = `
+  <p class="drop">Сребърният елен свети над Забранената гора цели седем секунди.</p>
+  <p>Достатъчно. Патронусът не е сигнален огън, но се вижда като такъв — и на седемстотин мили
+  на север нещо вдига качулка от водата и тръгва натам, откъдето е дошла светлината.</p>
+  <p>Стигат до теб на третата нощ. Не могат да вземат тайната — <em>Фиделиус</em> държи, тайната
+  е в теб като камък в юмрук и никой не може да разтвори пръстите. Затова взимат всичко около нея.
+  Кой те е учил. Кой те е чакал. Как миришеше кухнята в Хогуортс сутрин.</p>
+  <p>Когато свършват, не си празен — просто <strong>по-малък</strong>. И знаеш къде отива взетото,
+  защото всички го знаят: <em>Азкабан</em>, крепостта в Северно море, където отнетите спомени се
+  държат в стъкленици, докато престанат да значат нещо.</p>
+  <p>Отиваш сам. Никой не те задържа — Азкабан не пази хората навън. Пази ги вътре. За да излезеш
+  обратно, ще трябва да научиш единственото, което дименторите не понасят: как да <strong>затвориш
+  ума си</strong>.</p>
+  <p class="whisper">„Празният ум не е защитен ум. Защитеният ум е онзи, който сам решава какво да покаже.“</p>`;
 
 document.addEventListener('DOMContentLoaded', boot);

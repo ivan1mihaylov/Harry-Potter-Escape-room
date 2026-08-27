@@ -1,10 +1,15 @@
 /* ============================================================
    state.js — целият прогрес живее в localStorage. Без сървър.
-   Поддържа две части (акта), всяка със собствен запис,
+   Поддържа четири части (акта), всяка със собствен запис,
    плюс общ дневник с постигнатите резултати.
    ============================================================ */
 
-const ACT_KEYS = { 1: 'hogwarts_escape_v1', 2: 'hogwarts_escape_act2_v1', 3: 'hogwarts_escape_act3_v1' };
+const ACT_KEYS = {
+  1: 'hogwarts_escape_v1',
+  2: 'hogwarts_escape_act2_v1',
+  3: 'hogwarts_escape_act3_v1',
+  4: 'hogwarts_escape_act4_v1',
+};
 const RECORDS_KEY = 'hogwarts_records_v1';
 
 export const TOTAL_MS = 60 * 60 * 1000;       // 60 минути на част

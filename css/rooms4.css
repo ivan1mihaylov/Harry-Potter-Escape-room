@@ -1,0 +1,382 @@
+/* ============================================================
+   rooms4.css — Четвърта част: Азкабан
+   ============================================================ */
+
+body[data-act="4"] { --act-accent: #9fc0ff; }
+
+/* ---------------- I. Приливът ---------------- */
+.tide-table {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin: 8px 0 6px;
+}
+.tt-cell {
+  border: 1px solid rgba(159, 192, 255, .22);
+  border-radius: 7px;
+  padding: 5px 2px;
+  text-align: center;
+  background: rgba(20, 30, 48, .5);
+  transition: all .25s;
+}
+.tt-cell b { display: block; font-size: 1.05rem; color: #cfe0ff; }
+.tt-cell span { font-size: .68rem; opacity: .5; }
+.tt-cell.now { border-color: #9fc0ff; background: rgba(90, 140, 220, .3); box-shadow: 0 0 12px rgba(140, 190, 255, .3); }
+.tt-cell.next { border-color: rgba(220, 180, 100, .6); }
+.tide-rule { font-size: .84rem; margin-top: 6px; }
+
+.tide-map, .patrol-map {
+  display: grid;
+  gap: 4px;
+  margin: 10px auto;
+  max-width: 320px;
+}
+.tide-map { grid-template-columns: repeat(6, 1fr); }
+.patrol-map { grid-template-columns: repeat(7, 1fr); }
+.tm-cell, .pm-cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(159, 192, 255, .18);
+  border-radius: 6px;
+  background: rgba(24, 34, 52, .6);
+  font-size: .82rem; color: #b8c8e0;
+  cursor: pointer;
+  transition: background .25s, border-color .25s, transform .15s;
+}
+.tm-cell:hover, .pm-cell:hover { transform: scale(1.06); border-color: rgba(200, 220, 255, .5); }
+.tm-cell.wet { background: rgba(20, 60, 110, .75); color: rgba(150, 190, 230, .35); border-color: rgba(70, 130, 200, .35); }
+.tm-cell.goal, .pm-cell.goal { border-color: #d9b45b; color: #f0d488; }
+.tm-cell.me, .pm-cell.me { background: rgba(210, 230, 255, .9); color: #0a1220; font-weight: 700; box-shadow: 0 0 16px rgba(180, 215, 255, .6); }
+.pm-cell.wall { background: rgba(60, 66, 78, .95); border-color: rgba(90, 100, 120, .6); cursor: default; }
+.pm-cell.wall:hover { transform: none; }
+.pm-cell.cold { background: rgba(120, 30, 60, .35); border-color: rgba(200, 80, 110, .45); }
+.pm-cell.cold-now { box-shadow: inset 0 0 12px rgba(200, 60, 100, .5); }
+
+.tide-pad {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin: 10px 0;
+}
+.tp-row { display: flex; gap: 6px; }
+.tp-btn {
+  min-width: 52px; padding: 9px 12px;
+  border: 1px solid rgba(159, 192, 255, .3);
+  border-radius: 9px;
+  background: rgba(24, 34, 52, .8);
+  color: #cfe0ff; font: inherit; font-size: .92rem;
+  cursor: pointer; transition: all .18s;
+}
+.tp-btn:hover { background: rgba(50, 80, 130, .8); border-color: #9fc0ff; }
+.tp-btn:active { transform: scale(.94); }
+.tp-wait { min-width: 76px; font-size: .82rem; letter-spacing: .04em; }
+
+.patrol-legend {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  font-size: .76rem; opacity: .75; margin-top: 4px;
+}
+.patrol-legend i {
+  display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+  margin-right: 5px; vertical-align: -1px;
+}
+.pl-me { background: #d6e8ff; }
+.pl-cold { background: rgba(190, 60, 100, .7); }
+.pl-wall { background: #4a5060; }
+.pl-goal { background: transparent; border: 1px solid #d9b45b; }
+.patrol-count { text-align: center; font-size: .86rem; opacity: .8; margin-top: 8px; }
+
+/* ---------------- III. Нонограма ---------------- */
+.nono-wrap { overflow-x: auto; padding: 6px 0 10px; }
+.nono {
+  --nc: 30px;
+  display: grid;
+  gap: 1px;
+  margin: 0 auto;
+  width: max-content;
+}
+@media (max-width: 700px) { .nono { --nc: 22px; } }
+@media (max-width: 420px) { .nono { --nc: 19px; } }
+.nn-pad { width: var(--nc); height: var(--nc); }
+.nn-clue {
+  width: var(--nc); height: var(--nc);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .74rem; color: #e0cf9a;
+  background: rgba(30, 28, 22, .45);
+  border-radius: 3px;
+}
+.nn-clue.sep { box-shadow: inset -1px 0 0 rgba(217, 180, 91, .35); }
+.nn-clue.row.sep { box-shadow: inset 0 -1px 0 rgba(217, 180, 91, .35); }
+.nn-cell {
+  width: var(--nc); height: var(--nc);
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(232, 228, 214, .07);
+  border: 1px solid rgba(200, 210, 230, .14);
+  border-radius: 2px;
+  cursor: pointer;
+  color: rgba(200, 210, 230, .55);
+  font-size: .8rem;
+  transition: background .12s, transform .1s;
+  user-select: none;
+}
+.nn-cell:hover { background: rgba(200, 220, 255, .16); }
+.nn-cell.on { background: #dbe4f2; border-color: #f0f5ff; box-shadow: 0 0 8px rgba(190, 215, 255, .35); }
+.nn-cell.off { background: rgba(20, 22, 28, .5); }
+.nn-cell.vsep { border-right-color: rgba(217, 180, 91, .5); }
+.nn-cell.hsep { border-bottom-color: rgba(217, 180, 91, .5); }
+.nono.done .nn-cell { cursor: default; }
+.nono-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 6px; }
+.nono-count { font-size: .84rem; opacity: .75; }
+.nono-help { font-size: .84rem; margin-top: 8px; }
+
+.nono-picture {
+  display: grid;
+  grid-template-columns: repeat(10, 16px);
+  gap: 2px; justify-content: center;
+  margin: 14px auto;
+}
+@media (max-width: 640px) { .nono-picture { grid-template-columns: repeat(10, 13px); } }
+.np { width: 100%; aspect-ratio: 1; border-radius: 2px; background: rgba(255, 255, 255, .04); }
+.np.on {
+  background: #dfe8ff;
+  box-shadow: 0 0 10px rgba(190, 220, 255, .8);
+  animation: npIn .5s var(--dl) both;
+}
+@keyframes npIn { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+
+/* ---------------- IV. Разбитият спомен ---------------- */
+.slide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  max-width: 300px; margin: 0 auto;
+}
+.sg-cell {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 4px;
+  border: 1px solid rgba(200, 180, 230, .28);
+  border-radius: 9px;
+  background: linear-gradient(160deg, rgba(70, 64, 88, .85), rgba(40, 38, 54, .9));
+  cursor: pointer;
+  transition: transform .16s, box-shadow .16s;
+  text-align: center;
+}
+.sg-cell:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, .45); }
+.sg-cell b { font-size: 1.25rem; color: #f0e2bb; }
+.sg-cell span { font-size: .7rem; opacity: .72; line-height: 1.15; }
+.sg-cell.empty { background: rgba(10, 10, 16, .55); border-style: dashed; cursor: default; }
+.sg-cell.empty:hover { transform: none; box-shadow: none; }
+.slide-info { text-align: center; font-size: .86rem; opacity: .8; margin: 10px 0; }
+
+.memory-line { font-size: 1.1rem; line-height: 1.7; }
+.ml-w { display: inline-block; animation: mlIn .6s var(--dl) both; }
+@keyframes mlIn { from { opacity: 0; filter: blur(6px); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
+.memory-count { font-size: .96rem; opacity: .9; }
+
+/* ---------------- V. Везните ---------------- */
+.vials {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px; margin: 8px 0;
+}
+@media (max-width: 640px) { .vials { grid-template-columns: repeat(4, 1fr); } }
+.vial {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 7px 3px 5px;
+  border: 1px solid rgba(180, 200, 230, .22);
+  border-radius: 9px;
+  background: rgba(22, 28, 40, .7);
+  color: #cfe0ff; font: inherit; cursor: pointer;
+  transition: all .18s;
+}
+.vial:hover { border-color: rgba(220, 235, 255, .6); transform: translateY(-2px); }
+.vial b { font-size: .9rem; }
+.vial em { font-size: .62rem; font-style: normal; opacity: .6; }
+.v-glass {
+  width: 13px; height: 20px; border-radius: 3px 3px 6px 6px;
+  background: linear-gradient(180deg, rgba(160, 220, 240, .25), rgba(90, 180, 210, .75));
+  box-shadow: inset 0 0 6px rgba(200, 245, 255, .5);
+}
+.vial.left { border-color: #7fd6a1; background: rgba(30, 60, 46, .7); }
+.vial.right { border-color: #d9b45b; background: rgba(58, 48, 24, .7); }
+.vial.left em, .vial.right em { opacity: .95; }
+.scale-ctl { display: flex; gap: 10px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+
+.weigh-log { font-size: .86rem; }
+.wl-head { text-align: center; opacity: .8; margin-bottom: 6px; }
+.wl-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px; margin-bottom: 3px;
+  border-radius: 7px; background: rgba(20, 26, 38, .55);
+}
+.wl-n { width: 18px; opacity: .5; }
+.wl-set { flex: 1; letter-spacing: .1em; }
+.wl-sign { font-weight: 700; font-size: 1.05rem; width: 20px; text-align: center; }
+.wl-sign.gt, .wl-sign.lt { color: #d9b45b; }
+.wl-sign.eq { color: #7fd6a1; }
+.wl-empty { opacity: .5; text-align: center; padding: 6px; }
+
+.verdict { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.vd-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.vd-v {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid rgba(180, 200, 230, .25);
+  background: rgba(22, 28, 40, .7); color: #cfe0ff;
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.vd-v:hover { border-color: rgba(220, 235, 255, .6); }
+.vd-v.on { background: #cfe0ff; color: #0a1220; font-weight: 700; }
+.vd-dir {
+  padding: 8px 18px; border-radius: 9px;
+  border: 1px solid rgba(180, 200, 230, .25);
+  background: rgba(22, 28, 40, .7); color: #cfe0ff;
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.vd-dir:hover { border-color: rgba(220, 235, 255, .6); }
+.vd-dir.on { background: #d9b45b; color: #1a1408; font-weight: 600; }
+
+/* ---------------- VI. Списъкът ---------------- */
+.notes-list { line-height: 1.85; padding-left: 1.4em; }
+.notes-list li { margin-bottom: 3px; }
+.register {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin: 10px 0;
+}
+@media (max-width: 780px) { .register { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 460px) { .register { grid-template-columns: 1fr; } }
+.reg-cell {
+  border: 1px solid rgba(217, 180, 91, .22);
+  border-radius: 10px; padding: 8px;
+  background: rgba(24, 22, 18, .5);
+}
+.rc-head {
+  font-size: .74rem; letter-spacing: .12em; text-transform: uppercase;
+  color: #e0cf9a; text-align: center; margin-bottom: 7px;
+  padding-bottom: 5px; border-bottom: 1px solid rgba(217, 180, 91, .18);
+}
+.rc-field { display: block; margin-bottom: 6px; }
+.rc-field span {
+  display: block; font-size: .68rem; opacity: .6; margin-bottom: 2px;
+}
+.rc-field.dup .rg-sel { border-color: #e0625d; color: #ffb8b4; }
+.rg-sel {
+  width: 100%;
+  background: rgba(20, 20, 26, .85);
+  color: #e8e2cf; border: 1px solid rgba(200, 190, 160, .2);
+  border-radius: 6px; padding: 6px 4px; font: inherit; font-size: .82rem;
+}
+
+/* ---------------- VII. Лодката ---------------- */
+.pair-list { list-style: none; padding: 0; display: grid; gap: 5px; margin: 8px 0; }
+.pair-list li {
+  padding: 6px 10px; border-radius: 8px;
+  background: rgba(60, 30, 44, .4);
+  border: 1px solid rgba(200, 100, 130, .25);
+  font-size: .9rem;
+}
+.pair-list i { opacity: .55; font-style: normal; margin: 0 4px; }
+
+.banks { display: grid; gap: 8px; margin-bottom: 10px; }
+.bank {
+  border: 1px solid rgba(159, 192, 255, .2);
+  border-radius: 10px; padding: 8px;
+  background: rgba(16, 24, 38, .6);
+  transition: border-color .3s, box-shadow .3s;
+}
+.bank.here { border-color: #9fc0ff; box-shadow: 0 0 16px rgba(120, 170, 240, .25); }
+.bank h5 { margin: 0 0 6px; font-size: .76rem; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+.boat-bank { background: rgba(36, 28, 18, .6); border-color: rgba(200, 160, 90, .3); }
+.bank-items { display: flex; flex-wrap: wrap; gap: 5px; min-height: 34px; }
+.bank-empty { opacity: .35; font-size: .8rem; font-style: italic; align-self: center; }
+.mem-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 9px; border-radius: 20px;
+  border: 1px solid var(--mc);
+  background: color-mix(in srgb, var(--mc) 18%, rgba(10, 14, 22, .9));
+  color: #e8eef8; font: inherit; font-size: .78rem; cursor: pointer;
+  transition: transform .14s, box-shadow .14s;
+}
+.mem-chip:hover { transform: translateY(-2px); box-shadow: 0 0 14px var(--mc); }
+.mem-chip b {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--mc); color: #0a0d14; font-size: .74rem;
+}
+.boat-info { text-align: center; font-size: .86rem; opacity: .8; margin-top: 8px; }
+
+.mem-shelf { display: grid; gap: 6px; margin: 12px auto; max-width: 460px; }
+.ms-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px; border-radius: 9px;
+  border-left: 3px solid var(--mc);
+  background: rgba(16, 20, 30, .7);
+  animation: msIn .5s var(--dl) both;
+}
+.ms-row b { font-size: 1.3rem; color: var(--mc); width: 24px; text-align: center; }
+.ms-row span { font-size: .92rem; }
+@keyframes msIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+
+/* ---------------- VIII. Числата ---------------- */
+.crypt { display: flex; flex-direction: column; align-items: center; gap: 3px; margin: 10px 0; }
+.cr-row { display: flex; align-items: flex-end; gap: 3px; }
+.cr-op { font-size: 1.3rem; color: #e0cf9a; margin-right: 4px; align-self: center; }
+.cr-cell {
+  width: 42px; padding: 4px 0 5px;
+  display: flex; flex-direction: column; align-items: center;
+  border-bottom: 1px solid rgba(217, 180, 91, .3);
+}
+@media (max-width: 640px) { .cr-cell { width: 34px; } }
+.cr-cell.blank { border-bottom-color: transparent; }
+.cr-cell i { font-style: normal; font-size: .72rem; opacity: .6; letter-spacing: .06em; }
+.cr-cell b { font-size: 1.4rem; color: #dfe8ff; line-height: 1.1; }
+.cr-rule { width: 270px; height: 2px; background: rgba(217, 180, 91, .5); margin: 4px 0; }
+.cr-sum { font-size: .88rem; opacity: .85; margin-top: 8px; text-align: center; }
+.cr-sum b.good { color: #7fd6a1; }
+.cr-sum b.bad { color: #e0625d; }
+
+.crypt-letters {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0;
+}
+.cl-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 8px; border-radius: 9px;
+  border: 1px solid rgba(200, 190, 160, .2);
+  background: rgba(20, 22, 28, .7);
+}
+.cl-item.dup { border-color: #e0625d; }
+.cl-item b { font-size: 1rem; color: #e0cf9a; }
+.cl-sel {
+  background: rgba(10, 12, 18, .9); color: #e8e2cf;
+  border: 1px solid rgba(200, 190, 160, .2);
+  border-radius: 6px; padding: 3px 4px; font: inherit; font-size: .86rem;
+}
+
+.dial-row { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+.dl { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dl-btn {
+  width: 40px; padding: 4px 0;
+  border: 1px solid rgba(200, 190, 160, .25);
+  border-radius: 6px; background: rgba(24, 24, 30, .8);
+  color: #e0cf9a; font: inherit; cursor: pointer; transition: all .15s;
+}
+.dl-btn:hover { background: rgba(70, 62, 40, .8); }
+.dl-num {
+  width: 40px; padding: 8px 0; text-align: center;
+  font-size: 1.35rem; color: #f2e6c4;
+  background: linear-gradient(180deg, rgba(60, 54, 40, .9), rgba(30, 28, 22, .9));
+  border: 1px solid rgba(217, 180, 91, .35);
+  border-radius: 7px;
+}
+
+/* ---------------- IX. Оклуменс ---------------- */
+.occ-step {
+  font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+  opacity: .55; margin-bottom: 6px;
+}
+.occ-probe { border-left: 2px solid rgba(159, 192, 255, .4); }
+.occ-done {
+  border-left: 2px solid #7fd6a1;
+  background: rgba(24, 46, 38, .35);
+}
+
+/* ---------------- общи дреболии ---------------- */
+[hidden] { display: none !important; }

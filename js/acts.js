@@ -1,5 +1,5 @@
 /* ============================================================
-   acts.js — двете части на историята и оценяването
+   acts.js — четирите части на историята и оценяването
    ============================================================ */
 import { OUTSTANDING_MS } from './state.js';
 
@@ -73,7 +73,31 @@ export const ACTS = {
       import('./rooms3/a3r9-patronus.js'),
     ]),
   },
+  4: {
+    id: 4,
+    numeral: 'IV',
+    title: 'Крепостта на забравата',
+    tagline: 'девет зали · осем руни · шестдесет минути · нищо топло',
+    spell: 'ОКЛУМЕНС',
+    sealLine: 'Морето се затваря зад лодката',
+    endTitle: 'Затворен си — и свободен',
+    endText: `Излизаш през портата на Азкабан по същия път, по който влезе, само че този път
+              никой не те изпраща. Умът ти е заключен отвътре и ключът е у теб. Над Северно
+              море изгрява нещо, което много прилича на сутрин.`,
+    load: () => Promise.all([
+      import('./rooms4/a4r1-tide.js'),
+      import('./rooms4/a4r2-patrol.js'),
+      import('./rooms4/a4r3-wall.js'),
+      import('./rooms4/a4r4-shards.js'),
+      import('./rooms4/a4r5-scales.js'),
+      import('./rooms4/a4r6-list.js'),
+      import('./rooms4/a4r7-boat.js'),
+      import('./rooms4/a4r8-numbers.js'),
+      import('./rooms4/a4r9-occlumens.js'),
+    ]),
+  },
 };
+
 
 /* ---------- оценяване по скалата на СОВА ---------- */
 export function grade(ms) {
