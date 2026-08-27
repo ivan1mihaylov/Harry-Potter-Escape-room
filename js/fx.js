@@ -1,6 +1,7 @@
 /* ============================================================
    fx.js — частици, искри, разтърсване, toast съобщения
    ============================================================ */
+import { personalize } from './state.js';
 
 const dustLayer = () => document.getElementById('dust-layer');
 const spellLayer = () => document.getElementById('spell-layer');
@@ -95,6 +96,7 @@ export function shakeScreen(power = 8, ms = 420) {
 
 /* ---------- toast ---------- */
 export function toast(msg, kind = '', ms = 3400) {
+  msg = personalize(msg);
   const tray = document.getElementById('toast-tray');
   if (!tray) return;
   const t = document.createElement('div');

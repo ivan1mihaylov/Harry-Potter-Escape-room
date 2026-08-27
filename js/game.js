@@ -6,13 +6,15 @@ import {
   isSolved, markSolved, getRoomData, setRoomData, addMistake,
   remainingMs, usedMs, hintsUsed, readRecords, writeRecord, recordFor,
   isActUnlocked, TOTAL_MS, WRONG_PENALTY_MS, OUTSTANDING_MS,
+  playerName, playerHouse, hasName, clearProfile, writeProfile,
+  personalize, personalizeDOM,
 } from './state.js';
 import { ACTS, grade, housePoints, fmtTime } from './acts.js';
 import { HOUSES, crestSVG } from './art.js';
 import { sfx, unlockAudio, startAmbient } from './audio.js';
 import * as FX from './fx.js';
 import * as UI from './ui.js';
-import { runSorting } from './sorting.js';
+import { runSorting, nameFormHTML, wireNameForm } from './sorting.js';
 import { initBackground, setBgMode, setBgTint } from './three-bg.js';
 import { webglAvailable } from './three-stage.js';
 
@@ -53,9 +55,27 @@ function boot() {
 
 /* ---------- началните карти на частите ---------- */
 function renderActs() {
+  renderWizard();
   const box = $('#acts');
   box.innerHTML = '';
   [1, 2, 3, 4].forEach(n => box.appendChild(actCard(n)));
+}
+
+/* името и домът стоят над картите, щом веднъж са определени */
+function renderWizard() {
+  const box = $('#wizard-badge');
+  if (!box) return;
+  const name = playerName();
+  const house = playerHouse();
+  if (!name && !house) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  const h = HOUSES[house];
+  box.innerHTML = `
+    ${h ? `<span class="wb-crest">${crestSVG(house)}</span>` : ''}
+    <span class="wb-text">
+      ${name ? `<b>${name}</b>` : ''}
+      ${h ? `<i>${h.name}</i>` : ''}
+    </span>`;
 }
 
 function actCard(n) {
@@ -147,7 +167,8 @@ function confirmRestart(n) {
 
 function wipeAll() {
   UI.openModal(`<h2>Да изтрия ли всичко?</h2>
-    <p>И четирите части, всички резултати и бележките ще изчезнат като спомен под <em>Обливиате</em>.</p>
+    <p>И четирите части, всички резултати, бележките — а също <b>името и домът ти</b> —
+    ще изчезнат като спомен под <em>Обливиате</em>.</p>
     <div class="flex flex-center mt">
       <button class="btn btn-primary btn-sm" id="w-yes" style="background:linear-gradient(180deg,#c4382f,#7d1f1a);border-color:#e0625d;color:#fff">Изтрий всичко</button>
       <button class="btn btn-ghost btn-sm" id="w-no">Върни ме</button>
@@ -156,6 +177,7 @@ function wipeAll() {
     ['hogwarts_escape_v1', 'hogwarts_escape_act2_v1', 'hogwarts_escape_act3_v1',
      'hogwarts_escape_act4_v1', 'hogwarts_records_v1']
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    clearProfile();
     location.reload();
   });
   $('#w-no').addEventListener('click', UI.closeModal);
@@ -182,15 +204,38 @@ async function startAct(n, fresh) {
     $('#wg-ok').addEventListener('click', UI.closeModal);
   }
 
-  if (!S.house) {
-    const inherited = (peek(1) || {}).house;
-    if (inherited) S.house = inherited;
-  }
+  /* домът се пази в профила; ако липсва, Първа част минава през шапката */
+  const needSorting = !playerHouse();
 
-  const needSorting = (n === 1 && !S.house);
-  if (fresh || !S.started) { showPrologue(n, needSorting); return; }
-  if (needSorting) { goSorting(n); return; }
-  enterAct(n);
+  const go = () => {
+    if (fresh || !S.started) { showPrologue(n, needSorting); return; }
+    if (needSorting) { goSorting(n); return; }
+    enterAct(n);
+  };
+
+  /* заварен напредък без име — питаме, преди да продължим */
+  if (!needSorting && !hasName()) { askNameGate(go); return; }
+  go();
+}
+
+/* ============================================================
+   Как се казваш — за играчите, които са започнали, преди
+   шапката да пита за име.
+   ============================================================ */
+function askNameGate(next) {
+  UI.openModal(`
+    <h2>Шапката се обажда отново</h2>
+    <p>„Сортирах те навремето, но така и не ти записах името. А оттук нататък
+    ще се обръщам към теб — затова ми го кажи сега.“</p>
+    <div id="gate-name"></div>`);
+  const host = $('#gate-name');
+  host.innerHTML = nameFormHTML();
+  wireNameForm(host, (name) => {
+    writeProfile({ name });
+    UI.closeModal();
+    UI.paintHouse();
+    next();
+  });
 }
 
 function goSorting(n) {
@@ -204,7 +249,7 @@ function showPrologue(n, needSorting) {
   UI.showScreen('screen-story');
   $('#story-numeral').textContent = A.numeral;
   $('#story-title').textContent = A.title;
-  $('#story-body').innerHTML = { 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4 }[n];
+  $('#story-body').innerHTML = personalize({ 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4 }[n]);
   $('#story-go').querySelector('span').textContent =
     { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата', 4: 'Слез в лодката' }[n];
   const go = $('#story-go');
@@ -256,6 +301,7 @@ function mountRoom(i) {
   const api = makeApi(room);
   currentApi = api;
   room.mount(root, api);
+  personalizeDOM(root);
 
   UI.renderRail(ROOMS, current, jumpTo);
   UI.renderRunes(RUNE_ROOMS);
@@ -334,6 +380,7 @@ function showSolvedFooter(room, silent, msg) {
         : 'Продължи към следващата зала'}</span></button>
     </div>`;
   root.appendChild(box);
+  personalizeDOM(box);
   if (!silent) box.scrollIntoView({ behavior: 'smooth', block: 'end' });
 
   const prev = box.querySelector('#go-prev');
@@ -405,12 +452,12 @@ function showEnd(rec, g) {
   const house = HOUSES[S.house] || { name: 'Хогуортс' };
   const justUnlocked = act < 4 && rec.outstanding;
 
-  $('#end-wrap').innerHTML = `
+  $('#end-wrap').innerHTML = personalize(`
     <div class="end-badge">${crestSVG(S.house)}</div>
     <p class="tag">Част ${A.numeral}</p>
     <h1 class="end-title">${A.endTitle}</h1>
     <p class="muted" style="max-width:640px;margin:0 auto 10px">${A.endText}</p>
-    <p class="tag">${house.name}</p>
+    <p class="tag">${playerName() ? playerName() + ' · ' : ''}${house.name}</p>
 
     <div class="stat-grid">
       <div class="stat"><b>${fmtTime(rec.ms)}</b><span>време</span></div>
@@ -420,7 +467,7 @@ function showEnd(rec, g) {
     </div>
 
     <div class="grade-card" style="--gc:${g.color}">
-      <div class="grade-label">Оценка от изпитната комисия</div>
+      <div class="grade-label">Оценка за {име|теб} от изпитната комисия</div>
       <div class="grade-value">${g.label}</div>
       <p class="muted">${g.note}</p>
     </div>
@@ -440,7 +487,7 @@ function showEnd(rec, g) {
     <div class="flex flex-center mt-lg">
       <button class="btn btn-primary" id="end-home"><span>Към началото</span></button>
       <button class="btn btn-ghost btn-sm" id="end-again"><span>Изиграй частта отново</span></button>
-    </div>`;
+    </div>`);
 
   $('#end-home').addEventListener('click', goHome);
   $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
@@ -514,7 +561,7 @@ const PROLOGUE_1 = `
   <p class="whisper">„Помощ винаги ще бъде дадена в Хогуортс на онези, които я поискат.“</p>`;
 
 const PROLOGUE_2 = `
-  <p class="drop">Излезе на разсъмване. Само че зората не идва.</p>
+  <p class="drop">Излезе на разсъмване, {име}. Само че зората не идва.</p>
   <p>Слънцето стои на един и същи пръст над Забранената гора вече час. Птиците повтарят едни и същи
   три ноти. А когато се обърнеш към замъка, той е с една кула повече, отколкото беше преди малко.</p>
   <p>Печатът на Основателите не е бил ключалка. Бил е <em>шев</em>. Под подземията, в помещение без
@@ -526,11 +573,11 @@ const PROLOGUE_2 = `
   <p class="whisper">„Онова, което е скрито добре, не се пази от ключалка. Пази се от човек.“</p>`;
 
 const PROLOGUE_3 = `
-  <p class="drop">Излизаш от замъка на разсъмване и Хогуортс вече не знае кой си.</p>
+  <p class="drop">Излизаш от замъка на разсъмване и Хогуортс вече не знае кой си, {име}.</p>
   <p>Точно това поиска. Фиделиус държи: тайната е в теб, заключена като камък в юмрук, и никой
   жив не може да я извади. Остава само да се прибереш — а единственият път минава през
   <em>Забранената гора</em>.</p>
-  <p>На третата крачка между дърветата разбираш грешката си. Гората е <strong>по-стара от
+  <p>На третата крачка между дърветата разбираш грешката си, {име}. Гората е <strong>по-стара от
   Основателите</strong> и не признава тяхната магия. За нея човек, който носи неизречима тайна,
   не е човек, а <em>празно място</em> — а гората поглъща празните места.</p>
   <p>Пътеката зад теб я няма. Кентаврите вече са прочели в небето, че между дърветата върви
@@ -540,7 +587,7 @@ const PROLOGUE_3 = `
   <p class="whisper">„Гората не мрази никого. Просто не забравя нищо.“</p>`;
 
 const PROLOGUE_4 = `
-  <p class="drop">Сребърният елен свети над Забранената гора цели седем секунди.</p>
+  <p class="drop">Сребърният елен свети над Забранената гора цели седем секунди, {име}.</p>
   <p>Достатъчно. Патронусът не е сигнален огън, но се вижда като такъв — и на седемстотин мили
   на север нещо вдига качулка от водата и тръгва натам, откъдето е дошла светлината.</p>
   <p>Стигат до теб на третата нощ. Не могат да вземат тайната — <em>Фиделиус</em> държи, тайната
@@ -549,7 +596,7 @@ const PROLOGUE_4 = `
   <p>Когато свършват, не си празен — просто <strong>по-малък</strong>. И знаеш къде отива взетото,
   защото всички го знаят: <em>Азкабан</em>, крепостта в Северно море, където отнетите спомени се
   държат в стъкленици, докато престанат да значат нещо.</p>
-  <p>Отиваш сам. Никой не те задържа — Азкабан не пази хората навън. Пази ги вътре. За да излезеш
+  <p>Отиваш сам, {име}. Никой не те задържа — Азкабан не пази хората навън. Пази ги вътре. За да излезеш
   обратно, ще трябва да научиш единственото, което дименторите не понасят: как да <strong>затвориш
   ума си</strong>.</p>
   <p class="whisper">„Празният ум не е защитен ум. Защитеният ум е онзи, който сам решава какво да покаже.“</p>`;

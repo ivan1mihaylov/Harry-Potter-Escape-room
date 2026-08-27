@@ -11,6 +11,7 @@ const ACT_KEYS = {
   4: 'hogwarts_escape_act4_v1',
 };
 const RECORDS_KEY = 'hogwarts_records_v1';
+const PROFILE_KEY = 'hogwarts_wizard_v1';
 
 export const TOTAL_MS = 60 * 60 * 1000;       // 60 минути на част
 export const HINT_PENALTY_MS = 2 * 60 * 1000; // -2 мин за подсказка
@@ -79,8 +80,13 @@ export function saveNow() {
 }
 
 export const S = new Proxy({}, {
-  get: (_, k) => data[k],
-  set: (_, k, v) => { data[k] = v; save(); return true; },
+  get: (_, k) => (k === 'house' ? (playerHouse() || data.house) : data[k]),
+  set: (_, k, v) => {
+    data[k] = v;
+    if (k === 'house' && v) writeProfile({ house: v });
+    save();
+    return true;
+  },
 });
 
 export function reset(a = act) {
@@ -100,6 +106,83 @@ export function hasSaveFor(a) {
   return !!(d && d.started && !d.finished);
 }
 export function hasSave() { return hasSaveFor(act); }
+
+/* ============================================================
+   Профилът на магьосника — име и дом. Определят се веднъж, в
+   началото на Първа част, и живеят извън записите на частите:
+   нито «Започни отначало», нито смяната на част ги пипа.
+   Изтриват се само с «Изтрий всичко».
+   ============================================================ */
+let profile = null;
+
+export function readProfile() {
+  if (profile) return profile;
+  try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; }
+  catch (e) { profile = {}; }
+  return profile;
+}
+export function writeProfile(patch) {
+  profile = Object.assign(readProfile(), patch);
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) {}
+  return profile;
+}
+export function clearProfile() {
+  profile = {};
+  try { localStorage.removeItem(PROFILE_KEY); } catch (e) {}
+}
+
+export function playerName() { return (readProfile().name || '').trim(); }
+export function playerHouse() { return readProfile().house || null; }
+export function hasName() { return !!playerName(); }
+
+/* какво приемаме за име: 2–24 знака — само букви, интервал,
+   тире, апостроф и точка. Всичко друго отпада, за да не влезе
+   разметка в текстовете, които после се сглобяват с innerHTML. */
+export function cleanName(raw) {
+  const n = (raw || '').toString()
+    .replace(/[^\p{L}\s'’.-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 24);
+  return /\p{L}{2}/u.test(n) ? n : '';
+}
+
+/* «{име}» в текстовете се заменя с въведеното име.
+   «{име|друго}» дава резервна дума, ако име още няма;
+   самото «{име}» без резерва просто отпада заедно със запетайката си. */
+const NAME_TOKEN = /\{име(?:\|([^}]*))?\}/g;
+export function personalize(text) {
+  if (!text) return text;
+  const n = playerName();
+  if (n) return text.replace(NAME_TOKEN, n);
+  return text
+    .replace(/\s*,\s*\{име\}(?=[.!?,;:])/g, '')
+    .replace(/\{име\},\s*/g, '')
+    .replace(/\s*\{име\}/g, '')
+    .replace(NAME_TOKEN, (_, alt) => alt || '');
+}
+
+/* същото, но върху вече построено DOM дърво — само в текстовите възли */
+export function personalizeDOM(root) {
+  if (!root) return root;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const hits = [];
+  while (walker.nextNode()) {
+    if (walker.currentNode.nodeValue.includes('{име}')) hits.push(walker.currentNode);
+  }
+  hits.forEach(n => { n.nodeValue = personalize(n.nodeValue); });
+  return root;
+}
+
+/* стари записи: домът е живял вътре в частта — вдигаме го в профила */
+(function adoptOldHouse() {
+  const p = readProfile();
+  if (p.house) return;
+  for (const a of [1, 2, 3, 4]) {
+    const d = peek(a);
+    if (d && d.house) { writeProfile({ house: d.house }); return; }
+  }
+})();
 
 /* ---- дневник с резултатите ---- */
 export function readRecords() {

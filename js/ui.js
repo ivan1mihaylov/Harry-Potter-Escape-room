@@ -1,7 +1,8 @@
 /* ============================================================
    ui.js — обвивката: HUD, часовник, лента, подсказки, преходи
    ============================================================ */
-import { S, save, saveNow, remainingMs, TOTAL_MS, HINT_PENALTY_MS, addPenalty, isSolved } from './state.js';
+import { S, save, saveNow, remainingMs, TOTAL_MS, HINT_PENALTY_MS, addPenalty, isSolved,
+         playerName, personalize, personalizeDOM } from './state.js';
 import { crestSVG, HOUSES } from './art.js';
 import { sfx, setEnabled, isEnabled, startAmbient } from './audio.js';
 import { toast, shakeScreen, flash } from './fx.js';
@@ -39,6 +40,8 @@ export function renderGrains(rooms, show) {
 
 /* ---------------- герб и дом ---------------- */
 export function paintHouse() {
+  const nameEl = $('#hud-name');
+  if (nameEl) { const nm = playerName(); nameEl.textContent = nm; nameEl.hidden = !nm; }
   const h = S.house;
   document.body.dataset.house = h || 'none';
   const info = HOUSES[h];
@@ -133,6 +136,7 @@ export function renderRail(rooms, current, onJump) {
 
 /* ---------------- модал ---------------- */
 export function openModal(html) {
+  html = personalize(html);
   $('#modal-body').innerHTML = html;
   $('#modal-back').classList.add('open');
   sfx.page();
@@ -181,7 +185,7 @@ export function updateHintBadge(room) {
 /* ---------------- бележник ---------------- */
 export function openNotes(extra = '') {
   openModal(`
-    <h2>Бележник на ученика</h2>
+    <h2>Бележникът на {име|ученика}</h2>
     ${extra}
     <p class="muted">Записките се пазят в браузъра ти. Ползвай ги за кодове, букви и хрумвания.</p>
     <textarea id="notes-area" style="width:100%;min-height:230px;background:rgba(0,0,0,.4);
@@ -247,7 +251,7 @@ export function credits() {
 export function doorTransition(title, mid) {
   return new Promise(resolve => {
     const t = $('#room-transition');
-    $('#transition-title').textContent = title;
+    $('#transition-title').textContent = personalize(title);
     t.classList.remove('run'); void t.offsetWidth; t.classList.add('run');
     sfx.door();
     setTimeout(() => { mid && mid(); }, 900);

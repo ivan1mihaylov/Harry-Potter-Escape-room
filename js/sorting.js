@@ -1,7 +1,7 @@
 /* ============================================================
    sorting.js — Разпределителната шапка
    ============================================================ */
-import { S, save } from './state.js';
+import { S, save, cleanName, writeProfile, playerName, hasName } from './state.js';
 import { hatSVG, HOUSES, crestSVG } from './art.js';
 import { sfx } from './audio.js';
 import { typewriter, sparksFrom, flash, celebrate } from './fx.js';
@@ -79,10 +79,42 @@ export function runSorting(onDone) {
   const speech = $('.typed');
   const answers = $('#hat-answers');
   const prog = $('#hat-progress');
-  prog.innerHTML = QUESTIONS.map(() => '<i></i>').join('');
+  prog.innerHTML = '';
 
   const scores = { gryffindor: 0, slytherin: 0, ravenclaw: 0, hufflepuff: 0 };
   let i = 0;
+
+  /* ---------- нула: как се казваш ---------- */
+  const askName = () => {
+    answers.innerHTML = '';
+    answers.style.pointerEvents = 'none';
+    $('#sorting-hat').classList.add('talking');
+    sfx.page();
+    typewriter(speech,
+      'Аха — още един.\n\nПреди да те сложа някъде, кажи ми как да те наричам. ' +
+      'Хиляда години слушам имена и още не съм сбъркал нито едно.', {
+      speed: 22,
+      onDone: () => {
+        $('#sorting-hat').classList.remove('talking');
+        answers.style.pointerEvents = 'auto';
+        answers.innerHTML = nameFormHTML();
+        wireNameForm(answers, (name) => {
+          writeProfile({ name });
+          $('#sorting-hat').classList.add('talking');
+          answers.innerHTML = '';
+          answers.style.pointerEvents = 'none';
+          typewriter(speech, `${name}. Добре. Запомних те.\n\nСега — шест въпроса.`, {
+            speed: 34,
+            onDone: () => {
+              $('#sorting-hat').classList.remove('talking');
+              prog.innerHTML = QUESTIONS.map(() => '<i></i>').join('');
+              setTimeout(ask, 700);
+            },
+          });
+        });
+      },
+    });
+  };
 
   const ask = () => {
     if (i >= QUESTIONS.length) return finish();
@@ -91,7 +123,9 @@ export function runSorting(onDone) {
     answers.style.pointerEvents = 'none';
     $('#sorting-hat').classList.add('talking');
     sfx.page();
-    const intro = i === 0 ? 'Аха — още един. Сложи ме на главата си и не мисли много силно.\n\n' : LINES[i % LINES.length] + '\n\n';
+    const intro = i === 0
+      ? `Сложи ме на главата си, ${playerName() || 'приятелю'}, и не мисли много силно.\n\n`
+      : LINES[i % LINES.length] + '\n\n';
     typewriter(speech, intro + q.q, {
       speed: 22,
       onDone: () => {
@@ -130,7 +164,7 @@ export function runSorting(onDone) {
     prog.innerHTML = '';
     document.body.dataset.house = house;
     $('#sorting-hat').classList.add('talking');
-    typewriter(speech, `Няма никакво съмнение. По-добре да си в… ${HOUSES[house].name.toUpperCase()}!`, {
+    typewriter(speech, `Няма никакво съмнение, ${playerName() || 'приятелю'}. По-добре да си в… ${HOUSES[house].name.toUpperCase()}!`, {
       speed: 46,
       onDone: () => {
         $('#sorting-hat').classList.remove('talking');
@@ -150,5 +184,41 @@ export function runSorting(onDone) {
     });
   };
 
-  ask();
+  if (hasName()) { prog.innerHTML = QUESTIONS.map(() => '<i></i>').join(''); ask(); }
+  else askName();
+}
+
+/* ============================================================
+   Полето за име — ползва се и от шапката, и от питането
+   при заварен напредък без име.
+   ============================================================ */
+export function nameFormHTML() {
+  return `<form class="name-form" id="name-form" autocomplete="off">
+    <input class="name-input" id="name-input" maxlength="24" spellcheck="false"
+           autocomplete="off" placeholder="името ти" aria-label="Името ти">
+    <button class="btn btn-primary" type="submit"><span>Това съм аз</span></button>
+    <p class="name-hint" id="name-hint">Поне две букви. Ще те наричам така до края.</p>
+  </form>`;
+}
+
+export function wireNameForm(host, onName) {
+  const form = host.querySelector('#name-form');
+  const input = host.querySelector('#name-input');
+  const hint = host.querySelector('#name-hint');
+  if (!form || !input) return;
+  setTimeout(() => input.focus(), 60);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = cleanName(input.value);
+    if (!name) {
+      hint.textContent = 'Това не е име. Поне две букви, моля.';
+      hint.classList.add('bad');
+      input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+      sfx.bad();
+      return;
+    }
+    sfx.chime();
+    sparksFrom(input, { count: 16, color: '#ffe9a8' });
+    onName(name);
+  });
 }
