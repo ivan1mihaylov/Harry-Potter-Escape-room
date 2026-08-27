@@ -54,7 +54,7 @@ const ATTACKED = (() => {
 const OCCUPIED = new Set(PIECES.filter(p => p.t !== 'K').map(p => p.x + ',' + p.y));
 const isBad = (x, y) => ATTACKED.has(x + ',' + y) || OCCUPIED.has(x + ',' + y);
 
-let stage = null, knight = null, tiles = {}, marks = [];
+let stage = null, knight = null, tiles = {}, marks = [], busy = false;
 
 export function mount(root, api) {
   const d = api.data;
@@ -71,7 +71,8 @@ export function mount(root, api) {
             <p>„Конят тръгва от <b>b1</b> и трябва да стигне белия цар на <b>g8</b> за
             <b>точно шест скока</b>. Полетата в червено са под обстрел — там дъската взема фигурата.“</p>
             <p style="font-size:.94rem">На белия цар <b>се стъпва</b> — това е целта, не капан.
-            Седмият скок е забранен: дъската се връща в началото.</p>
+            Шестият скок трябва да падне точно върху него: стигнеш ли го по-рано или изразходваш
+            ли и шестия другаде, дъската те връща на <b>b1</b>.</p>
           </div>
           <div class="knight-hud">
             <div class="kh-item"><span>скокове</span><b id="kh-jumps">0 / ${MAX_JUMPS}</b></div>
@@ -84,7 +85,8 @@ export function mount(root, api) {
       </div>
     </div>`;
 
-  $('#kn-reset').addEventListener('click', () => resetRun(api, false));
+  busy = false;
+  $('#kn-reset').addEventListener('click', () => { if (!busy) resetRun(api, false); });
   renderHud(api);
   boot(api);
   api.onLeave = () => { if (stage) { stage.dispose(); stage = null; } knight = null; tiles = {}; marks = []; };
@@ -97,11 +99,12 @@ function renderHud(api) {
   if (s) s.textContent = nameOf(d.at.x, d.at.y);
   const ml = $('#move-list');
   if (ml) ml.innerHTML = ['b1', ...d.path].map((n, i) =>
-    `<span class="mv${i ? '' : ' start'}">${n}</span>`).join('<i>→</i>');
+    `<span class="mv${i ? '' : ' start'}">${i ? `<b>${i}</b>` : ''}${n}</span>`).join('<i>→</i>');
 }
 
 function resetRun(api, penalty) {
   const d = api.data;
+  busy = false;
   d.at = { ...START }; d.path = []; api.saveData();
   if (knight) placeKnight(api, false);
   renderHud(api);
@@ -111,7 +114,7 @@ function resetRun(api, penalty) {
 }
 
 function tryMove(api, x, y) {
-  if (api.solved) return;
+  if (api.solved || busy) return;
   const d = api.data;
   const dx = x - d.at.x, dy = y - d.at.y;
   if (!JUMPS.some(j => j[0] === dx && j[1] === dy)) {
@@ -135,6 +138,8 @@ function tryMove(api, x, y) {
   renderHud(api);
 
   if (isGoal) {
+    busy = true;
+    highlightMoves(api, true);
     if (d.path.length === MAX_JUMPS) {
       api.sfx.unlock();
       api.fx.flash('rgba(230,230,240,.3)', 800);
@@ -148,7 +153,9 @@ function tryMove(api, x, y) {
     return;
   }
   if (d.path.length >= MAX_JUMPS) {
-    setTimeout(() => resetRun(api, true), 600);
+    busy = true;
+    highlightMoves(api, true);
+    setTimeout(() => resetRun(api, true), 700);
     return;
   }
   highlightMoves(api);

@@ -461,8 +461,10 @@ function grainsBlock() {
     .filter(x => x.d != null);
   if (!rows.length) return '';
   return `<div class="notes-grains">
-    <div class="ng-title">зърна пясък</div>
-    ${rows.map(x => `<div class="ng-row"><b>${x.d}</b><span>${x.title}</span></div>`).join('')}
+    <div class="ng-title">зърна пясък · ${rows.length} събрани</div>
+    <p class="ng-hint">Пясъкът не издава цифрите си тук. Обръщат се едно по едно в
+    <b>Хроноворота</b> — и се разместват след всяко надникване. Записвай ги по-долу, докато ги помниш.</p>
+    ${rows.map(x => `<div class="ng-row"><b>◆</b><span>${x.title}</span></div>`).join('')}
   </div>`;
 }
 

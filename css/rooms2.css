@@ -149,23 +149,56 @@
 .pb-name{font-family:var(--font-head);font-size:.86rem}
 .pb-arrow{color:var(--pc);font-size:1.1rem;transition:transform .35s cubic-bezier(.2,1.3,.4,1);display:inline-block}
 
-/* ---------- таблица със зърната пясък ---------- */
-.grain-table{padding:12px;border-radius:12px;background:rgba(0,0,0,.32);border:1px solid rgba(224,200,140,.24)}
-.gr-row{display:flex;align-items:center;gap:10px;padding:.32em .2em;border-bottom:1px dashed rgba(224,200,140,.14)}
-.gr-row:last-of-type{border-bottom:0}
-.gr-digit{
-  width:30px;height:34px;flex:none;display:grid;place-items:center;border-radius:7px;
-  border:1px solid #7a6a3a;background:rgba(224,200,140,.07);
-  font-family:var(--font-head);font-size:1rem;color:#a99b74
+/* ---------- зърната пясък: игра на памет ---------- */
+.grain-memory{padding:13px;border-radius:13px;background:rgba(0,0,0,.34);
+  border:1px solid rgba(224,200,140,.24)}
+.gm-head{font-size:.9rem;color:var(--parch-dim);margin:0 0 12px;line-height:1.55}
+.gm-head b{color:var(--gold-100)}
+.gm-empty{color:#7d7466;font-style:italic;margin:0}
+.gm-board{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.gm-card{
+  width:86px;height:112px;padding:0;border:0;background:none;cursor:pointer;
+  perspective:700px;position:relative;flex:none
 }
-.gr-row.needed .gr-digit{border-color:#c9a95a;color:#f0dca8;background:linear-gradient(180deg,#3a3320,#1e1a10);
-  box-shadow:0 0 12px rgba(224,200,140,.35)}
-.gr-room{flex:1;font-size:.88rem;color:#8a8172;min-width:0}
-.gr-row.needed .gr-room{color:var(--parch)}
-.gr-mark{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;
-  font-family:var(--font-head);font-size:.62rem;background:var(--house);color:#fff}
-.gr-mark.idle{background:transparent;color:#4f4838}
-.gr-note{font-size:.78rem;color:#7d7466;margin:8px 0 0;font-style:italic}
+@media(max-width:430px){.gm-card{width:72px;height:96px}}
+.gm-inner{
+  position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.3,.9,.3,1)
+}
+.gm-card.open .gm-inner{transform:rotateY(180deg)}
+.gm-back,.gm-face{
+  position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;overflow:hidden
+}
+.gm-back{
+  background:linear-gradient(150deg,#2b2418,#141009 60%,#221c12);
+  border:1px solid #6b5a2e;box-shadow:inset 0 0 20px rgba(0,0,0,.8)
+}
+.gm-back i{
+  width:26px;height:26px;border-radius:50%;display:block;
+  background:radial-gradient(circle at 38% 32%,rgba(224,200,140,.55),rgba(224,200,140,.06) 70%);
+  box-shadow:0 0 14px rgba(224,200,140,.2)
+}
+.gm-back::after{
+  content:"";position:absolute;inset:6px;border-radius:7px;
+  border:1px dashed rgba(224,200,140,.22)
+}
+.gm-card:hover .gm-back{border-color:#c9a95a;box-shadow:inset 0 0 20px rgba(0,0,0,.8),0 0 16px rgba(224,200,140,.25)}
+.gm-face{
+  transform:rotateY(180deg);
+  background:linear-gradient(160deg,#3a3320,#1c1810);
+  border:1px solid #c9a95a;box-shadow:0 0 22px rgba(224,200,140,.28);padding:4px
+}
+.gm-face b{font-family:var(--font-head);font-size:2.1rem;color:#f6e6b6;line-height:1;
+  text-shadow:0 0 16px rgba(224,200,140,.75);margin-bottom:2px}
+.gm-face small{font-size:.55rem;color:#b5a67d;text-align:center;line-height:1.3;padding:0 5px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gm-badge{
+  position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;
+  display:grid;place-items:center;background:var(--house);color:#fff;
+  font-family:var(--font-head);font-size:.6rem;font-style:normal
+}
+.gm-note{margin-top:10px;text-align:center;font-size:.8rem;color:#7d7466;font-style:italic;min-height:1.2em}
 
 /* зърната в бележника — достъпни на всяко устройство */
 .notes-grains{margin:0 0 16px;padding:12px 14px;border-radius:12px;
@@ -174,4 +207,7 @@
 .ng-row{display:flex;align-items:center;gap:10px;padding:.16em 0;font-size:.9rem;color:var(--parch-dim)}
 .ng-row b{width:26px;height:30px;display:grid;place-items:center;border-radius:6px;flex:none;
   border:1px solid #c9a95a;background:linear-gradient(180deg,#3a3320,#1e1a10);
-  font-family:var(--font-head);color:#f0dca8}
+  font-family:var(--font-head);color:#f0dca8;font-size:.8rem}
+.ng-hint{font-size:.8rem;color:#8a8172;margin:0 0 10px;line-height:1.5}
+.ng-hint b{color:var(--gold);display:inline}
+.move-list .mv b{font-size:.62rem;color:var(--gold-deep);margin-right:.35em;font-weight:400}

@@ -31,8 +31,9 @@ export function renderGrains(rooms, show) {
   if (!show) return;
   const withGrain = rooms.filter(r => r.meta.grain != null);
   tray.innerHTML = withGrain.map(r => {
-    const got = S.grains[r.meta.id];
-    return `<span class="grain-slot${got != null ? ' filled' : ''}" title="${r.meta.title}">${got != null ? got : '·'}</span>`;
+    const got = S.grains[r.meta.id] != null;
+    return `<span class="grain-slot${got ? ' filled' : ''}"
+      title="${got ? r.meta.title + ' — зърното е у теб; цифрата се чете в Хроноворота' : 'още неоткрито зърно'}">${got ? '◆' : '·'}</span>`;
   }).join('');
 }
 

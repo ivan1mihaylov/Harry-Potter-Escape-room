@@ -15,7 +15,7 @@ export const meta = {
   bg: 'dim',
   tint: '#e0c07a',
   hints: [
-    'Зърната пясък, които събра, са изписани по-долу — до всяко пише от коя зала идва. Загадката ти казва кои четири да вземеш и в какъв ред.',
+    'Пясъкът показва само по едно зърно наведнъж. Отвориш ли друго, предишното се затваря и зърната се разместват — но разместването е бавно и можеш да проследиш с поглед кое къде отива.',
     'Годината се чете и без зърна: последната битка за Хогуортс, втори май. Ако помниш книгата, помниш и годината.',
     'Годината е <b>1998</b>. След това дръпни веригата точно <b>три</b> пъти — толкова, колкото Хърмаяни завъртя своя хроноворот, за да спаси Бъкбийк.',
   ],
@@ -46,7 +46,13 @@ export function mount(root, api) {
             Четирите цифри идват от:</p>
             <ol class="grain-src">${SOURCES.map(s => `<li>${s}</li>`).join('')}</ol>
           </div>
-          <div class="grain-table" id="grain-row"></div>
+          <div class="grain-memory">
+            <p class="gm-head">Седемте зърна лежат с лицето надолу. Пясъкът разкрива само едно —
+            отвориш ли следващото, предишното се затваря и зърната се разбъркват.
+            <b>Запомняй.</b></p>
+            <div class="gm-board" id="gm-board"></div>
+            <div class="gm-note" id="gm-note">докосни зърно, за да го обърнеш</div>
+          </div>
           <div class="dials big" id="dials"></div>
           <div class="center mt" id="turner-ctl"></div>
         </div>
@@ -58,25 +64,135 @@ export function mount(root, api) {
   renderDials(api);
   renderCtl(api);
   boot(api);
-  api.onLeave = () => { if (stage) { stage.dispose(); stage = null; } rings = []; glass = null; };
+  api.onLeave = () => {
+    if (stage) { stage.dispose(); stage = null; }
+    rings = []; glass = null;
+    deck = []; openCard = null; gmBusy = false;
+  };
 }
 
+let deck = [], openCard = null, gmBusy = false;
+
 function renderGrains(api) {
-  const box = $('#grain-row');
-  if (!box) return;
+  const board = $('#gm-board');
+  if (!board) return;
   const g = api.allGrains ? api.allGrains() : {};
-  const rows = Object.entries(g);
-  if (!rows.length) { box.innerHTML = '<div class="gr-title">още нямаш зърна пясък</div>'; return; }
-  box.innerHTML = `<div class="gr-title">събрани зърна пясък</div>` +
-    rows.map(([room, digit]) => {
-      const needed = SOURCES.indexOf(room);
-      return `<div class="gr-row${needed >= 0 ? ' needed' : ''}">
-        <span class="gr-digit">${digit}</span>
-        <span class="gr-room">${room}</span>
-        ${needed >= 0 ? `<span class="gr-mark">${needed + 1}</span>` : '<span class="gr-mark idle">—</span>'}
-      </div>`;
-    }).join('') +
-    `<p class="gr-note">Отбелязаните с номер зърна са четирите, които часовникът иска — в този ред.</p>`;
+  deck = Object.entries(g).map(([room, digit]) => ({ room, digit, need: SOURCES.indexOf(room) }));
+  if (!deck.length) {
+    board.innerHTML = '<p class="gm-empty">Още нямаш зърна пясък.</p>';
+    return;
+  }
+  deck = shuffleOnce(deck, 41);
+  board.innerHTML = '';
+  deck.forEach(card => board.appendChild(makeCard(api, card)));
+}
+
+function makeCard(api, card) {
+  const b = el('button', 'gm-card');
+  b._card = card;
+  b.innerHTML = `<span class="gm-inner">
+      <span class="gm-back"><i></i></span>
+      <span class="gm-face">
+        <b>${card.digit}</b>
+        <small>${card.room}</small>
+        ${card.need >= 0 ? `<i class="gm-badge">${card.need + 1}</i>` : ''}
+      </span>
+    </span>`;
+  b.addEventListener('click', () => tapCard(api, b));
+  return b;
+}
+
+function tapCard(api, node) {
+  if (gmBusy) return;
+  const board = $('#gm-board');
+
+  // затваряне на същото зърно
+  if (openCard === node) {
+    node.classList.remove('open');
+    openCard = null;
+    setNote('докосни зърно, за да го обърнеш');
+    api.sfx.page();
+    return;
+  }
+
+  // първото отваряне — без разбъркване
+  if (!openCard) {
+    node.classList.add('open');
+    openCard = node;
+    setNote('запомни го — щом отвориш друго, зърната ще се разместят');
+    api.sfx.chime();
+    return;
+  }
+
+  // затваряме предишното, разбъркваме, после отваряме избраното
+  gmBusy = true;
+  const target = node;
+  openCard.classList.remove('open');
+  openCard = null;
+  api.sfx.page();
+  setNote('пясъкът разбърква зърната…');
+
+  setTimeout(() => {
+    shuffleBoard(board, () => {
+      target.classList.add('open');
+      openCard = target;
+      gmBusy = false;
+      api.sfx.chime();
+      setNote('запомни го — щом отвориш друго, зърната ще се разместят');
+    });
+  }, 420);
+}
+
+function setNote(t) { const n = $('#gm-note'); if (n) n.textContent = t; }
+
+/* разместване, което може да се проследи с поглед (техниката FLIP) */
+function shuffleBoard(board, done) {
+  const els = [...board.children];
+  if (els.length < 2) { done(); return; }
+  const first = els.map(e => e.getBoundingClientRect());
+
+  const order = [...els];
+  const swaps = Math.min(3, Math.floor(order.length / 2));
+  for (let k = 0; k < swaps; k++) {
+    const i = Math.floor(Math.random() * order.length);
+    let j = Math.floor(Math.random() * order.length);
+    if (i === j) j = (j + 1) % order.length;
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  order.forEach(e => board.appendChild(e));
+  deck = order.map(e => e._card);
+
+  const last = els.map(e => e.getBoundingClientRect());
+  els.forEach((e, i) => {
+    const dx = first[i].left - last[i].left, dy = first[i].top - last[i].top;
+    if (!dx && !dy) return;
+    e.style.transition = 'none';
+    e.style.transform = `translate(${dx}px,${dy}px)`;
+    e.style.zIndex = '6';
+  });
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    els.forEach(e => {
+      e.style.transition = 'transform 1.15s cubic-bezier(.35,.05,.2,1)';
+      e.style.transform = 'translate(0,0)';
+    });
+    setTimeout(() => {
+      els.forEach(e => { e.style.transition = ''; e.style.transform = ''; e.style.zIndex = ''; });
+      done();
+    }, 1220);
+  }));
+}
+
+/* еднократно разбъркване с постоянно семе — подредбата е една и съща при презареждане */
+function shuffleOnce(arr, seed) {
+  const a = [...arr];
+  let s = seed;
+  const rnd = () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 function renderDials(api) {
