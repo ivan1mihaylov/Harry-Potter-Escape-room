@@ -340,7 +340,7 @@ function makeApi(room) {
     meta: room.meta,
     act,
     data: getRoomData(id, {}),
-    saveData() { setRoomData(id, this.data); },
+    saveData() { setRoomData(id, this.data); UI.updateHintBadge(room); },
     get solved() { return isSolved(id); },
     toast: FX.toast,
     sfx,
@@ -364,6 +364,7 @@ function makeApi(room) {
     solve(msg) {
       if (isSolved(id)) return;
       markSolved(id, room.meta.rune, room.meta.grain);
+      UI.updateHintBadge(room);
       sfx.rune();
       FX.celebrate(1.4);
       UI.renderRail(ROOMS, current, jumpTo);

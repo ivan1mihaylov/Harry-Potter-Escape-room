@@ -2,7 +2,8 @@
    ui.js — обвивката: HUD, часовник, лента, подсказки, преходи
    ============================================================ */
 import { S, save, saveNow, remainingMs, TOTAL_MS, HINT_PENALTY_MS, addPenalty, isSolved,
-         playerName, personalize, personalizeDOM } from './state.js';
+         playerName, personalize, personalizeDOM,
+         openedHints, markHintOpened, getRoomData } from './state.js';
 import { crestSVG, HOUSES } from './art.js';
 import { sfx, setEnabled, isEnabled, startAmbient } from './audio.js';
 import { toast, shakeScreen, flash } from './fx.js';
@@ -144,27 +145,48 @@ export function openModal(html) {
 export function closeModal() { $('#modal-back').classList.remove('open'); }
 
 /* ---------------- подсказки ---------------- */
+/* Подсказка може да носи `done(data)` — предикат за стъпката, която обслужва.
+   Мине ли играчът тази стъпка сам, подсказката се отбелязва като изминала
+   и не му се пречка: следващата, която му трябва, се отваря направо.   */
+function hintState(room) {
+  const id = room.meta.id;
+  const hints = (room.meta.hints || []).map(h => (typeof h === 'string' ? { text: h } : h));
+  const data = getRoomData(id, {});
+  const opened = openedHints(id);
+  const solved = isSolved(id);
+  return hints.map((h, i) => ({
+    i, text: h.text,
+    opened: opened.includes(i),
+    passed: !opened.includes(i) && (solved || (typeof h.done === 'function' && !!h.done(data))),
+  }));
+}
+
 export function openHints(room) {
   const id = room.meta.id;
-  const opened = S.hintsOpened[id] || 0;
-  const hints = room.meta.hints || [];
-  const rows = hints.map((h, i) => i < opened
-    ? `<div class="hint-item"><b>Подсказка ${i + 1}.</b> ${h}</div>`
-    : `<div class="hint-item hint-locked">Подсказка ${i + 1} — още не е разкрита</div>`).join('');
+  const list = hintState(room);
+  const rows = list.map(h => {
+    if (h.opened) return `<div class="hint-item"><b>Подсказка ${h.i + 1}.</b> ${h.text}</div>`;
+    if (h.passed) return `<div class="hint-item hint-passed">
+      <b>Подсказка ${h.i + 1}.</b> Тази стъпка вече е зад гърба ти — няма да я плащаш.</div>`;
+    return `<div class="hint-item hint-locked">Подсказка ${h.i + 1} — още не е разкрита</div>`;
+  }).join('');
 
-  const canMore = opened < hints.length;
+  /* първата, която още върши работа: нито отворена, нито изминала */
+  const nextH = list.find(h => !h.opened && !h.passed);
+  const spent = !nextH && list.length && !isSolved(id);
   openModal(`
     <h2>Помощ от портретите</h2>
     <p class="muted">Всяка подсказка струва <b>2 минути</b> от оставащото време. Портретите са бъбриви, но не безплатни.</p>
     ${rows || '<p class="muted">Тази зала не се нуждае от подсказки.</p>'}
+    ${spent ? '<p class="muted mt">За онова, което ти остава тук, портретите нямат какво да добавят.</p>' : ''}
     <div class="flex flex-center mt">
-      ${canMore ? `<button class="btn btn-house btn-sm" id="hint-more">Разкрий подсказка ${opened + 1} (–2:00)</button>` : ''}
+      ${nextH ? `<button class="btn btn-house btn-sm" id="hint-more">Разкрий подсказка ${nextH.i + 1} (–2:00)</button>` : ''}
       <button class="btn btn-ghost btn-sm" id="hint-close">Затвори</button>
     </div>`);
 
   const more = $('#hint-more');
   if (more) more.addEventListener('click', () => {
-    const h = { ...S.hintsOpened }; h[id] = (h[id] || 0) + 1; S.hintsOpened = h;
+    markHintOpened(id, nextH.i);
     penalise(HINT_PENALTY_MS);
     sfx.chime();
     flash('rgba(217,180,91,.18)', 300);
@@ -176,10 +198,9 @@ export function openHints(room) {
 
 export function updateHintBadge(room) {
   const el = $('#hint-count'); if (!el || !room) return;
-  const total = (room.meta.hints || []).length;
-  const used = S.hintsOpened[room.meta.id] || 0;
-  el.textContent = Math.max(0, total - used);
-  el.style.opacity = total - used ? 1 : .35;
+  const left = hintState(room).filter(h => !h.opened && !h.passed).length;
+  el.textContent = left;
+  el.style.opacity = left ? 1 : .35;
 }
 
 /* ---------------- бележник ---------------- */

@@ -33,7 +33,7 @@ const blank = (act = 1) => ({
   runes: {},         // roomId -> "А"
   grains: {},        // roomId -> цифра (само Втора част)
   roomData: {},      // roomId -> произволно състояние на загадката
-  hintsOpened: {},   // roomId -> брой отворени подсказки
+  hintsOpened: {},   // roomId -> списък с индексите на отворените подсказки
   elapsedMs: 0,
   penaltyMs: 0,
   mistakes: 0,
@@ -294,4 +294,25 @@ export function addMistake() { data.mistakes++; save(); }
 
 export function remainingMs() { return Math.max(0, TOTAL_MS - data.elapsedMs - data.penaltyMs); }
 export function usedMs() { return data.elapsedMs + data.penaltyMs; }
-export function hintsUsed() { return Object.values(data.hintsOpened || {}).reduce((a, b) => a + b, 0); }
+/* Подсказките се пазят като списък с индекси, за да може играч, който вече
+   е минал първата стъпка, да отвори направо подсказката за втората.
+   Старите записи са само число („първите n“) и се вдигат наум.        */
+export function openedHints(id) {
+  const v = (data.hintsOpened || {})[id];
+  if (Array.isArray(v)) return v.slice();
+  const n = +v || 0;
+  return Array.from({ length: n }, (_, i) => i);
+}
+
+export function markHintOpened(id, i) {
+  const list = openedHints(id);
+  if (!list.includes(i)) list.push(i);
+  data.hintsOpened = { ...data.hintsOpened, [id]: list };
+  save();
+  return list;
+}
+
+export function hintsUsed() {
+  return Object.values(data.hintsOpened || {})
+    .reduce((a, v) => a + (Array.isArray(v) ? v.length : (+v || 0)), 0);
+}
