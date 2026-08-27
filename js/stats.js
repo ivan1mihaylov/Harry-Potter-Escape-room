@@ -2,14 +2,15 @@
    stats.js — статистиката: кой коя част е минал, за колко
    време, с колко грешки и подсказки.
 
-   Данните са само в браузъра. Своите пробези играта записва
-   сама; чуждите влизат с код за споделяне.
+   Общите данни идват от Google Sheets, а локалният дневник
+   остава резервен вариант при липса на мрежа.
    ============================================================ */
 import { readHistory, importRuns } from './state.js';
 import { ACTS, fmtTime } from './acts.js';
 import { HOUSES } from './art.js';
 import { sfx } from './audio.js';
 import { decodeMany } from './share.js';
+import { loadSharedRuns, mergeRuns } from './shared-stats.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -25,20 +26,23 @@ const GRADE_COLOR = {
 
 let filterAct = 0;      // 0 = всички части
 let filterMine = false;
+let currentRuns = [];
 
 export function renderStats() {
   const host = $('#stats-wrap');
   if (!host) return;
   const all = readHistory();
+  currentRuns = all;
 
   host.innerHTML = `
     <div class="stats-head">
       <p class="tag">Дневник на замъка</p>
       <h1 class="stats-title">Статистика</h1>
-      <p class="muted stats-lead">Какво е изиграно на този браузър — коя част, за колко
+      <p class="muted stats-lead">Общият дневник на всички играчи — коя част, за колко
       време, с колко грешки и подсказки.</p>
+      <p class="muted stats-sync" id="stats-sync">Свързване с дневника на замъка…</p>
     </div>
-    ${all.length ? '' : `<div class="stats-empty">
+    ${all.length ? '' : `<div class="stats-empty" id="stats-empty">
       <p>Още няма записан пробег.</p>
       <p class="muted">Завърши една част и тя ще се появи тук.</p>
     </div>`}
@@ -51,6 +55,22 @@ export function renderStats() {
   drawActs(all);
   drawBoard(all);
   drawRuns(all);
+
+  loadSharedRuns({ refresh: true }).then(shared => {
+    currentRuns = mergeRuns(readHistory(), shared);
+    const sync = $('#stats-sync');
+    if (sync) sync.innerHTML = `Общият дневник е синхронизиран · <b>${shared.length}</b> ${shared.length === 1 ? 'пробег' : 'пробега'}`;
+    redraw(currentRuns);
+  }).catch(() => {
+    const sync = $('#stats-sync');
+    if (sync) sync.textContent = 'Общият дневник не е достъпен. Показани са записите от този браузър.';
+  });
+}
+
+function redraw(all) {
+  const empty = $('#stats-empty');
+  if (empty) empty.hidden = all.length > 0;
+  drawSummary(all); drawActs(all); drawBoard(all); drawRuns(all);
 }
 
 /* ---------------- обобщение ---------------- */
@@ -162,7 +182,7 @@ function drawRuns(all) {
       <h2>Всички пробези <span class="muted">· ${list.length}</span></h2>
       <div class="stats-filters">
         <div class="sf-group" id="sf-act">
-          ${[0, 1, 2, 3, 4].map(a => `<button class="sf-btn${filterAct === a ? ' on' : ''}" data-a="${a}">${
+          ${[0, 1, 2, 3, 4, 5].map(a => `<button class="sf-btn${filterAct === a ? ' on' : ''}" data-a="${a}">${
             a ? 'Част ' + ACTS[a].numeral : 'Всички'}</button>`).join('')}
         </div>
         <button class="sf-btn${filterMine ? ' on' : ''}" id="sf-mine">само моите</button>
@@ -189,11 +209,11 @@ function drawRuns(all) {
     </section>`;
 
   $$('#sf-act .sf-btn').forEach(b => b.addEventListener('click', () => {
-    filterAct = +b.dataset.a; sfx.click(); drawRuns(readHistory());
+    filterAct = +b.dataset.a; sfx.click(); drawRuns(currentRuns);
   }));
   const mine = $('#sf-mine');
   if (mine) mine.addEventListener('click', () => {
-    filterMine = !filterMine; sfx.click(); drawRuns(readHistory());
+    filterMine = !filterMine; sfx.click(); drawRuns(currentRuns);
   });
 }
 
