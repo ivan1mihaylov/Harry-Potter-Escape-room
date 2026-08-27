@@ -12,6 +12,7 @@ const ACT_KEYS = {
 };
 const RECORDS_KEY = 'hogwarts_records_v1';
 const PROFILE_KEY = 'hogwarts_wizard_v1';
+const HISTORY_KEY = 'hogwarts_history_v1';
 
 export const TOTAL_MS = 60 * 60 * 1000;       // 60 минути на част
 export const HINT_PENALTY_MS = 2 * 60 * 1000; // -2 мин за подсказка
@@ -197,9 +198,68 @@ export function writeRecord(a, rec) {
   slot.runs = (slot.runs || 0) + 1;
   all['act' + a] = slot;
   try { localStorage.setItem(RECORDS_KEY, JSON.stringify(all)); } catch (e) {}
+  addRun({
+    name: playerName() || 'Незнаен магьосник',
+    act: a, ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
+    gradeKey: rec.gradeKey, house: rec.house, points: rec.points,
+    at: rec.at, mine: true,
+  });
   return slot;
 }
 export function recordFor(a) { return readRecords()['act' + a] || null; }
+
+/* ============================================================
+   Дневник на всички изиграни части — по един ред на завършване.
+   Тук лежат и чуждите резултати, внесени с код за споделяне.
+   ============================================================ */
+export const HISTORY_MAX = 400;
+
+export function readHistory() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) { return []; }
+}
+
+function writeHistory(list) {
+  const trimmed = list.slice(-HISTORY_MAX);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed)); } catch (e) {}
+  return trimmed;
+}
+
+/* стабилен отпечатък: същият пробег не влиза два пъти */
+export function runId(r) {
+  const key = [r.name || '', r.act, r.ms, r.mistakes, r.hints, Math.round((r.at || 0) / 1000)].join('|');
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
+
+export function addRun(entry) {
+  const list = readHistory();
+  const r = { ...entry, id: runId(entry) };
+  if (list.some(x => x.id === r.id)) return list;
+  list.push(r);
+  return writeHistory(list);
+}
+
+/* внасяне на чужди резултати — връща колко са добавени и колко са били вече тук */
+export function importRuns(entries) {
+  const list = readHistory();
+  const seen = new Set(list.map(x => x.id));
+  let added = 0, dup = 0;
+  entries.forEach(e => {
+    const r = { ...e, id: runId(e) };
+    if (seen.has(r.id)) { dup++; return; }
+    seen.add(r.id);
+    list.push(r);
+    added++;
+  });
+  if (added) writeHistory(list);
+  return { added, dup };
+}
+
+export function clearHistory() { try { localStorage.removeItem(HISTORY_KEY); } catch (e) {} }
 
 /* всяка следваща част се отключва само с отличие в предишната */
 export function isActUnlocked(a) {

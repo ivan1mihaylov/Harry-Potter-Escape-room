@@ -6,7 +6,7 @@ import {
   isSolved, markSolved, getRoomData, setRoomData, addMistake,
   remainingMs, usedMs, hintsUsed, readRecords, writeRecord, recordFor,
   isActUnlocked, TOTAL_MS, WRONG_PENALTY_MS, OUTSTANDING_MS,
-  playerName, playerHouse, hasName, clearProfile, writeProfile,
+  playerName, playerHouse, hasName, clearProfile, writeProfile, clearHistory,
   personalize, personalizeDOM,
 } from './state.js';
 import { ACTS, grade, housePoints, fmtTime } from './acts.js';
@@ -15,6 +15,8 @@ import { sfx, unlockAudio, startAmbient } from './audio.js';
 import * as FX from './fx.js';
 import * as UI from './ui.js';
 import { runSorting, nameFormHTML, wireNameForm } from './sorting.js';
+import { renderStats, importFromHash, copy } from './stats.js';
+import { encodeRun, shareLink } from './share.js';
 import { initBackground, setBgMode, setBgTint } from './three-bg.js';
 import { webglAvailable } from './three-stage.js';
 
@@ -36,6 +38,8 @@ function boot() {
   UI.wireSoundButton();
 
   $('#btn-howto').addEventListener('click', UI.howTo);
+  $('#btn-stats').addEventListener('click', goStats);
+  $('#stats-home').addEventListener('click', goHome);
   $('#btn-wipe').addEventListener('click', wipeAll);
   $('#modal-close').addEventListener('click', UI.closeModal);
   $('#modal-back').addEventListener('click', e => { if (e.target.id === 'modal-back') UI.closeModal(); });
@@ -49,6 +53,11 @@ function boot() {
   });
 
   renderActs();
+  const brought = importFromHash();
+  if (brought) setTimeout(() => {
+    FX.toast(`Внесен${brought > 1 ? 'и са ' + brought + ' резултата' : ' е един резултат'} от връзката.`, 'good', 5000);
+    goStats();
+  }, 900);
   window.addEventListener('beforeunload', saveNow);
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
 }
@@ -167,7 +176,7 @@ function confirmRestart(n) {
 
 function wipeAll() {
   UI.openModal(`<h2>Да изтрия ли всичко?</h2>
-    <p>И четирите части, всички резултати, бележките — а също <b>името и домът ти</b> —
+    <p>И четирите части, статистиката, бележките — а също <b>името и домът ти</b> —
     ще изчезнат като спомен под <em>Обливиате</em>.</p>
     <div class="flex flex-center mt">
       <button class="btn btn-primary btn-sm" id="w-yes" style="background:linear-gradient(180deg,#c4382f,#7d1f1a);border-color:#e0625d;color:#fff">Изтрий всичко</button>
@@ -178,6 +187,7 @@ function wipeAll() {
      'hogwarts_escape_act4_v1', 'hogwarts_records_v1']
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     clearProfile();
+    clearHistory();
     location.reload();
   });
   $('#w-no').addEventListener('click', UI.closeModal);
@@ -270,6 +280,13 @@ function enterAct(n) {
     const first = ROOMS.findIndex(r => !isSolved(r.meta.id));
     mountRoom(first < 0 ? ROOMS.length - 1 : first);
   }, 900);
+}
+
+function goStats() {
+  sfx.click();
+  renderStats();
+  UI.showScreen('screen-stats');
+  setBgMode('dim');
 }
 
 function goHome() {
@@ -451,6 +468,11 @@ function showEnd(rec, g) {
   const A = ACTS[act];
   const house = HOUSES[S.house] || { name: 'Хогуортс' };
   const justUnlocked = act < 4 && rec.outstanding;
+  const shareCode = encodeRun({
+    name: playerName() || 'Незнаен магьосник', act,
+    ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
+    house: S.house, gradeKey: rec.gradeKey, at: rec.at,
+  });
 
   $('#end-wrap').innerHTML = personalize(`
     <div class="end-badge">${crestSVG(S.house)}</div>
@@ -484,6 +506,18 @@ function showEnd(rec, g) {
       <div class="muted" style="width:100%;margin-top:8px;font-size:.9rem">руните, които те изведоха</div>
     </div>
 
+    <div class="share-card">
+      <div class="sc-title">Кодът на този пробег</div>
+      <p class="muted">Играта няма сървър — резултатът пътува като код. Прати го на този,
+      който събира статистиката, и той ще го добави при своите.</p>
+      <div class="sc-code" id="sc-code">${shareCode}</div>
+      <div class="flex flex-center mt">
+        <button class="btn btn-ghost btn-sm" id="sc-copy"><span>Копирай кода</span></button>
+        <button class="btn btn-ghost btn-sm" id="sc-link"><span>Копирай връзка</span></button>
+        <button class="btn btn-ghost btn-sm" id="sc-stats"><span>Виж статистиката</span></button>
+      </div>
+    </div>
+
     <div class="flex flex-center mt-lg">
       <button class="btn btn-primary" id="end-home"><span>Към началото</span></button>
       <button class="btn btn-ghost btn-sm" id="end-again"><span>Изиграй частта отново</span></button>
@@ -491,6 +525,19 @@ function showEnd(rec, g) {
 
   $('#end-home').addEventListener('click', goHome);
   $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
+  $('#sc-stats').addEventListener('click', goStats);
+  $('#sc-copy').addEventListener('click', async () => {
+    sfx.click();
+    const ok = await copy(shareCode);
+    FX.toast(ok ? 'Кодът е в клипборда.' : 'Браузърът не позволи копиране — маркирай кода на ръка.',
+             ok ? 'good' : 'bad');
+  });
+  $('#sc-link').addEventListener('click', async () => {
+    sfx.click();
+    const ok = await copy(shareLink(shareCode));
+    FX.toast(ok ? 'Връзката е в клипборда — който я отвори, внася резултата си сам.'
+                : 'Браузърът не позволи копиране.', ok ? 'good' : 'bad');
+  });
   if (justUnlocked) setTimeout(() => FX.celebrate(4), 600);
 }
 
