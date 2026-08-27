@@ -103,3 +103,53 @@
 .near-btn.wide{display:flex;align-items:center;gap:8px;font-size:.82rem}
 .near-btn.wide i{font-style:normal;font-size:.7rem;color:#e0c88a;
   border:1px solid rgba(224,200,140,.4);border-radius:5px;padding:0 .35em}
+
+/* ============================================================
+   Преход между поляните на Трета част — гората се затваря
+   ============================================================ */
+body[data-act="3"] .door {
+  background:
+    url('../assets/trans-trunks.svg') center bottom / auto 108% repeat-x,
+    radial-gradient(ellipse at 50% 118%, rgba(48,104,68,.07), transparent 58%),
+    linear-gradient(180deg, #071009 0%, #040a06 55%, #020503 100%);
+  box-shadow: inset 0 0 150px rgba(0,0,0,.92);
+}
+body[data-act="3"] .door-edge {
+  width: 3px;
+  background: linear-gradient(180deg, transparent, rgba(159,240,176,.55) 30%, rgba(159,240,176,.55) 70%, transparent);
+  box-shadow: 0 0 18px rgba(120,220,150,.35);
+}
+
+/* короните се спускат отгоре, докато пътеката се затваря */
+body[data-act="3"] .door::after {
+  content: '';
+  position: absolute; left: -3%; right: -3%; top: 0;
+  height: 44%;
+  background: url('../assets/trans-canopy.svg') top center / 100% 100% no-repeat;
+  transform: translateY(-100%);
+  animation: canopyDrop 2.1s cubic-bezier(.5,0,.3,1) both;
+}
+@keyframes canopyDrop {
+  0%       { transform: translateY(-100%); }
+  46%, 56% { transform: translateY(0); }
+  100%     { transform: translateY(-100%); }
+}
+
+/* светулки между стволовете */
+body[data-act="3"] .trans-motes {
+  background-image:
+    radial-gradient(circle at 16% 34%, rgba(159,240,176,.95) 0 1.8px, transparent 2.3px),
+    radial-gradient(circle at 64% 12%, rgba(200,255,214,.7) 0 1.3px, transparent 1.8px),
+    radial-gradient(circle at 41% 79%, rgba(140,230,170,.55) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 88% 51%, rgba(180,250,196,.6) 0 1.1px, transparent 1.6px),
+    radial-gradient(circle at 29% 93%, rgba(159,240,176,.45) 0 1.6px, transparent 2.1px),
+    radial-gradient(circle at 73% 66%, rgba(210,255,222,.5) 0 1.0px, transparent 1.5px);
+  background-size: 347px 347px, 347px 347px, 347px 347px, 211px 211px, 211px 211px, 211px 211px;
+  animation: firefliesDrift 2.1s ease-in-out both;
+}
+@keyframes firefliesDrift {
+  0%   { opacity: 0; background-position: 0 80px, 0 80px, 0 80px, 0 46px, 0 46px, 0 46px; }
+  40%  { opacity: .95; }
+  62%  { opacity: .75; }
+  100% { opacity: 0; background-position: -52px -96px, -52px -96px, -52px -96px, 26px -142px, 26px -142px, 26px -142px; }
+}
