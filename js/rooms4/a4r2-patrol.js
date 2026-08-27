@@ -18,7 +18,7 @@ export const meta = {
   hints: [
     'Студът се усеща <b>една клетка около</b> диментора — на плочата му и на четирите ѝ съседки. Червените плочи на картата показват къде ще е студът <b>след следващия ти ход</b>.',
     'Чакането на място е пълноценен ход. Двата патрула се повтарят на всеки <b>осем хода</b> — застани на безопасна плоча и ги изчакай да се разминат.',
-    'Пътят е 23 хода: изчакай <b>четири</b> хода на входа, мини надясно по долния ред до десния ръб, изкачи се и <b>изчакай шест хода</b>, преди да продължиш нагоре — после излез вляво в колона 5 и се качи до стълбите.',
+    'Долният ред е задънен — плочата вдясно от входа е зид. Пътят е <b>23 хода</b>: една стъпка <b>нагоре</b> и <b>чакай четири</b>; после <b>шест пъти надясно</b> до десния ръб; <b>чакай един</b> ход и се качи <b>два нагоре</b>; там <b>чакай четири</b>; после <b>нагоре</b>, <b>наляво</b>, <b>два пъти нагоре</b> и последната стъпка е <b>надясно</b> — на стълбите.',
   ],
 };
 
@@ -47,6 +47,7 @@ export function mount(root, api) {
           <div class="patrol-legend">
             <span><i class="pl-me"></i>ти</span>
             <span><i class="pl-cold"></i>студ след хода</span>
+            <span><i class="pl-trap"></i>капан — няма изход</span>
             <span><i class="pl-wall"></i>зид</span>
             <span><i class="pl-goal"></i>стълбите</span>
           </div>
@@ -107,6 +108,26 @@ function coldAt(t) {
   return s;
 }
 
+/* Плочи, които изглеждат безопасни сега, но от които през следващия
+   ход няма накъде — дори чакането на място е студ. Играчът няма как
+   да ги пресметне наум от картата, затова ги показваме. */
+function trapsAt(t) {
+  const soon = coldAt(t + 1);
+  const later = coldAt(t + 2);
+  const out = new Set();
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const k = x + ',' + y;
+    if (isWall(x, y) || soon.has(k)) continue;
+    if (x === GOAL.x && y === GOAL.y) continue;   // стъпиш ли на стълбите, вече си минал
+    const escape = Object.values(DIRS).some(([dx, dy]) => {
+      const nx = x + dx, ny = y + dy;
+      return inside(nx, ny) && !isWall(nx, ny) && !later.has(nx + ',' + ny);
+    });
+    if (!escape) out.add(k);
+  }
+  return out;
+}
+
 function step(api, dir) {
   const d = api.data;
   if (d.crossed) return;
@@ -145,6 +166,7 @@ function draw(api) {
   const box = $('#patrol-map'); if (!box) return;
   const cold = coldAt(d.t + 1);
   const now = coldAt(d.t);
+  const traps = trapsAt(d.t);
   let html = '';
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     const k = x + ',' + y;
@@ -152,12 +174,18 @@ function draw(api) {
       isWall(x, y) ? 'wall' : '',
       cold.has(k) ? 'cold' : '',
       now.has(k) ? 'cold-now' : '',
+      traps.has(k) ? 'trap' : '',
       d.x === x && d.y === y ? 'me' : '',
       GOAL.x === x && GOAL.y === y ? 'goal' : '',
     ].filter(Boolean).join(' ');
     const dm = PATROLS.some(r => { const c = r[d.t % r.length]; return c[0] === x && c[1] === y; });
-    html += `<div class="pm-cell ${cls}" data-x="${x}" data-y="${y}">${
-      isWall(x, y) ? '' : dm ? '☠' : d.x === x && d.y === y ? '✦' : GOAL.x === x && GOAL.y === y ? '⌂' : ''}</div>`;
+    const glyph = isWall(x, y) ? ''
+      : dm ? '☠'
+      : d.x === x && d.y === y ? '✦'
+      : GOAL.x === x && GOAL.y === y ? '⌂'
+      : traps.has(k) ? '!' : '';
+    const tip = traps.has(k) ? ' title="капан: оттук няма измъкване следващия ход"' : '';
+    html += `<div class="pm-cell ${cls}" data-x="${x}" data-y="${y}"${tip}>${glyph}</div>`;
   }
   box.innerHTML = html;
   $$('.pm-cell', box).forEach(c => c.addEventListener('click', () => {
@@ -255,8 +283,9 @@ async function boot(api) {
       if (o.g.userData.animate) o.g.userData.animate(t + i * 1.7);
     });
     const cold = coldAt(d.t + 1);
+    const traps = trapsAt(d.t);
     tileMap.forEach((m, k) => {
-      const want = cold.has(k) ? 0x3a1f28 : 0x1b1f27;
+      const want = cold.has(k) ? 0x3a1f28 : traps.has(k) ? 0x3a331c : 0x1b1f27;
       m.material.color.lerp(new T.Color(want), 0.08);
     });
   });

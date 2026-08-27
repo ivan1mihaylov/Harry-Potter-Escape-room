@@ -451,3 +451,13 @@ body[data-act="4"] .transition-text {
   color: #dbe6f5;
   text-shadow: 0 0 30px rgba(160,195,245,.55), 0 2px 18px rgba(0,0,0,.9);
 }
+
+/* плочи, които изглеждат безопасни, но нямат изход следващия ход */
+.pm-cell.trap {
+  background: rgba(120, 96, 20, .32);
+  border-color: rgba(224, 179, 42, .5);
+  color: #e0b32a;
+  font-weight: 700;
+}
+.pm-cell.trap.cold { background: rgba(120, 30, 60, .35); color: #b8c8e0; }
+.pl-trap { background: rgba(224, 179, 42, .65); }
