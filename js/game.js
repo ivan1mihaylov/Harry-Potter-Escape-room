@@ -15,7 +15,7 @@ import { sfx, unlockAudio, startAmbient } from './audio.js';
 import * as FX from './fx.js';
 import * as UI from './ui.js';
 import { runSorting, nameFormHTML, wireNameForm } from './sorting.js';
-import { renderStats, importFromHash, copy } from './stats.js';
+import { renderStats, importFromHash } from './stats.js';
 import { encodeRun, shareLink } from './share.js';
 import { sendRun, flushOutbox, isConfigured, clearOutbox } from './collect.js';
 import { initBackground, setBgMode, setBgTint } from './three-bg.js';
@@ -530,15 +530,17 @@ function showEnd(rec, g) {
     </div>
 
     <div class="share-card">
-      <div class="sc-title">Кодът на този пробег</div>
-      <p class="muted">${isConfigured()
-        ? 'Резултатът тръгва сам към дневника на замъка. Кодът отдолу е резервният път — ако мрежата е капризна, прати него.'
-        : 'Играта няма сървър — резултатът пътува като код. Прати го на този, който събира статистиката, и той ще го добави при своите.'}</p>
       <div class="sc-sent" id="sc-sent" hidden></div>
-      <div class="sc-code" id="sc-code">${shareCode}</div>
+      ${isConfigured() ? '' : `
+        <div class="sc-title">Кодът на този пробег</div>
+        <p class="muted">Играта няма сървър — резултатът пътува като код. Прати го на този,
+        който събира статистиката.</p>
+        <div class="sc-code" id="sc-code">${shareCode}</div>
+        <div class="flex flex-center mt">
+          <button class="btn btn-ghost btn-sm" id="sc-copy"><span>Копирай кода</span></button>
+          <button class="btn btn-ghost btn-sm" id="sc-link"><span>Копирай връзка</span></button>
+        </div>`}
       <div class="flex flex-center mt">
-        <button class="btn btn-ghost btn-sm" id="sc-copy"><span>Копирай кода</span></button>
-        <button class="btn btn-ghost btn-sm" id="sc-link"><span>Копирай връзка</span></button>
         <button class="btn btn-ghost btn-sm" id="sc-stats"><span>Виж статистиката</span></button>
       </div>
     </div>
@@ -552,15 +554,17 @@ function showEnd(rec, g) {
   $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
   paintSendState();
   $('#sc-stats').addEventListener('click', goStats);
-  $('#sc-copy').addEventListener('click', async () => {
+  const scCopy = $('#sc-copy');
+  if (scCopy) scCopy.addEventListener('click', async () => {
     sfx.click();
-    const ok = await copy(shareCode);
+    const ok = await copyText(shareCode);
     FX.toast(ok ? 'Кодът е в клипборда.' : 'Браузърът не позволи копиране — маркирай кода на ръка.',
              ok ? 'good' : 'bad');
   });
-  $('#sc-link').addEventListener('click', async () => {
+  const scLink = $('#sc-link');
+  if (scLink) scLink.addEventListener('click', async () => {
     sfx.click();
-    const ok = await copy(shareLink(shareCode));
+    const ok = await copyText(shareLink(shareCode));
     FX.toast(ok ? 'Връзката е в клипборда — който я отвори, внася резултата си сам.'
                 : 'Браузърът не позволи копиране.', ok ? 'good' : 'bad');
   });
@@ -611,6 +615,21 @@ function grainsBlock() {
     <b>Хроноворота</b> — и се разместват след всяко надникване. Записвай ги по-долу, докато ги помниш.</p>
     ${rows.map(x => `<div class="ng-row"><b>◆</b><span>${x.title}</span></div>`).join('')}
   </div>`;
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e2) { return false; }
+  }
 }
 
 /* ---------- дребна графика ---------- */

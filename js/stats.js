@@ -5,14 +5,11 @@
    Данните са само в браузъра. Своите пробези играта записва
    сама; чуждите влизат с код за споделяне.
    ============================================================ */
-import { readHistory, importRuns, clearHistory, playerName } from './state.js';
-import { ACTS, grade, fmtTime } from './acts.js';
+import { readHistory, importRuns } from './state.js';
+import { ACTS, fmtTime } from './acts.js';
 import { HOUSES } from './art.js';
-import { encodeRun, decodeMany, shareLink } from './share.js';
-import { isConfigured, activeForm, parsePrefilled, configSnippet,
-         saveLocalForm, clearLocalForm, outboxSize, flushOutbox } from './collect.js';
 import { sfx } from './audio.js';
-import { toast } from './fx.js';
+import { decodeMany } from './share.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -28,7 +25,6 @@ const GRADE_COLOR = {
 
 let filterAct = 0;      // 0 = всички части
 let filterMine = false;
-let importNote = null;  // преживява преначертаването след внасяне
 
 export function renderStats() {
   const host = $('#stats-wrap');
@@ -39,26 +35,22 @@ export function renderStats() {
     <div class="stats-head">
       <p class="tag">Дневник на замъка</p>
       <h1 class="stats-title">Статистика</h1>
-      <p class="muted stats-lead">Всичко тук живее в този браузър. Своите пробези играта
-      записва сама; чуждите се внасят с код — затова не е нужна база данни.</p>
+      <p class="muted stats-lead">Какво е изиграно на този браузър — коя част, за колко
+      време, с колко грешки и подсказки.</p>
     </div>
     ${all.length ? '' : `<div class="stats-empty">
       <p>Още няма записан пробег.</p>
-      <p class="muted">Завърши една част или внеси чужд резултат по-долу.</p>
+      <p class="muted">Завърши една част и тя ще се появи тук.</p>
     </div>`}
     <div id="stats-summary"></div>
     <div id="stats-acts"></div>
     <div id="stats-board"></div>
-    <div id="stats-runs"></div>
-    <div id="stats-collect"></div>
-    <div id="stats-io"></div>`;
+    <div id="stats-runs"></div>`;
 
   drawSummary(all);
   drawActs(all);
   drawBoard(all);
   drawRuns(all);
-  drawCollect();
-  drawIO(all);
 }
 
 /* ---------------- обобщение ---------------- */
@@ -205,205 +197,7 @@ function drawRuns(all) {
   });
 }
 
-/* ---------------- автоматично събиране ---------------- */
-function drawCollect() {
-  const box = $('#stats-collect'); if (!box) return;
-  const on = isConfigured();
-  const cfg = activeForm();
-  const queued = outboxSize();
-
-  box.innerHTML = `
-    <section class="stats-card collect">
-      <h2>Автоматично събиране</h2>
-      ${on ? `
-        <p class="col-on">Включено. Всеки завършен пробег тръгва сам към твоята
-        Google Форма и се появява в прикачената таблица.</p>
-        <div class="col-url">${esc(cfg.url)}</div>
-        ${queued ? `<p class="muted">Чакат изпращане: <b>${queued}</b> — ще тръгнат при следващо отваряне.</p>` : ''}
-        <div class="flex flex-center mt">
-          <button class="btn btn-ghost btn-sm" id="col-flush"><span>Изпрати чакащите</span></button>
-          <button class="btn btn-ghost btn-sm" id="col-again"><span>Настрой отново</span></button>
-        </div>
-      ` : `
-        <p class="muted">Играта може да праща всеки завършен пробег направо в твоя
-        Google Sheet. Google Формата приема заявката от браузъра на играча — затова
-        не ти трябва нито сървър, нито база данни.</p>
-      `}
-      <details class="col-setup"${on ? '' : ' open'}>
-        <summary>Как се настройва (веднъж, около пет минути)</summary>
-        <ol class="col-steps">
-          <li>Направи нова <b>Google Форма</b> с <b>осем</b> въпроса от вида
-            «кратък отговор», точно в този ред:
-            <span class="col-fields">Име · Част · Секунди · Грешки · Подсказки · Оценка · Дом · Дата</span>
-          </li>
-          <li>От менюто ⋮ горе вдясно избери <b>«Get pre-filled link»</b>
-            (Вземи предварително попълнена връзка).</li>
-          <li>В осемте полета напиши просто <b>1, 2, 3, 4, 5, 6, 7, 8</b> — по едно число
-            във всяко, по реда отгоре. Натисни <b>Get link</b> и копирай.</li>
-          <li>Залепи връзката тук:</li>
-        </ol>
-        <input class="col-input" id="col-link" spellcheck="false"
-               placeholder="https://docs.google.com/forms/d/e/…/viewform?usp=pp_url&amp;entry.…=1&amp;…">
-        <div class="flex flex-center mt">
-          <button class="btn btn-house btn-sm" id="col-go"><span>Свържи</span></button>
-          <span class="imp-note" id="col-note"></span>
-        </div>
-        <div id="col-out"></div>
-      </details>
-    </section>`;
-
-  const flush = $('#col-flush');
-  if (flush) flush.addEventListener('click', async () => {
-    sfx.click();
-    const n = await flushOutbox();
-    toast(n ? `Изпратени: ${n}.` : 'Нямаше какво да се изпраща.', n ? 'good' : '');
-    renderStats();
-  });
-
-  const again = $('#col-again');
-  if (again) again.addEventListener('click', () => {
-    if (!confirm('Да изключа ли събирането на този браузър?')) return;
-    clearLocalForm(); sfx.click(); renderStats();
-  });
-
-  const go = $('#col-go');
-  if (go) go.addEventListener('click', () => {
-    const note = $('#col-note');
-    const res = parsePrefilled($('#col-link').value);
-    if (res.error) {
-      note.textContent = res.error;
-      note.className = 'imp-note bad';
-      sfx.bad();
-      return;
-    }
-    saveLocalForm(res.cfg);
-    sfx.chime();
-    note.textContent = 'Готово — на този браузър вече е включено.';
-    note.className = 'imp-note good';
-    const snippet = configSnippet(res.cfg);
-    $('#col-out').innerHTML = `
-      <p class="col-final">Остава едно нещо: за да праща <b>и от чуждите браузъри</b>,
-      залепи това в <code>js/collect.js</code> (върху сегашния <code>export const FORM</code>)
-      и качи промяната.</p>
-      <pre class="col-code" id="col-code">${esc(snippet)}</pre>
-      <div class="flex flex-center mt">
-        <button class="btn btn-ghost btn-sm" id="col-copy"><span>Копирай блока</span></button>
-      </div>`;
-    $('#col-copy').addEventListener('click', async () => {
-      toast(await copy(snippet) ? 'Блокът е в клипборда.' : 'Браузърът не позволи копиране.',
-            'good');
-    });
-  });
-}
-
-/* ---------------- внасяне и износ ---------------- */
-function drawIO(all) {
-  const box = $('#stats-io'); if (!box) return;
-  const myRuns = all.filter(r => r.mine);
-  const keepText = (document.getElementById('imp-box') || {}).value || '';
-  box.innerHTML = `
-    <section class="stats-card">
-      <h2>Чужди резултати</h2>
-      <p class="muted">Играта няма сървър, затова резултатите пътуват на ръка: играчът
-      копира кода си от финалния екран и ти го праща. Постави го тук — може и няколко
-      наведнъж, може и цял разговор, кодовете се намират сами.</p>
-      <textarea id="imp-box" class="imp-box" spellcheck="false"
-        placeholder="HOG1.…">${importNote && importNote.kind === 'good' ? '' : esc(keepText)}</textarea>
-      <div class="flex flex-center mt">
-        <button class="btn btn-house btn-sm" id="imp-go"><span>Внеси</span></button>
-        <span class="imp-note${importNote ? ' ' + importNote.kind : ''}" id="imp-note">${
-          importNote ? esc(importNote.text) : ''}</span>
-      </div>
-    </section>
-
-    <section class="stats-card">
-      <h2>Изнасяне</h2>
-      <p class="muted">За да пренесеш дневника на друг браузър или да го отвориш в таблица.</p>
-      <div class="flex flex-center mt">
-        <button class="btn btn-ghost btn-sm" id="exp-csv"><span>Свали CSV</span></button>
-        <button class="btn btn-ghost btn-sm" id="exp-codes"
-          ${myRuns.length ? '' : 'disabled'}><span>Копирай моите кодове</span></button>
-        <button class="btn btn-ghost btn-sm" id="exp-wipe"
-          ${all.length ? '' : 'disabled'}><span>Изчисти дневника</span></button>
-      </div>
-    </section>`;
-
-  $('#imp-go').addEventListener('click', () => {
-    const { runs, seen } = decodeMany($('#imp-box').value);
-    if (!seen) {
-      importNote = { text: 'Не намерих нито един код.', kind: 'bad' };
-      sfx.bad();
-      paintNote();
-      return;
-    }
-    const { added, dup } = importRuns(runs);
-    const broken = seen - runs.length;
-    importNote = {
-      kind: added ? 'good' : 'bad',
-      text: [
-        added ? `внесени: ${added}` : 'нищо ново',
-        dup ? `вече ги имаше: ${dup}` : '',
-        broken ? `счупени: ${broken}` : '',
-      ].filter(Boolean).join(' · '),
-    };
-    if (added) { sfx.chime(); renderStats(); }
-    else { sfx.bad(); paintNote(); }
-  });
-
-  $('#exp-csv').addEventListener('click', () => { sfx.click(); downloadCSV(readHistory()); });
-
-  $('#exp-codes').addEventListener('click', async () => {
-    const codes = readHistory().filter(r => r.mine).map(encodeRun).join('\n');
-    if (await copy(codes)) { sfx.chime(); toast('Кодовете са в клипборда.', 'good'); }
-    else toast('Браузърът не позволи копиране.', 'bad');
-  });
-
-  $('#exp-wipe').addEventListener('click', () => {
-    if (!confirm('Да изтрия ли целия дневник със статистиката? Записаните части остават.')) return;
-    clearHistory(); sfx.door(); renderStats();
-  });
-}
-
-function paintNote() {
-  const note = $('#imp-note');
-  if (!note || !importNote) return;
-  note.textContent = importNote.text;
-  note.className = 'imp-note ' + importNote.kind;
-}
-
 /* ---------------- помощни ---------------- */
-export async function copy(text) {
-  try { await navigator.clipboard.writeText(text); return true; }
-  catch (e) {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta); ta.select();
-      const ok = document.execCommand('copy');
-      ta.remove();
-      return ok;
-    } catch (e2) { return false; }
-  }
-}
-
-function downloadCSV(list) {
-  const head = ['име', 'част', 'заглавие', 'време', 'секунди', 'грешки', 'подсказки', 'оценка', 'дом', 'дата'];
-  const rows = list.slice().sort((a, b) => (a.at || 0) - (b.at || 0)).map(r => [
-    r.name, r.act, ACTS[r.act].title, fmtTime(r.ms), Math.round(r.ms / 1000),
-    r.mistakes, r.hints, GRADE_LABEL[r.gradeKey] || '', (HOUSES[r.house] || {}).name || '',
-    new Date(r.at || 0).toISOString().slice(0, 16).replace('T', ' '),
-  ]);
-  const csv = '﻿' + [head, ...rows]
-    .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `hogwarts-статистика-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
-
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

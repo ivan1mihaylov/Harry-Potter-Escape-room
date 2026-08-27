@@ -715,17 +715,6 @@ body[data-act="3"]{background:#050906}
 .bl-time{font-family:var(--font-head);color:var(--gold-100);font-size:.9rem}
 .bl-grade{width:8px;height:8px;border-radius:50%;background:var(--gc);flex:none}
 
-.imp-box{
-  width:100%;min-height:110px;margin-top:12px;padding:12px 14px;
-  border:1px solid rgba(217,180,91,.25);border-radius:10px;
-  background:rgba(0,0,0,.4);color:var(--parch);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
-  line-height:1.5;resize:vertical
-}
-.imp-box:focus{outline:none;border-color:var(--gold)}
-.imp-note{font-size:.84rem;color:var(--parch-dim)}
-.imp-note.good{color:#7fd6a1}
-.imp-note.bad{color:#e0625d}
 
 /* ---------- състояние на изпращането ---------- */
 .sc-sent{
@@ -735,35 +724,3 @@ body[data-act="3"]{background:#050906}
 .sc-sent.sent{color:#7fd6a1;border-color:rgba(127,214,161,.3);background:rgba(40,90,64,.18)}
 .sc-sent.queued{color:#e0b32a;border-color:rgba(224,179,42,.3);background:rgba(90,72,20,.18)}
 .sc-sent[hidden]{display:none}
-
-/* ---------- настройка на автоматичното събиране ---------- */
-.collect .col-on{color:#7fd6a1;font-size:.94rem}
-.col-url{
-  margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.4);
-  border:1px solid rgba(217,180,91,.18);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:.72rem;color:var(--parch-dim);word-break:break-all
-}
-.col-setup{margin-top:14px;border-top:1px solid rgba(217,180,91,.14);padding-top:12px}
-.col-setup summary{cursor:pointer;color:var(--gold);font-size:.88rem;letter-spacing:.04em}
-.col-setup summary::marker{color:var(--gold-dark)}
-.col-steps{margin:12px 0;padding-left:1.3em;line-height:1.75;font-size:.92rem}
-.col-steps li{margin-bottom:6px}
-.col-fields{
-  display:block;margin-top:5px;padding:7px 10px;border-radius:8px;
-  background:rgba(217,180,91,.08);border:1px solid rgba(217,180,91,.2);
-  font-size:.84rem;color:var(--gold-100)
-}
-.col-input{
-  width:100%;margin-top:6px;padding:11px 13px;border-radius:10px;
-  border:1px solid rgba(217,180,91,.25);background:rgba(0,0,0,.4);color:var(--parch);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.78rem
-}
-.col-input:focus{outline:none;border-color:var(--gold)}
-.col-final{margin-top:16px;font-size:.92rem}
-.col-code{
-  margin-top:8px;padding:12px 14px;border-radius:10px;overflow-x:auto;
-  background:rgba(0,0,0,.5);border:1px solid rgba(217,180,91,.2);
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:.74rem;line-height:1.6;color:var(--gold-100);white-space:pre
-}
