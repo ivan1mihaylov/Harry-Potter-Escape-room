@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/rooms.css">
+<link rel="stylesheet" href="css/rooms2.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9889;</text></svg>">
 </head>
 <body data-house="none">
@@ -24,21 +25,27 @@
   <div class="intro-wrap">
     <div class="crest-big" id="intro-crest"></div>
     <h1 class="title-main">Ключалката на <span>Хогуортс</span></h1>
-    <p class="title-sub">магическа ескейп стая · десет зали · девет руни · шестдесет минути</p>
+    <p class="title-sub">магическа ескейп стая в две части</p>
 
-    <div class="scroll-panel" id="intro-story">
-      <p class="drop">Часовникът удари полунощ, а ти още си в замъка.</p>
-      <p>Вратите се затвориха с звук, който не издава дърво, а магия. По стените плъзна сребрист печат — <em>Обвързващото заклинание на Основателите</em>. То се задейства веднъж на сто години и пуска навън само онзи, който премине през девет зали и възстанови <strong>Ключовото Слово</strong>.</p>
-      <p>Във всяка зала те чака по една руна. Девет руни. Едно заклинание. Ако до изгрев не го изречеш пред Огледалото Еиналеж — Хогуортс ще те задържи като още един портрет по стените си.</p>
-      <p class="whisper">„Помощ винаги ще бъде дадена в Хогуортс на онези, които я поискат.“</p>
-    </div>
+    <div class="acts" id="acts"></div>
 
     <div class="intro-actions">
-      <button class="btn btn-primary" id="btn-begin"><span>Отвори портата</span></button>
-      <button class="btn btn-ghost" id="btn-continue" hidden><span>Продължи играта</span></button>
       <button class="btn btn-ghost" id="btn-howto"><span>Как се играе</span></button>
+      <button class="btn btn-ghost" id="btn-wipe"><span>Изтрий всичко</span></button>
     </div>
-    <p class="tiny-note">Напредъкът се пази в твоя браузър. Няма сървър, няма база данни — само магия и <code>localStorage</code>.</p>
+    <p class="tiny-note">Напредъкът и резултатите се пазят в твоя браузър. Няма сървър, няма база данни — само магия и <code>localStorage</code>.</p>
+  </div>
+</section>
+
+<!-- ============ ЕКРАН: ПРОЛОГ НА ЧАСТТА ============ -->
+<section id="screen-story" class="screen">
+  <div class="intro-wrap">
+    <div class="story-numeral" id="story-numeral">II</div>
+    <h2 class="story-title" id="story-title"></h2>
+    <div class="scroll-panel" id="story-body"></div>
+    <div class="intro-actions">
+      <button class="btn btn-primary" id="story-go"><span>Слез надолу</span></button>
+    </div>
   </div>
 </section>
 
@@ -63,8 +70,9 @@
       <div class="hud-crest" id="hud-crest" title="Твоят дом"></div>
       <div class="hud-house">
         <span class="hud-house-name" id="hud-house-name">—</span>
-        <span class="hud-chapter" id="hud-chapter">Зала 1 / 9</span>
+        <span class="hud-chapter" id="hud-chapter">Зала 1 / 10</span>
       </div>
+      <span class="act-badge" id="act-badge">I</span>
     </div>
 
     <div class="hud-center">
@@ -79,6 +87,7 @@
 
     <div class="hud-right">
       <div class="runes" id="runes-tray" title="Събрани руни"></div>
+      <div class="grains-tray" id="grains-tray" title="Зърна пясък" hidden></div>
       <div class="hud-buttons">
         <button class="icon-btn" id="btn-hint" title="Подсказка (–2 минути)">
           <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-4 12.7V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 2Z"/><path d="M9 21h6"/></svg>

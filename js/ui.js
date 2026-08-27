@@ -14,6 +14,28 @@ export function showScreen(id) {
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
 
+/* ---------------- частта ---------------- */
+let ACT = null;
+export function setAct(a) {
+  ACT = a;
+  const b = $('#act-badge');
+  if (b) { b.textContent = a.numeral; b.title = a.title; }
+  document.body.dataset.act = a.id;
+}
+
+/* ---------------- зърна пясък ---------------- */
+export function renderGrains(rooms, show) {
+  const tray = $('#grains-tray');
+  if (!tray) return;
+  tray.hidden = !show;
+  if (!show) return;
+  const withGrain = rooms.filter(r => r.meta.grain != null);
+  tray.innerHTML = withGrain.map(r => {
+    const got = S.grains[r.meta.id];
+    return `<span class="grain-slot${got != null ? ' filled' : ''}" title="${r.meta.title}">${got != null ? got : '·'}</span>`;
+  }).join('');
+}
+
 /* ---------------- герб и дом ---------------- */
 export function paintHouse() {
   const h = S.house;
@@ -171,15 +193,17 @@ export function openNotes() {
 }
 
 /* ---------------- меню ---------------- */
-export function openMenu({ onReset, onSkip }) {
+export function openMenu({ onReset, onHome }) {
   openModal(`
     <h2>Меню на замъка</h2>
     <div class="flex" style="flex-direction:column;gap:10px;margin-top:14px">
+      <button class="btn btn-ghost btn-sm" id="m-home">Към началния екран</button>
       <button class="btn btn-ghost btn-sm" id="m-howto">Как се играе</button>
       <button class="btn btn-ghost btn-sm" id="m-credits">За тази стая</button>
-      <button class="btn btn-ghost btn-sm" id="m-reset" style="border-color:rgba(224,98,93,.5);color:#ffb9b6">Изтрий напредъка и започни отначало</button>
+      <button class="btn btn-ghost btn-sm" id="m-reset" style="border-color:rgba(224,98,93,.5);color:#ffb9b6">Изтрий тази част и започни отначало</button>
     </div>
     <p class="muted mt" style="font-size:.85rem">Играта се записва автоматично. Можеш да затвориш раздела и да се върнеш по-късно.</p>`);
+  $('#m-home').addEventListener('click', onHome);
   $('#m-howto').addEventListener('click', howTo);
   $('#m-credits').addEventListener('click', credits);
   $('#m-reset').addEventListener('click', () => {
@@ -195,12 +219,13 @@ export function howTo() {
   openModal(`
     <h2>Как се играе</h2>
     <ul style="padding-left:1.2em;line-height:1.75">
-      <li><b>Девет зали, девет руни.</b> Всяка решена загадка ти дава по една буква-руна.</li>
+      <li><b>Две части.</b> Първа част са десет зали. Втора се отключва само с оценка «Изключителна» в Първа — и е доста по-тежка, с триизмерни загадки.</li>
+      <li><b>Всяка решена зала дава руна.</b> Накрая руните се пренареждат в едно заклинание.</li>
       <li><b>Шестдесет минути.</b> Часовникът тече само докато играеш и се пази между посещенията.</li>
       <li><b>Подсказки.</b> Бутонът с крушката дава по една подсказка срещу 2 минути.</li>
       <li><b>Грешките болят.</b> Някои погрешни действия отнемат по 30 секунди.</li>
       <li><b>Бележникът</b> (иконата с листа) пази записките ти — ще ти трябва.</li>
-      <li><b>Финалът.</b> Деветте руни се пренареждат в едно заклинание пред Огледалото Еиналеж.</li>
+      <li><b>Зърната пясък</b> (само във Втора част) са цифри — ще ти потрябват накрая.</li>
     </ul>
     <p class="muted">Съвет: почти всяка загадка има връзка със света на Хари Потър. Ако си спомниш книгата — печелиш минути.</p>
     <div class="flex flex-center mt"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-back').classList.remove('open')">Разбрах</button></div>`);

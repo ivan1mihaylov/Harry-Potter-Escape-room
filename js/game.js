@@ -1,44 +1,40 @@
 /* ============================================================
-   game.js — оркестраторът на цялата ескейп стая
+   game.js — оркестраторът на двете части
    ============================================================ */
-import { S, save, saveNow, reset, hasSave, isSolved, markSolved, getRoomData, setRoomData,
-         addMistake, remainingMs, usedMs, TOTAL_MS, WRONG_PENALTY_MS } from './state.js';
+import {
+  S, save, saveNow, reset, useAct, currentAct, hasSaveFor, peek,
+  isSolved, markSolved, getRoomData, setRoomData, addMistake,
+  remainingMs, usedMs, hintsUsed, readRecords, writeRecord, recordFor,
+  isActUnlocked, TOTAL_MS, WRONG_PENALTY_MS, OUTSTANDING_MS,
+} from './state.js';
+import { ACTS, grade, housePoints, fmtTime } from './acts.js';
 import { HOUSES, crestSVG } from './art.js';
-import { sfx, unlockAudio, startAmbient, isEnabled, setEnabled } from './audio.js';
+import { sfx, unlockAudio, startAmbient } from './audio.js';
 import * as FX from './fx.js';
 import * as UI from './ui.js';
 import { runSorting } from './sorting.js';
 import { initBackground, setBgMode, setBgTint } from './three-bg.js';
-
-import * as R1 from './rooms/r1-platform.js';
-import * as R2 from './rooms/r2-greathall.js';
-import * as R3 from './rooms/r3-potions.js';
-import * as R4 from './rooms/r4-library.js';
-import * as R5 from './rooms/r5-astronomy.js';
-import * as R6 from './rooms/r6-dada.js';
-import * as R7 from './rooms/r7-chamber.js';
-import * as R8 from './rooms/r8-gringotts.js';
-import * as R9 from './rooms/r9-diary.js';
-import * as R10 from './rooms/r10-mirror.js';
-
-const ROOMS = [R1, R2, R3, R4, R5, R6, R7, R8, R9, R10];
-const RUNE_ROOMS = ROOMS.filter(r => r.meta.rune);
+import { webglAvailable } from './three-stage.js';
 
 const $ = (s) => document.querySelector(s);
+
+let ROOMS = [];
+let RUNE_ROOMS = [];
 let current = 0;
 let currentApi = null;
+let act = 1;
 
 /* ============================================================
    Начало
    ============================================================ */
 function boot() {
   FX.initDust();
-  initBackground().then(() => { setBgMode('dim'); });
+  initBackground().then(() => setBgMode('dim'));
   UI.paintHouse();
   UI.wireSoundButton();
 
-  $('#btn-begin').addEventListener('click', () => { unlockAudio(); startAmbient(); newGame(); });
   $('#btn-howto').addEventListener('click', UI.howTo);
+  $('#btn-wipe').addEventListener('click', wipeAll);
   $('#modal-close').addEventListener('click', UI.closeModal);
   $('#modal-back').addEventListener('click', e => { if (e.target.id === 'modal-back') UI.closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') UI.closeModal(); });
@@ -47,66 +43,195 @@ function boot() {
   $('#btn-notes').addEventListener('click', () => { sfx.click(); UI.openNotes(); });
   $('#btn-menu').addEventListener('click', () => {
     sfx.click();
-    UI.openMenu({ onReset: hardReset });
+    UI.openMenu({ onReset: () => { reset(act); location.reload(); }, onHome: goHome });
   });
 
-  if (hasSave()) {
-    const btn = $('#btn-continue');
-    btn.hidden = false;
-    const left = Math.round(remainingMs() / 60000);
-    btn.querySelector('span').textContent = `Продължи (${left} мин остават)`;
-    btn.addEventListener('click', () => { unlockAudio(); startAmbient(); resume(); });
-    $('#btn-begin').querySelector('span').textContent = 'Започни отначало';
-    $('#btn-begin').classList.remove('btn-primary');
-    $('#btn-begin').classList.add('btn-ghost');
-    btn.classList.add('btn-primary');
-  }
-  if (S.finished) {
-    // играта е приключена — показваме резултата при желание
-    const btn = $('#btn-continue');
-    btn.hidden = false;
-    btn.querySelector('span').textContent = 'Виж резултата си';
-    btn.classList.add('btn-primary');
-    btn.addEventListener('click', () => showEnd(true));
-  }
-
+  renderActs();
   window.addEventListener('beforeunload', saveNow);
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
 }
 
-function newGame() {
-  reset();
-  UI.paintHouse();
+/* ---------- началните карти на двете части ---------- */
+function renderActs() {
+  const box = $('#acts');
+  box.innerHTML = '';
+  [1, 2].forEach(n => box.appendChild(actCard(n)));
+}
+
+function actCard(n) {
+  const A = ACTS[n];
+  const rec = recordFor(n);
+  const unlocked = isActUnlocked(n);
+  const save = peek(n);
+  const inProgress = hasSaveFor(n);
+  const card = document.createElement('article');
+  card.className = 'act-card' + (unlocked ? '' : ' locked');
+
+  const last = rec && rec.last;
+  const best = rec && rec.best;
+
+  const resultBlock = last ? `
+    <div class="ac-result">
+      <div class="ac-result-title">последен резултат</div>
+      <div class="ac-stats">
+        <span><b>${fmtTime(last.ms)}</b>време</span>
+        <span><b>${last.mistakes}</b>грешки</span>
+        <span><b>${last.hints}</b>подсказки</span>
+      </div>
+      <div class="ac-grade" style="--gc:${last.color}">${last.grade}</div>
+      ${best && best.ms !== last.ms
+        ? `<div class="ac-best">най-добро: <b>${fmtTime(best.ms)}</b> · ${best.grade}</div>` : ''}
+    </div>` : '';
+
+  if (!unlocked) {
+    const b = recordFor(1) && recordFor(1).best;
+    card.innerHTML = `
+      <div class="ac-lock">${lockSVG()}</div>
+      <div class="ac-num">Част ${A.numeral}</div>
+      <h3 class="ac-title">${A.title}</h3>
+      <p class="ac-tag">${A.tagline}</p>
+      <div class="ac-req">
+        <div class="ac-req-title">заключено</div>
+        <p>Отваря се само за онзи, който е минал <b>Първа част с оценка «Изключителна»</b> —
+        всичките десет зали за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
+        ${b ? `<div class="ac-progress">
+                 <div class="ac-pb"><i style="width:${Math.min(100, Math.round(OUTSTANDING_MS / b.ms * 100))}%"></i></div>
+                 <span>най-доброто ти време: <b>${fmtTime(b.ms)}</b> — трябват ти още
+                 <b>${fmtTime(Math.max(0, b.ms - OUTSTANDING_MS))}</b> по-малко</span>
+               </div>`
+             : `<div class="ac-progress"><span>още не си завършвал Първа част</span></div>`}
+      </div>
+      ${resultBlock}`;
+    return card;
+  }
+
+  card.innerHTML = `
+    <div class="ac-num">Част ${A.numeral}</div>
+    <h3 class="ac-title">${A.title}</h3>
+    <p class="ac-tag">${A.tagline}</p>
+    ${resultBlock}
+    ${inProgress ? `<div class="ac-inprog">започната игра · остават ${fmtTime(Math.max(0, TOTAL_MS - save.elapsedMs - save.penaltyMs))}</div>` : ''}
+    <div class="ac-actions"></div>`;
+
+  const actions = card.querySelector('.ac-actions');
+  if (inProgress) {
+    const c = mkBtn('Продължи', 'btn-primary', () => startAct(n, false));
+    actions.appendChild(c);
+    actions.appendChild(mkBtn('Отначало', 'btn-ghost btn-sm', () => confirmRestart(n)));
+  } else {
+    actions.appendChild(mkBtn(rec ? 'Изиграй отново' : 'Започни', 'btn-primary', () => startAct(n, true)));
+  }
+  return card;
+}
+
+function mkBtn(text, cls, fn) {
+  const b = document.createElement('button');
+  b.className = 'btn ' + cls;
+  b.innerHTML = `<span>${text}</span>`;
+  b.addEventListener('click', () => { unlockAudio(); startAmbient(); fn(); });
+  return b;
+}
+
+function confirmRestart(n) {
+  UI.openModal(`<h2>Да започнем ли отначало?</h2>
+    <p>Текущата игра в <b>Част ${ACTS[n].numeral}</b> ще изчезне — часовникът, руните и решените зали.
+    Записаните резултати остават.</p>
+    <div class="flex flex-center mt">
+      <button class="btn btn-primary btn-sm" id="rs-yes">Да, отначало</button>
+      <button class="btn btn-ghost btn-sm" id="rs-no">Не</button>
+    </div>`);
+  $('#rs-yes').addEventListener('click', () => { UI.closeModal(); reset(n); startAct(n, true); });
+  $('#rs-no').addEventListener('click', UI.closeModal);
+}
+
+function wipeAll() {
+  UI.openModal(`<h2>Да изтрия ли всичко?</h2>
+    <p>И двете части, всички резултати и бележките ще изчезнат като спомен под <em>Обливиате</em>.</p>
+    <div class="flex flex-center mt">
+      <button class="btn btn-primary btn-sm" id="w-yes" style="background:linear-gradient(180deg,#c4382f,#7d1f1a);border-color:#e0625d;color:#fff">Изтрий всичко</button>
+      <button class="btn btn-ghost btn-sm" id="w-no">Върни ме</button>
+    </div>`);
+  $('#w-yes').addEventListener('click', () => {
+    ['hogwarts_escape_v1', 'hogwarts_escape_act2_v1', 'hogwarts_records_v1']
+      .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    location.reload();
+  });
+  $('#w-no').addEventListener('click', UI.closeModal);
+}
+
+/* ============================================================
+   Пускане на част
+   ============================================================ */
+async function startAct(n, fresh) {
+  act = n;
+  useAct(n);
+  if (fresh) reset(n);
+  UI.setAct(ACTS[n]);
+
+  const mods = await ACTS[n].load();
+  ROOMS = mods;
+  RUNE_ROOMS = ROOMS.filter(r => r.meta.rune);
+
+  if (n === 2 && !webglAvailable()) {
+    UI.openModal(`<h2>Тази част иска 3D</h2>
+      <p>Почти всяка загадка във Втора част е триизмерна, а браузърът ти не дава WebGL.
+      Пробвай друг браузър или включи хардуерното ускорение — иначе ще виждаш само бутоните.</p>
+      <div class="flex flex-center mt"><button class="btn btn-ghost btn-sm" id="wg-ok">Разбрах, продължавам</button></div>`);
+    $('#wg-ok').addEventListener('click', UI.closeModal);
+  }
+
+  if (!S.house) {
+    const inherited = (peek(1) || {}).house;
+    if (inherited) S.house = inherited;
+  }
+
+  const needSorting = (n === 1 && !S.house);
+  if (fresh || !S.started) { showPrologue(n, needSorting); return; }
+  if (needSorting) { goSorting(n); return; }
+  enterAct(n);
+}
+
+function goSorting(n) {
   UI.showScreen('screen-sorting');
   setBgMode('dim');
-  runSorting(() => {
+  runSorting(() => { S.started = true; UI.paintHouse(); enterAct(n); });
+}
+
+function showPrologue(n, needSorting) {
+  const A = ACTS[n];
+  UI.showScreen('screen-story');
+  $('#story-numeral').textContent = A.numeral;
+  $('#story-title').textContent = A.title;
+  $('#story-body').innerHTML = n === 1 ? PROLOGUE_1 : PROLOGUE_2;
+  $('#story-go').querySelector('span').textContent = n === 1 ? 'Отвори портата' : 'Слез надолу';
+  const go = $('#story-go');
+  go.replaceWith(go.cloneNode(true));
+  $('#story-go').addEventListener('click', () => {
     S.started = true;
-    UI.paintHouse();
-    setBgTint(HOUSES[S.house].color);
-    UI.doorTransition('Печатът на Основателите се затваря зад теб').then(() => {
-      startGame(0);
-    });
-    UI.showScreen('screen-game');
+    if (needSorting) goSorting(n); else enterAct(n);
   });
 }
 
-function resume() {
+function enterAct(n) {
   UI.paintHouse();
   if (S.house) setBgTint(HOUSES[S.house].color);
   UI.showScreen('screen-game');
-  const first = ROOMS.findIndex(r => !isSolved(r.meta.id));
-  startGame(first < 0 ? ROOMS.length - 1 : first);
+  UI.doorTransition(ACTS[n].sealLine).then(() => {});
+  setTimeout(() => {
+    UI.startTimer(onTimeout);
+    const first = ROOMS.findIndex(r => !isSolved(r.meta.id));
+    mountRoom(first < 0 ? ROOMS.length - 1 : first);
+  }, 900);
 }
 
-function startGame(index) {
-  UI.startTimer(onTimeout);
-  mountRoom(index);
-}
-
-function hardReset() {
-  reset();
+function goHome() {
+  UI.closeModal();
   UI.stopTimer();
-  location.reload();
+  if (currentApi && currentApi.onLeave) { try { currentApi.onLeave(); } catch (e) {} }
+  saveNow();
+  renderActs();
+  UI.showScreen('screen-intro');
+  setBgMode('dim');
 }
 
 /* ============================================================
@@ -131,37 +256,37 @@ function mountRoom(i) {
 
   UI.renderRail(ROOMS, current, jumpTo);
   UI.renderRunes(RUNE_ROOMS);
+  UI.renderGrains(ROOMS, act === 2);
   UI.updateHintBadge(room);
   root.focus({ preventScroll: true });
 
   if (isSolved(room.meta.id)) showSolvedFooter(room, true);
 }
 
-function jumpTo(i) {
-  if (i === current) return;
-  mountRoom(i);
-}
+function jumpTo(i) { if (i !== current) mountRoom(i); }
 
 function makeApi(room) {
   const id = room.meta.id;
-  const api = {
+  return {
     meta: room.meta,
+    act,
     data: getRoomData(id, {}),
     saveData() { setRoomData(id, this.data); },
     get solved() { return isSolved(id); },
     toast: FX.toast,
     sfx,
     fx: {
-      sparks: FX.sparks,
-      sparksFrom: FX.sparksFrom,
-      shockwave: FX.shockwave,
-      shockwaveFrom: FX.shockwaveFrom,
-      flash: FX.flash,
-      shakeScreen: FX.shakeScreen,
-      celebrate: FX.celebrate,
-      typewriter: FX.typewriter,
+      sparks: FX.sparks, sparksFrom: FX.sparksFrom,
+      shockwave: FX.shockwave, shockwaveFrom: FX.shockwaveFrom,
+      flash: FX.flash, shakeScreen: FX.shakeScreen,
+      celebrate: FX.celebrate, typewriter: FX.typewriter,
     },
     allRunes() { return RUNE_ROOMS.map(r => S.runes[r.meta.id]).filter(Boolean); },
+    allGrains() {
+      const out = {};
+      ROOMS.forEach(r => { if (S.grains[r.meta.id] != null) out[r.meta.title] = S.grains[r.meta.id]; });
+      return out;
+    },
     fail(msg, ms = WRONG_PENALTY_MS) {
       addMistake();
       UI.penalise(ms, `${msg} <b>−${Math.round(ms / 1000)} сек.</b>`);
@@ -169,16 +294,16 @@ function makeApi(room) {
     },
     solve(msg) {
       if (isSolved(id)) return;
-      markSolved(id, room.meta.rune);
+      markSolved(id, room.meta.rune, room.meta.grain);
       sfx.rune();
       FX.celebrate(1.4);
       UI.renderRail(ROOMS, current, jumpTo);
       UI.renderRunes(RUNE_ROOMS);
+      UI.renderGrains(ROOMS, act === 2);
       showSolvedFooter(room, false, msg);
     },
     onLeave: null,
   };
-  return api;
 }
 
 function showSolvedFooter(room, silent, msg) {
@@ -189,17 +314,19 @@ function showSolvedFooter(room, silent, msg) {
   const last = current >= ROOMS.length - 1;
   const box = document.createElement('div');
   box.className = 'solved-footer';
+  const award = room.meta.rune || '★';
   box.innerHTML = `
     <div class="solved-banner">
-      ${room.meta.rune ? `<div class="rune-award">${room.meta.rune}</div>` : '<div class="rune-award">★</div>'}
+      <div class="rune-award">${award}</div>
+      ${room.meta.grain != null ? `<div class="grain-award">${room.meta.grain}</div>` : ''}
       <div style="text-align:left">
         <b>${silent ? 'Тази зала вече е решена.' : 'Загадката е решена!'}</b>
-        <div class="muted" style="font-size:.94rem">${msg || (room.meta.rune ? 'Руната е в джоба ти.' : 'Пътят навън е отворен.')}</div>
+        <div class="muted" style="font-size:.94rem">${msg || (room.meta.rune ? 'Руната е в джоба ти.' : 'Пътят напред е отворен.')}</div>
       </div>
     </div>
     <div class="flex flex-center mt">
       ${current > 0 ? '<button class="btn btn-ghost btn-sm" id="go-prev"><span>Предишна зала</span></button>' : ''}
-      <button class="btn btn-primary" id="go-next"><span>${last ? 'Излез от Хогуортс' : 'Продължи към следващата зала'}</span></button>
+      <button class="btn btn-primary" id="go-next"><span>${last ? (act === 1 ? 'Излез от Хогуортс' : 'Затвори шева') : 'Продължи към следващата зала'}</span></button>
     </div>`;
   root.appendChild(box);
   if (!silent) box.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -207,15 +334,14 @@ function showSolvedFooter(room, silent, msg) {
   const prev = box.querySelector('#go-prev');
   if (prev) prev.addEventListener('click', () => { sfx.click(); mountRoom(current - 1); });
   box.querySelector('#go-next').addEventListener('click', () => {
-    if (last) { finishGame(); return; }
-    const nextRoom = ROOMS[current + 1];
-    UI.doorTransition(nextRoom.meta.title).then(() => {});
+    if (last) { finishAct(); return; }
+    UI.doorTransition(ROOMS[current + 1].meta.title).then(() => {});
     setTimeout(() => mountRoom(current + 1), 900);
   });
 }
 
 /* ============================================================
-   Край на времето и финал
+   Край
    ============================================================ */
 let timedOut = false;
 function onTimeout() {
@@ -226,94 +352,137 @@ function onTimeout() {
   FX.shakeScreen(18, 900);
   UI.openModal(`
     <h2>Шестдесетте минути изтекоха</h2>
-    <p>Печатът на Основателите се стяга. Портретите по стените са спрели да дишат.</p>
-    <p class="muted">Можеш да продължиш — но вече <b>в допълнително време</b>, и то ще личи в оценката ти.
-    Или да започнеш нощта отначало.</p>
+    <p>${act === 1 ? 'Печатът на Основателите се стяга.' : 'Пясъкът тече все по-бързо.'}
+    Портретите по стените са спрели да дишат.</p>
+    <p class="muted">Можеш да продължиш — но вече <b>в допълнително време</b>, и то ще личи в оценката ти.</p>
     <div class="flex flex-center mt">
       <button class="btn btn-primary btn-sm" id="t-cont">Продължи в допълнително време</button>
       <button class="btn btn-ghost btn-sm" id="t-reset">Започни отначало</button>
     </div>`);
-  $('#t-cont').addEventListener('click', () => { UI.closeModal(); });
-  $('#t-reset').addEventListener('click', hardReset);
+  $('#t-cont').addEventListener('click', UI.closeModal);
+  $('#t-reset').addEventListener('click', () => { reset(act); location.reload(); });
 }
 
-function finishGame() {
+function finishAct() {
   S.finished = true;
   S.finishedAt = Date.now();
+  const ms = usedMs();
+  const g = grade(ms);
+  const rec = {
+    ms, mistakes: S.mistakes, hints: hintsUsed(),
+    grade: g.label, gradeKey: g.key, color: g.color,
+    outstanding: g.key === 'outstanding',
+    house: S.house, at: Date.now(),
+    points: housePoints(ms, S.mistakes, hintsUsed()),
+  };
+  writeRecord(act, rec);
   saveNow();
   UI.stopTimer();
   sfx.victory();
   FX.celebrate(6);
-  UI.doorTransition('Портата се отваря').then(() => showEnd(false));
+  UI.doorTransition(act === 1 ? 'Портата се отваря' : 'Пясъкът спира').then(() => showEnd(rec, g));
 }
 
-function grade(ms, mistakes, hints) {
-  const min = ms / 60000;
-  if (min > 60) return { g: 'Тролска', d: 'Успя — но замъкът вече беше започнал да те смята за мебел.', c: '#e0625d' };
-  if (min <= 32) return { g: 'Изключителна', d: 'Дъмбълдор би вдигнал вежда. Одобрително.', c: '#7fd6a1' };
-  if (min <= 42) return { g: 'Над очакванията', d: 'Макгонагъл кимна. А тя не кима често.', c: '#d9b45b' };
-  if (min <= 52) return { g: 'Приемлива', d: 'Мина. С малко пот и малко късмет.', c: '#e0b32a' };
-  return { g: 'Слаба', d: 'Излезе в последната минута. Точно както се полага на герой.', c: '#e0a24a' };
-}
-
-function showEnd(already) {
+function showEnd(rec, g) {
   UI.showScreen('screen-end');
   setBgMode('candles');
-  const ms = usedMs();
-  const min = Math.floor(ms / 60000), sec = Math.floor(ms / 1000) % 60;
-  const hints = Object.values(S.hintsOpened || {}).reduce((a, b) => a + b, 0);
-  const g = grade(ms, S.mistakes, hints);
-  const points = Math.max(0, 600 - S.mistakes * 12 - hints * 30 - Math.max(0, ms - TOTAL_MS) / 60000 * 20 | 0);
-  const house = HOUSES[S.house] || { name: 'Хогуортс', motto: '' };
+  const A = ACTS[act];
+  const house = HOUSES[S.house] || { name: 'Хогуортс' };
+  const justUnlocked = act === 1 && rec.outstanding;
 
   $('#end-wrap').innerHTML = `
     <div class="end-badge">${crestSVG(S.house)}</div>
-    <h1 class="end-title">Свободен си</h1>
-    <p class="muted" style="max-width:620px;margin:0 auto 6px">
-      Портата на Хогуортс се затваря зад теб с тихо щракане. Над Забранената гора вече изсветлява.
-      Печатът на Основателите е разчупен — от теб.</p>
+    <p class="tag">Част ${A.numeral}</p>
+    <h1 class="end-title">${A.endTitle}</h1>
+    <p class="muted" style="max-width:640px;margin:0 auto 10px">${A.endText}</p>
     <p class="tag">${house.name}</p>
 
     <div class="stat-grid">
-      <div class="stat"><b>${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}</b><span>време</span></div>
-      <div class="stat"><b>${S.mistakes}</b><span>грешки</span></div>
-      <div class="stat"><b>${hints}</b><span>подсказки</span></div>
-      <div class="stat"><b>${points}</b><span>точки за дома</span></div>
+      <div class="stat"><b>${fmtTime(rec.ms)}</b><span>време</span></div>
+      <div class="stat"><b>${rec.mistakes}</b><span>грешки</span></div>
+      <div class="stat"><b>${rec.hints}</b><span>подсказки</span></div>
+      <div class="stat"><b>${rec.points}</b><span>точки за дома</span></div>
     </div>
 
-    <div class="grade-card" style="--gc:${g.c}">
+    <div class="grade-card" style="--gc:${g.color}">
       <div class="grade-label">Оценка от изпитната комисия</div>
-      <div class="grade-value">${g.g}</div>
-      <p class="muted">${g.d}</p>
+      <div class="grade-value">${g.label}</div>
+      <p class="muted">${g.note}</p>
     </div>
+
+    ${act === 1 ? unlockBlock(rec) : `
+      <div class="epilogue">
+        <p>Никой в замъка няма да си спомни, че си слизал. Портретите ще те гледат учтиво и
+        празно, а Голямата зала ще мирише на препечен хляб, все едно нищо не е било.</p>
+        <p><b>Тайната е в теб. Точно както поиска.</b></p>
+      </div>`}
 
     <div class="runes-final">
       ${RUNE_ROOMS.map(r => `<span class="rune-final">${S.runes[r.meta.id] || '·'}</span>`).join('')}
-      <div class="muted" style="width:100%;margin-top:8px;font-size:.9rem">деветте руни, които те изведоха навън</div>
+      <div class="muted" style="width:100%;margin-top:8px;font-size:.9rem">руните, които те изведоха</div>
     </div>
 
     <div class="flex flex-center mt-lg">
-      <button class="btn btn-primary" id="end-again"><span>Още веднъж, от начало</span></button>
-      <button class="btn btn-ghost btn-sm" id="end-credits"><span>За тази стая</span></button>
-    </div>
-    <p class="tiny-note mt">Резултатът ти остава записан в този браузър.</p>`;
+      <button class="btn btn-primary" id="end-home"><span>Към началото</span></button>
+      <button class="btn btn-ghost btn-sm" id="end-again"><span>Изиграй частта отново</span></button>
+    </div>`;
 
-  $('#end-again').addEventListener('click', hardReset);
-  $('#end-credits').addEventListener('click', UI.credits);
-  if (!already) FX.celebrate(5);
+  $('#end-home').addEventListener('click', goHome);
+  $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
+  if (justUnlocked) setTimeout(() => FX.celebrate(4), 600);
 }
 
-/* Ако файлът е отворен с двойно щракане (file://), ES модулите не тръгват.
-   Този надпис се показва само тогава — иначе го няма. */
-if (location.protocol === 'file:') {
-  document.addEventListener('DOMContentLoaded', () => {
-    const w = document.querySelector('.intro-actions');
-    if (w) w.insertAdjacentHTML('beforebegin',
-      `<p style="color:#ffb9b6;border:1px solid rgba(224,98,93,.5);border-radius:12px;padding:14px;margin-bottom:18px">
-        Страницата е отворена директно от диска. Браузърът блокира модулите при <code>file://</code>.
-        Пусни малък локален сървър — например <code>python3 -m http.server 8000</code> — и отвори
-        <code>http://localhost:8000</code>.</p>`);
-  });
+function unlockBlock(rec) {
+  if (rec.outstanding) {
+    return `<div class="unlock-card open">
+      <div class="uc-icon">${keySVG()}</div>
+      <div class="uc-title">Втора част е отключена</div>
+      <p>Мина за <b>${fmtTime(rec.ms)}</b> — под ${fmtTime(OUTSTANDING_MS)}. Печатът обаче не беше
+      ключалка, а <b>шев</b>. И ти току-що го разпра.</p>
+      <p class="muted">«Пясъкът на Основателите» те чака на началния екран.</p>
+    </div>`;
+  }
+  const need = Math.max(0, rec.ms - OUTSTANDING_MS);
+  return `<div class="unlock-card">
+    <div class="uc-icon">${lockSVG()}</div>
+    <div class="uc-title">Втора част остава заключена</div>
+    <p>За да се отвори «Пясъкът на Основателите», трябва оценка <b>«Изключителна»</b> —
+    цялата Първа част за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
+    <p class="muted">Този път ти трябваха <b>${fmtTime(rec.ms)}</b> — с <b>${fmtTime(need)}</b> повече от нужното.
+    Подсказките и грешките ядат време: всяка подсказка е 2 минути.</p>
+  </div>`;
 }
+
+/* ---------- дребна графика ---------- */
+function lockSVG() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`;
+}
+function keySVG() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="8" cy="8" r="4"/><path d="M11 11l8 8M16 16l2-2M19 19l2-2"/></svg>`;
+}
+
+/* ---------- пролози ---------- */
+const PROLOGUE_1 = `
+  <p class="drop">Часовникът удари полунощ, а ти още си в замъка.</p>
+  <p>Вратите се затвориха със звук, който не издава дърво, а магия. По стените плъзна сребрист печат —
+  <em>Обвързващото заклинание на Основателите</em>. То се задейства веднъж на сто години и пуска навън
+  само онзи, който премине през десет зали и възстанови <strong>Ключовото Слово</strong>.</p>
+  <p>Във всяка зала те чака по една руна. Девет руни. Едно заклинание. Ако до изгрев не го изречеш пред
+  Огледалото Еиналеж — Хогуортс ще те задържи като още един портрет по стените си.</p>
+  <p class="whisper">„Помощ винаги ще бъде дадена в Хогуортс на онези, които я поискат.“</p>`;
+
+const PROLOGUE_2 = `
+  <p class="drop">Излезе на разсъмване. Само че зората не идва.</p>
+  <p>Слънцето стои на един и същи пръст над Забранената гора вече час. Птиците повтарят едни и същи
+  три ноти. А когато се обърнеш към замъка, той е с една кула повече, отколкото беше преди малко.</p>
+  <p>Печатът на Основателите не е бил ключалка. Бил е <em>шев</em>. Под подземията, в помещение без
+  врата, се е въртял хроноворот, стар колкото самия Хогуортс — и той е държал часовете един след друг.
+  Ти го счупи, когато излезе.</p>
+  <p>Сега замъкът се сгъва навътре, зала по зала. Имаш още шестдесет минути, преди примката да се
+  затвори завинаги. Трябва да слезеш обратно — под всичко — и да прековеш печата с най-старото
+  заклинание за скриване, което Основателите са знаели.</p>
+  <p class="whisper">„Онова, което е скрито добре, не се пази от ключалка. Пази се от човек.“</p>`;
 
 document.addEventListener('DOMContentLoaded', boot);

@@ -1,0 +1,150 @@
+/* ============================================================
+   rooms2.css — залите от Втора част (триизмерните)
+   ============================================================ */
+
+.stage-panel{position:relative}
+.stage-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(14px,2.4vw,24px);align-items:start}
+.stage-layout.wide{grid-template-columns:minmax(0,.92fr) minmax(0,1.28fr)}
+@media(max-width:940px){.stage-layout,.stage-layout.wide{grid-template-columns:1fr}}
+.stage-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.stage-box{
+  position:relative;height:clamp(340px,46vw,470px);border-radius:14px;overflow:hidden;
+  border:1px solid rgba(217,180,91,.24);
+  background:radial-gradient(ellipse at 50% 30%,#141224,#05050a 72%);
+  box-shadow:inset 0 0 90px rgba(0,0,0,.92),0 20px 50px rgba(0,0,0,.6)
+}
+.stage-box.tall{height:clamp(380px,52vw,560px)}
+.stage-loading{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;
+  color:#8f8cb8;font-style:italic;letter-spacing:.08em}
+.stage-help{font-size:.85rem;margin-top:12px}
+
+/* ---------- отзвук (зала I) ---------- */
+.resonance{display:flex;align-items:center;gap:12px}
+.res-label{font-family:var(--font-head);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-deep);flex:none}
+.res-bar{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+.res-bar div{height:100%;width:0;border-radius:5px;transition:width .18s linear}
+.res-pct{font-family:var(--font-head);font-size:.86rem;color:#8f8cb8;width:3.2em;text-align:right}
+.res-pct.hot{color:#c9ffe0;text-shadow:0 0 12px rgba(127,214,161,.8)}
+
+/* ---------- списъци с цели ---------- */
+.stage-goals,.cube-goals{display:flex;flex-direction:column;gap:8px}
+.goal{
+  display:flex;align-items:center;gap:10px;padding:.55em .8em;border-radius:10px;font-size:.92rem;
+  background:rgba(0,0,0,.28);border:1px solid rgba(217,180,91,.14);color:#9a917f;transition:.3s
+}
+.goal.active{border-color:var(--house);color:var(--parch);box-shadow:0 0 0 3px var(--house-glow)}
+.goal.done{border-color:var(--ok);color:#c9ffe0;background:rgba(127,214,161,.07)}
+.goal-n{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:rgba(217,180,91,.16);font-family:var(--font-head);font-size:.68rem;color:var(--gold)}
+.goal.done .goal-n{background:rgba(127,214,161,.25);color:#c9ffe0}
+
+/* ---------- лостове (зала II) ---------- */
+.levers{display:flex;flex-direction:column;gap:8px}
+.lever{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.6em .8em;
+  border-radius:11px;background:rgba(0,0,0,.3);border:1px solid rgba(217,180,91,.18)
+}
+.lever-info{display:flex;flex-direction:column;min-width:0}
+.lever-info b{font-family:var(--font-head);font-size:.82rem;color:var(--gold-100)}
+.lever-info span{font-size:.74rem;color:#8a8172}
+.lever-btns{display:flex;gap:6px;flex:none}
+.lever-btn{
+  width:38px;height:34px;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(217,180,91,.35);background:rgba(217,180,91,.09);color:var(--gold);
+  font-size:.8rem;transition:.18s
+}
+.lever-btn:hover:not(:disabled){background:rgba(217,180,91,.24);transform:translateY(-2px)}
+.lever-btn:disabled{opacity:.35;cursor:default}
+.ring-readout{display:flex;flex-direction:column;gap:6px}
+.ro-row{display:flex;align-items:center;gap:9px;font-size:.9rem;color:#9a917f;
+  padding:.35em .7em;border-radius:8px;background:rgba(0,0,0,.25)}
+.ro-row.ok{color:#c9ffe0;background:rgba(127,214,161,.09)}
+.ro-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+
+/* ---------- кръстат бутон ---------- */
+.dpad{position:relative;width:150px;height:150px;margin:4px auto 0}
+.dp{
+  position:absolute;width:46px;height:46px;border-radius:11px;cursor:pointer;
+  border:1px solid rgba(217,180,91,.35);background:rgba(217,180,91,.09);color:var(--gold);
+  font-size:.95rem;transition:.16s
+}
+.dp:hover{background:rgba(217,180,91,.26);transform:scale(1.08)}
+.dp:active{transform:scale(.94)}
+.dp-n{left:52px;top:0}.dp-s{left:52px;bottom:0}.dp-w{left:0;top:52px}.dp-e{right:0;top:52px}
+.dp-mid{position:absolute;left:52px;top:52px;width:46px;height:46px;display:grid;place-items:center;
+  color:var(--gold-deep);font-size:1.1rem;opacity:.5}
+
+.cube-state,.knight-hud{display:flex;gap:10px;justify-content:space-between;
+  padding:.6em .9em;border-radius:11px;background:rgba(0,0,0,.3);border:1px solid rgba(217,180,91,.16)}
+.cs-item,.kh-item{display:flex;flex-direction:column;align-items:center;flex:1}
+.cs-item span,.kh-item span{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:#7d7466}
+.cs-item b,.kh-item b{font-family:var(--font-head);font-size:1.24rem;color:var(--gold-100)}
+
+.move-list{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.82rem}
+.move-list .mv{padding:.16em .5em;border-radius:6px;background:rgba(217,180,91,.13);
+  color:var(--gold-100);font-family:var(--font-head)}
+.move-list .mv.start{background:rgba(255,255,255,.07);color:#8a8172}
+.move-list i{color:#5a5344;font-style:normal}
+
+/* ---------- скрити неща (зала V) ---------- */
+.find-list{display:flex;flex-direction:column;gap:7px}
+.find{display:flex;align-items:center;gap:10px;padding:.45em .8em;border-radius:9px;
+  background:rgba(0,0,0,.28);border:1px solid transparent;font-size:.9rem;color:#8a8172}
+.find.active{border-color:var(--house);color:var(--parch)}
+.find.done{color:#c9ffe0;border-color:rgba(127,214,161,.35);background:rgba(127,214,161,.07)}
+.find-dot{width:8px;height:8px;border-radius:50%;background:#4a4335;flex:none}
+.find.done .find-dot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.find.active .find-dot{background:var(--house);box-shadow:0 0 10px var(--house)}
+
+/* ---------- воалът (зала VII) ---------- */
+.cipher-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.cp{
+  width:34px;height:42px;display:grid;place-items:center;border-radius:7px;
+  background:rgba(60,45,20,.16);border:1px solid rgba(90,60,20,.35);
+  font-family:var(--font-head);font-size:1.1rem;color:#4a3413
+}
+.sub-step{padding:14px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(217,180,91,.2)}
+.key-map{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:8px 0 12px}
+.kp{display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:.3em .45em;border-radius:7px;background:rgba(150,120,255,.1);border:1px solid rgba(150,120,255,.3)}
+.kp b{font-family:var(--font-head);font-size:1rem;color:#d8ccff}
+.kp i{font-style:normal;font-size:.7rem;color:#9f8cff}
+.disc-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:.55em .8em;border-radius:11px;background:rgba(0,0,0,.3);border:1px solid rgba(217,180,91,.18)}
+.disc-read{text-align:center;font-size:.82rem;color:#9a917f;line-height:1.3}
+.disc-read b{font-family:var(--font-head);color:var(--gold-100);font-size:1.1rem}
+.disc-read span{display:block;font-size:.66rem;letter-spacing:.14em;color:#7d7466}
+.az-strip{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+.az-strip span{display:flex;flex-direction:column;align-items:center;width:26px;padding:.2em 0;
+  border-radius:5px;background:rgba(255,255,255,.04)}
+.az-strip b{font-family:var(--font-head);font-size:.8rem;color:var(--parch)}
+.az-strip i{font-style:normal;font-size:.58rem;color:#6f6656}
+
+/* ---------- хроноворотът (зала VIII) ---------- */
+.grain-src{margin:.4em 0 0;padding-left:1.3em;font-size:.93rem}
+.grain-src li{padding:.12em 0}
+.grain-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  padding:.6em .8em;border-radius:11px;background:rgba(0,0,0,.3);border:1px solid rgba(224,200,140,.2)}
+.gr-title{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:#7d7466;width:100%}
+.grain{
+  width:32px;height:38px;display:grid;place-items:center;border-radius:7px;
+  border:1px solid #c9a95a;background:linear-gradient(180deg,#3a3320,#1e1a10);
+  font-family:var(--font-head);font-size:1.05rem;color:#f0dca8;box-shadow:0 0 12px rgba(224,200,140,.25)
+}
+.dials.big{gap:9px;justify-content:center;display:flex}
+.turn-count{margin-top:10px;font-size:.85rem;color:#9a917f}
+.turn-count b{font-family:var(--font-head);color:var(--gold-100);font-size:1.1rem}
+
+/* ---------- печатът (зала IX) ---------- */
+.plate-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.plate-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;padding:.65em .9em;
+  border-radius:11px;cursor:pointer;border:1px solid var(--pc);background:rgba(0,0,0,.32);
+  color:var(--parch);transition:.2s
+}
+.plate-btn:hover:not(:disabled){transform:translateY(-3px);background:color-mix(in srgb,var(--pc) 16%,transparent)}
+.plate-btn:disabled{cursor:default;opacity:.85}
+.plate-btn.ok{box-shadow:0 0 0 2px color-mix(in srgb,var(--pc) 45%,transparent)}
+.pb-name{font-family:var(--font-head);font-size:.86rem}
+.pb-arrow{color:var(--pc);font-size:1.1rem;transition:transform .35s cubic-bezier(.2,1.3,.4,1);display:inline-block}
