@@ -50,6 +50,29 @@ export const ACTS = {
       import('./rooms2/a2r9-seal.js'),
     ]),
   },
+  3: {
+    id: 3,
+    numeral: 'III',
+    title: 'Гората помни',
+    tagline: 'девет поляни · осем руни · шестдесет минути · гората не прощава',
+    spell: 'ПАТРОНУС',
+    sealLine: 'Дърветата се затварят зад теб',
+    endTitle: 'Гората те пусна',
+    endText: `Сребърният елен тръгва пред теб и дърветата се разстъпват сами. Зад гърба ти
+              Забранената гора се затваря — не враждебно, а както се затваря книга, която
+              вече е прочетена докрай.`,
+    load: () => Promise.all([
+      import('./rooms3/a3r1-edge.js'),
+      import('./rooms3/a3r2-centaurs.js'),
+      import('./rooms3/a3r3-web.js'),
+      import('./rooms3/a3r4-thestrals.js'),
+      import('./rooms3/a3r5-moonbeam.js'),
+      import('./rooms3/a3r6-stones.js'),
+      import('./rooms3/a3r7-moon.js'),
+      import('./rooms3/a3r8-heart.js'),
+      import('./rooms3/a3r9-patronus.js'),
+    ]),
+  },
 };
 
 /* ---------- оценяване по скалата на СОВА ---------- */

@@ -4,7 +4,7 @@
    плюс общ дневник с постигнатите резултати.
    ============================================================ */
 
-const ACT_KEYS = { 1: 'hogwarts_escape_v1', 2: 'hogwarts_escape_act2_v1' };
+const ACT_KEYS = { 1: 'hogwarts_escape_v1', 2: 'hogwarts_escape_act2_v1', 3: 'hogwarts_escape_act3_v1' };
 const RECORDS_KEY = 'hogwarts_records_v1';
 
 export const TOTAL_MS = 60 * 60 * 1000;       // 60 минути на част
@@ -113,10 +113,10 @@ export function writeRecord(a, rec) {
 }
 export function recordFor(a) { return readRecords()['act' + a] || null; }
 
-/* Втора част се отключва само с отличие в Първа */
+/* всяка следваща част се отключва само с отличие в предишната */
 export function isActUnlocked(a) {
   if (a === 1) return true;
-  const r = recordFor(1);
+  const r = recordFor(a - 1);
   return !!(r && r.best && r.best.outstanding);
 }
 

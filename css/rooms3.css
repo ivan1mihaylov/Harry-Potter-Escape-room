@@ -1,0 +1,105 @@
+/* ============================================================
+   rooms3.css — Забранената гора
+   ============================================================ */
+
+/* ---------- Поляна I: разклоненията ---------- */
+.trail-progress{display:flex;gap:6px;justify-content:center}
+.tp{width:26px;height:5px;border-radius:3px;background:rgba(160,220,180,.15);transition:.4s}
+.tp.done{background:#6fd8a0;box-shadow:0 0 10px rgba(111,216,160,.6)}
+.tp.now{background:rgba(160,220,180,.5);animation:tpPulse 1.6s ease-in-out infinite}
+@keyframes tpPulse{0%,100%{opacity:.5}50%{opacity:1}}
+.trail-picks{display:flex;flex-direction:column;gap:8px}
+.trail-btn{
+  display:flex;align-items:center;gap:10px;padding:.6em .9em;border-radius:11px;cursor:pointer;
+  border:1px solid rgba(160,220,180,.28);background:rgba(8,20,12,.6);color:var(--parch);
+  font-size:.95rem;text-align:left;transition:.2s
+}
+.trail-btn:hover{border-color:#6fd8a0;background:rgba(111,216,160,.12);transform:translateX(6px)}
+.tb-dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+
+/* ---------- Поляна II: кентаврите ---------- */
+.say-list{display:flex;flex-direction:column;gap:7px}
+.say{
+  display:flex;gap:10px;align-items:baseline;padding:.55em .85em;border-radius:10px;
+  background:rgba(10,14,26,.6);border:1px solid rgba(150,175,255,.2)
+}
+.say b{font-family:var(--font-head);font-size:.82rem;color:#b9c8f0;flex:none;min-width:5.5em}
+.say span{font-family:var(--font-old);font-style:italic;font-size:1rem;color:var(--parch)}
+.path-picks{display:flex;flex-direction:column;gap:8px}
+.path-opt{font-family:var(--font-head);letter-spacing:.06em}
+
+/* ---------- Поляна III: паяжината ---------- */
+.web-hud,.beam-hud{display:flex;gap:10px;justify-content:space-between;
+  padding:.6em .9em;border-radius:11px;background:rgba(0,0,0,.32);border:1px solid rgba(200,215,230,.18)}
+.wh-item,.bh-item{display:flex;flex-direction:column;align-items:center;flex:1}
+.wh-item span,.bh-item span{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:#7d8a94}
+.wh-item b,.bh-item b{font-family:var(--font-head);font-size:1.2rem;color:#dfe8f2}
+.bh-item b.yes{color:#a8f0c0;text-shadow:0 0 12px rgba(168,240,192,.7)}
+.web-path{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.85rem}
+.wp{padding:.16em .55em;border-radius:6px;background:rgba(159,240,176,.14);
+  color:#c9ffe0;font-family:var(--font-head)}
+.wp.start{background:rgba(255,255,255,.07);color:#8a9a92}
+.web-path i{color:#4a5a52;font-style:normal}
+
+/* ---------- Поляна V: огледалата ---------- */
+.mirror-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:8px}
+.mirror-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;padding:.55em .4em;
+  border-radius:11px;cursor:pointer;border:1px solid rgba(200,220,255,.28);
+  background:rgba(10,16,28,.6);color:var(--parch);transition:.2s
+}
+.mirror-btn:hover{border-color:#cfe0ff;background:rgba(200,220,255,.12);transform:translateY(-3px)}
+.mb-pos{font-size:.6rem;letter-spacing:.14em;color:#8fa0b8}
+.mb-slash{font-family:var(--font-head);font-size:1.6rem;color:#dfe8ff;line-height:1;
+  text-shadow:0 0 12px rgba(200,220,255,.6)}
+
+/* ---------- Поляна VI: камъните ---------- */
+.stone-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:220px;margin:0 auto}
+.sm{
+  aspect-ratio:1;border-radius:8px;cursor:pointer;border:1px solid rgba(160,220,180,.25);
+  background:linear-gradient(160deg,#141c16,#0a100c);transition:.25s
+}
+.sm.up{background:linear-gradient(160deg,#3e6a4c,#1e3a28);border-color:#8fd0a8;
+  box-shadow:0 0 14px rgba(143,208,168,.4)}
+.sm:hover{transform:scale(1.08)}
+
+/* ---------- Поляна VII: пълнолунието ---------- */
+.req-list{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.rq{
+  padding:.28em .7em;border-radius:999px;font-size:.78rem;font-family:var(--font-head);
+  border:1px solid rgba(224,200,140,.35);color:#a99b74;background:rgba(0,0,0,.28)
+}
+.rq.got{color:#f0e0b0;border-color:#e0c88a;background:rgba(224,200,140,.16);
+  box-shadow:0 0 12px rgba(224,200,140,.3)}
+.kh-item b.over{color:#e0625d;text-shadow:0 0 12px rgba(224,98,93,.6)}
+
+/* ---------- Поляна VIII: резките ---------- */
+.mark-order{list-style:none;padding:0;margin:0 0 12px;counter-reset:m}
+.mark-order li{
+  display:flex;gap:10px;align-items:flex-start;padding:.5em .7em;border-radius:9px;margin-bottom:6px;
+  background:rgba(143,208,168,.09);border:1px solid rgba(143,208,168,.28);font-size:.93rem
+}
+.mo-n{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:#2e7a4a;color:#e8fff0;font-family:var(--font-head);font-size:.66rem}
+.mark-pool{display:flex;flex-direction:column;gap:7px}
+.mark-btn{
+  text-align:left;padding:.55em .85em;border-radius:9px;cursor:pointer;font-size:.93rem;
+  border:1px solid rgba(217,180,91,.22);background:rgba(0,0,0,.3);color:var(--parch);transition:.2s
+}
+.mark-btn:hover{border-color:#8fd0a8;background:rgba(143,208,168,.1);transform:translateX(5px)}
+
+/* ---------- списък със съседните места (и за телефон) ---------- */
+.near-list{padding:10px 12px;border-radius:11px;background:rgba(0,0,0,.3);
+  border:1px solid rgba(160,200,180,.18);display:flex;flex-wrap:wrap;gap:6px}
+.near-title{width:100%;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;
+  color:#7d8a84;margin-bottom:2px}
+.near-btn{
+  min-width:38px;padding:.4em .7em;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(160,220,180,.32);background:rgba(10,20,14,.7);color:#c9ffe0;
+  font-family:var(--font-head);font-size:.9rem;transition:.18s
+}
+.near-btn:hover{background:rgba(111,216,160,.18);border-color:#6fd8a0;transform:translateY(-2px)}
+.near-btn.used{opacity:.35}
+.near-btn.wide{display:flex;align-items:center;gap:8px;font-size:.82rem}
+.near-btn.wide i{font-style:normal;font-size:.7rem;color:#e0c88a;
+  border:1px solid rgba(224,200,140,.4);border-radius:5px;padding:0 .35em}

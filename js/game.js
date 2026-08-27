@@ -55,7 +55,7 @@ function boot() {
 function renderActs() {
   const box = $('#acts');
   box.innerHTML = '';
-  [1, 2].forEach(n => box.appendChild(actCard(n)));
+  [1, 2, 3].forEach(n => box.appendChild(actCard(n)));
 }
 
 function actCard(n) {
@@ -84,7 +84,8 @@ function actCard(n) {
     </div>` : '';
 
   if (!unlocked) {
-    const b = recordFor(1) && recordFor(1).best;
+    const prev = ACTS[n - 1];
+    const b = recordFor(n - 1) && recordFor(n - 1).best;
     card.innerHTML = `
       <div class="ac-lock">${lockSVG()}</div>
       <div class="ac-num">Част ${A.numeral}</div>
@@ -92,14 +93,14 @@ function actCard(n) {
       <p class="ac-tag">${A.tagline}</p>
       <div class="ac-req">
         <div class="ac-req-title">заключено</div>
-        <p>Отваря се само за онзи, който е минал <b>Първа част с оценка «Изключителна»</b> —
-        всичките десет зали за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
+        <p>Отваря се само за онзи, който е минал <b>${prev.numeral === 'I' ? 'Първа' : 'Втора'} част
+        с оценка «Изключителна»</b> — цялата, за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
         ${b ? `<div class="ac-progress">
                  <div class="ac-pb"><i style="width:${Math.min(100, Math.round(OUTSTANDING_MS / b.ms * 100))}%"></i></div>
                  <span>най-доброто ти време: <b>${fmtTime(b.ms)}</b> — трябват ти още
                  <b>${fmtTime(Math.max(0, b.ms - OUTSTANDING_MS))}</b> по-малко</span>
                </div>`
-             : `<div class="ac-progress"><span>още не си завършвал Първа част</span></div>`}
+             : `<div class="ac-progress"><span>още не си завършвал «${prev.title}»</span></div>`}
       </div>
       ${resultBlock}`;
     return card;
@@ -202,8 +203,9 @@ function showPrologue(n, needSorting) {
   UI.showScreen('screen-story');
   $('#story-numeral').textContent = A.numeral;
   $('#story-title').textContent = A.title;
-  $('#story-body').innerHTML = n === 1 ? PROLOGUE_1 : PROLOGUE_2;
-  $('#story-go').querySelector('span').textContent = n === 1 ? 'Отвори портата' : 'Слез надолу';
+  $('#story-body').innerHTML = { 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3 }[n];
+  $('#story-go').querySelector('span').textContent =
+    { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата' }[n];
   const go = $('#story-go');
   go.replaceWith(go.cloneNode(true));
   $('#story-go').addEventListener('click', () => {
@@ -326,7 +328,9 @@ function showSolvedFooter(room, silent, msg) {
     </div>
     <div class="flex flex-center mt">
       ${current > 0 ? '<button class="btn btn-ghost btn-sm" id="go-prev"><span>Предишна зала</span></button>' : ''}
-      <button class="btn btn-primary" id="go-next"><span>${last ? (act === 1 ? 'Излез от Хогуортс' : 'Затвори шева') : 'Продължи към следващата зала'}</span></button>
+      <button class="btn btn-primary" id="go-next"><span>${last
+        ? { 1: 'Излез от Хогуортс', 2: 'Затвори шева', 3: 'Тръгни след елена' }[act]
+        : 'Продължи към следващата зала'}</span></button>
     </div>`;
   root.appendChild(box);
   if (!silent) box.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -410,7 +414,7 @@ function showEnd(rec, g) {
       <p class="muted">${g.note}</p>
     </div>
 
-    ${act === 1 ? unlockBlock(rec) : `
+    ${act < 3 ? unlockBlock(rec) : `
       <div class="epilogue">
         <p>Никой в замъка няма да си спомни, че си слизал. Портретите ще те гледат учтиво и
         празно, а Голямата зала ще мирише на препечен хляб, все едно нищо не е било.</p>
@@ -433,21 +437,25 @@ function showEnd(rec, g) {
 }
 
 function unlockBlock(rec) {
+  const nextAct = ACTS[act + 1];
+  if (!nextAct) return '';
+  const ordinal = act === 1 ? 'Втора' : 'Трета';
   if (rec.outstanding) {
     return `<div class="unlock-card open">
       <div class="uc-icon">${keySVG()}</div>
-      <div class="uc-title">Втора част е отключена</div>
-      <p>Мина за <b>${fmtTime(rec.ms)}</b> — под ${fmtTime(OUTSTANDING_MS)}. Печатът обаче не беше
-      ключалка, а <b>шев</b>. И ти току-що го разпра.</p>
-      <p class="muted">«Пясъкът на Основателите» те чака на началния екран.</p>
+      <div class="uc-title">${ordinal} част е отключена</div>
+      <p>Мина за <b>${fmtTime(rec.ms)}</b> — под ${fmtTime(OUTSTANDING_MS)}.
+      ${act === 1 ? 'Печатът обаче не беше ключалка, а <b>шев</b>. И ти току-що го разпра.'
+                  : 'Замъкът те забрави. Гората обаче помни всичко — и я чака да ѝ обясниш кой си.'}</p>
+      <p class="muted">«${nextAct.title}» те чака на началния екран.</p>
     </div>`;
   }
   const need = Math.max(0, rec.ms - OUTSTANDING_MS);
   return `<div class="unlock-card">
     <div class="uc-icon">${lockSVG()}</div>
-    <div class="uc-title">Втора част остава заключена</div>
-    <p>За да се отвори «Пясъкът на Основателите», трябва оценка <b>«Изключителна»</b> —
-    цялата Първа част за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
+    <div class="uc-title">${ordinal} част остава заключена</div>
+    <p>За да се отвори «${nextAct.title}», трябва оценка <b>«Изключителна»</b> —
+    цялата тази част за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
     <p class="muted">Този път ти трябваха <b>${fmtTime(rec.ms)}</b> — с <b>${fmtTime(need)}</b> повече от нужното.
     Подсказките и грешките ядат време: всяка подсказка е 2 минути.</p>
   </div>`;
@@ -499,5 +507,19 @@ const PROLOGUE_2 = `
   затвори завинаги. Трябва да слезеш обратно — под всичко — и да прековеш печата с най-старото
   заклинание за скриване, което Основателите са знаели.</p>
   <p class="whisper">„Онова, което е скрито добре, не се пази от ключалка. Пази се от човек.“</p>`;
+
+const PROLOGUE_3 = `
+  <p class="drop">Излизаш от замъка на разсъмване и Хогуортс вече не знае кой си.</p>
+  <p>Точно това поиска. Фиделиус държи: тайната е в теб, заключена като камък в юмрук, и никой
+  жив не може да я извади. Остава само да се прибереш — а единственият път минава през
+  <em>Забранената гора</em>.</p>
+  <p>На третата крачка между дърветата разбираш грешката си. Гората е <strong>по-стара от
+  Основателите</strong> и не признава тяхната магия. За нея човек, който носи неизречима тайна,
+  не е човек, а <em>празно място</em> — а гората поглъща празните места.</p>
+  <p>Пътеката зад теб я няма. Кентаврите вече са прочели в небето, че между дърветата върви
+  Пазител на тайната. Акромантулите го подушиха. Тесталите го видяха първи.</p>
+  <p>За да те пусне, гората иска доказателство, че в теб е останало нещо твое. Не тайна — а
+  <strong>спомен</strong>, толкова светъл, че да добие форма.</p>
+  <p class="whisper">„Гората не мрази никого. Просто не забравя нищо.“</p>`;
 
 document.addEventListener('DOMContentLoaded', boot);
