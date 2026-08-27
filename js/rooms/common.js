@@ -66,3 +66,49 @@ export function fmt(ms) {
   const s = Math.round(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/* ============================================================
+   Малък въпросник — използва се като „порта“ пред основната
+   загадка в няколко зали.
+   ============================================================ */
+export function mountQuiz(host, { api, key, title, intro, questions, doneText, onDone }) {
+  const d = api.data;
+  if (d[key] == null) d[key] = 0;
+  api.saveData();
+
+  const draw = () => {
+    const i = d[key];
+    if (i >= questions.length) {
+      host.innerHTML = `<div class="quiz done">
+        <p class="panel-title">${title}</p>
+        <p class="quiz-done">${doneText}</p></div>`;
+      return;
+    }
+    const q = questions[i];
+    host.innerHTML = `<div class="quiz">
+      <p class="panel-title">${title}</p>
+      ${intro && i === 0 ? `<p class="muted quiz-intro">${intro}</p>` : ''}
+      <div class="quiz-step">въпрос ${i + 1} от ${questions.length}</div>
+      <p class="quiz-q">${q.q}</p>
+      <div class="opt-list">${q.opts.map((o, k) =>
+        `<button class="opt" data-k="${k}">${o.t}</button>`).join('')}</div>
+    </div>`;
+    $$('.opt', host).forEach(b => b.addEventListener('click', () => {
+      const o = q.opts[+b.dataset.k];
+      if (o.ok) {
+        b.classList.add('right');
+        api.sfx.chime();
+        api.fx.sparksFrom(b, { count: 14, color: '#ffe9a8', spread: 90 });
+        d[key] = i + 1; api.saveData();
+        setTimeout(() => { draw(); if (d[key] >= questions.length) onDone(); }, 620);
+      } else {
+        b.classList.add('wrong');
+        b.disabled = true;
+        api.sfx.bad();
+        api.fail(o.r || 'Не е това.');
+      }
+    }));
+  };
+  draw();
+  if (d[key] >= questions.length) onDone();
+}

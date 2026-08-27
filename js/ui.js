@@ -178,9 +178,10 @@ export function updateHintBadge(room) {
 }
 
 /* ---------------- бележник ---------------- */
-export function openNotes() {
+export function openNotes(extra = '') {
   openModal(`
     <h2>Бележник на ученика</h2>
+    ${extra}
     <p class="muted">Записките се пазят в браузъра ти. Ползвай ги за кодове, букви и хрумвания.</p>
     <textarea id="notes-area" style="width:100%;min-height:230px;background:rgba(0,0,0,.4);
       border:1px solid rgba(217,180,91,.3);border-radius:10px;color:var(--parch);padding:14px;

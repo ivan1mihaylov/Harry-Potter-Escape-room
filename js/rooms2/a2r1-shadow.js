@@ -16,9 +16,9 @@ export const meta = {
   bg: 'off',
   tint: '#9f8cff',
   hints: [
-    'Влачи, за да обикаляш залата. Шкалата вдясно се пълни, когато ъгълът ти се приближи до верния — движи се натам, накъдето тя расте.',
-    'Първата подредба се вижда отгоре и отдясно. Втората иска да слезеш ниско, почти до нивото на отломките, и да минеш зад тях.',
-    'Ако си заседнал: първата гледна точка е около 40° надясно и високо; втората е почти отсреща — завърти още около 180° и свали погледа ниско.',
+    'Влачи, за да обикаляш залата. Камъкът не ти казва число — казва ти само дали е студено, топло или нажежено. Движи се натам, накъдето става по-топло, и не бързай.',
+    'Първата подредба се вижда отгоре и отдясно. Втората е почти отсреща и по-ниско. Третата иска да <b>слезеш под отломките</b> и да гледаш нагоре.',
+    'Ако си заседнал: първата гледна точка е около 40° надясно и високо; втората — завърти още около 180° и свали погледа; третата е отдолу-отпред, почти под самите камъни.',
   ],
 };
 
@@ -33,8 +33,26 @@ const GLYPHS = [
     name: 'счупена руна',
     segs: [[1.8, 2.0, -0.6, 2.4], [-0.6, 2.4, -2.0, 0.9], [-2.0, 0.9, -0.7, -0.2],
            [-0.7, -0.2, 1.4, -0.9], [1.4, -0.9, 1.9, -2.2], [1.9, -2.2, -0.9, -2.5]],
-    dir: [-0.70, 0.16, -0.69], tol: 0.135, n: 52,
+    dir: [-0.70, 0.16, -0.69], tol: 0.125, n: 52,
   },
+  { // окото на печата — вижда се само отдолу
+    name: 'окото на печата',
+    segs: [[-2.6, 0, -1.3, 1.5], [-1.3, 1.5, 1.3, 1.5], [1.3, 1.5, 2.6, 0],
+           [2.6, 0, 1.3, -1.5], [1.3, -1.5, -1.3, -1.5], [-1.3, -1.5, -2.6, 0],
+           [-0.9, 0, -0.45, 0.75], [-0.45, 0.75, 0.45, 0.75], [0.45, 0.75, 0.9, 0],
+           [0.9, 0, 0.45, -0.75], [0.45, -0.75, -0.45, -0.75], [-0.45, -0.75, -0.9, 0]],
+    dir: [0.18, -0.60, 0.78], tol: 0.105, n: 58,
+  },
+];
+
+/* грубата скала — точен процент вече не се показва */
+const HEAT = [
+  { at: 0.00, t: 'мъртво студено', c: '#4a4358' },
+  { at: 0.42, t: 'студено', c: '#5f6f9a' },
+  { at: 0.62, t: 'хладно', c: '#8f7bff' },
+  { at: 0.78, t: 'топло', c: '#d9b45b' },
+  { at: 0.90, t: 'горещо', c: '#e0a24a' },
+  { at: 0.965, t: 'нажежено', c: '#7fd6a1' },
 ];
 
 let stage = null;
@@ -58,7 +76,7 @@ export function mount(root, api) {
           <div class="resonance">
             <div class="res-label">Отзвук</div>
             <div class="res-bar"><div id="res-fill"></div></div>
-            <div class="res-pct" id="res-pct">0%</div>
+            <div class="res-pct" id="res-pct">мъртво студено</div>
           </div>
           <div class="stage-goals" id="goals"></div>
         </div>
@@ -112,16 +130,17 @@ async function boot(api) {
     const cam = stage.camera.position.clone().normalize();
     const ang = cam.angleTo(dir);
     const close = Math.max(0, 1 - ang / (Math.PI * 0.55));
-    const pct = Math.round(Math.pow(close, 2.1) * 100);
+    const heat = Math.pow(close, 2.1);
+    let step = 0;
+    for (let i = 0; i < HEAT.length; i++) if (heat >= HEAT[i].at) step = i;
+    const h = HEAT[step];
 
     const fill = $('#res-fill'), lab = $('#res-pct');
     if (fill) {
-      fill.style.width = pct + '%';
-      fill.style.background = pct > 82 ? 'linear-gradient(90deg,#7fd6a1,#d9ffe8)'
-        : pct > 55 ? 'linear-gradient(90deg,#d9b45b,#ffe9a8)'
-        : 'linear-gradient(90deg,#4a4358,#8f7bff)';
-      lab.textContent = pct + '%';
-      lab.classList.toggle('hot', pct > 82);
+      fill.style.width = ((step + 1) / HEAT.length * 100) + '%';
+      fill.style.background = h.c;
+      lab.textContent = h.t;
+      lab.classList.toggle('hot', step >= HEAT.length - 1);
     }
     groups[current].setFocus(Math.pow(close, 3));
 

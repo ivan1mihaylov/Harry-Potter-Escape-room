@@ -15,7 +15,7 @@ export const meta = {
   bg: 'dim',
   tint: '#e0c07a',
   hints: [
-    'Зърната пясък, които събра, са цифри. Погледни ги в раздела „зърна“ вдясно горе — редът е даден в самата загадка.',
+    'Зърната пясък, които събра, са изписани по-долу — до всяко пише от коя зала идва. Загадката ти казва кои четири да вземеш и в какъв ред.',
     'Годината се чете и без зърна: последната битка за Хогуортс, втори май. Ако помниш книгата, помниш и годината.',
     'Годината е <b>1998</b>. След това дръпни веригата точно <b>три</b> пъти — толкова, колкото Хърмаяни завъртя своя хроноворот, за да спаси Бъкбийк.',
   ],
@@ -46,7 +46,7 @@ export function mount(root, api) {
             Четирите цифри идват от:</p>
             <ol class="grain-src">${SOURCES.map(s => `<li>${s}</li>`).join('')}</ol>
           </div>
-          <div class="grain-row" id="grain-row"></div>
+          <div class="grain-table" id="grain-row"></div>
           <div class="dials big" id="dials"></div>
           <div class="center mt" id="turner-ctl"></div>
         </div>
@@ -63,10 +63,20 @@ export function mount(root, api) {
 
 function renderGrains(api) {
   const box = $('#grain-row');
+  if (!box) return;
   const g = api.allGrains ? api.allGrains() : {};
-  box.innerHTML = `<div class="gr-title">събрани зърна</div>` +
-    Object.entries(g).map(([room, digit]) =>
-      `<span class="grain" title="${room}">${digit}</span>`).join('') || '<span class="muted">няма</span>';
+  const rows = Object.entries(g);
+  if (!rows.length) { box.innerHTML = '<div class="gr-title">още нямаш зърна пясък</div>'; return; }
+  box.innerHTML = `<div class="gr-title">събрани зърна пясък</div>` +
+    rows.map(([room, digit]) => {
+      const needed = SOURCES.indexOf(room);
+      return `<div class="gr-row${needed >= 0 ? ' needed' : ''}">
+        <span class="gr-digit">${digit}</span>
+        <span class="gr-room">${room}</span>
+        ${needed >= 0 ? `<span class="gr-mark">${needed + 1}</span>` : '<span class="gr-mark idle">—</span>'}
+      </div>`;
+    }).join('') +
+    `<p class="gr-note">Отбелязаните с номер зърна са четирите, които часовникът иска — в този ред.</p>`;
 }
 
 function renderDials(api) {

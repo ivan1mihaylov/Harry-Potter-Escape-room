@@ -40,7 +40,7 @@ function boot() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') UI.closeModal(); });
 
   $('#btn-hint').addEventListener('click', () => { sfx.click(); UI.openHints(ROOMS[current]); });
-  $('#btn-notes').addEventListener('click', () => { sfx.click(); UI.openNotes(); });
+  $('#btn-notes').addEventListener('click', () => { sfx.click(); UI.openNotes(grainsBlock()); });
   $('#btn-menu').addEventListener('click', () => {
     sfx.click();
     UI.openMenu({ onReset: () => { reset(act); location.reload(); }, onHome: goHome });
@@ -450,6 +450,19 @@ function unlockBlock(rec) {
     цялата Първа част за <b>под ${fmtTime(OUTSTANDING_MS)}</b>.</p>
     <p class="muted">Този път ти трябваха <b>${fmtTime(rec.ms)}</b> — с <b>${fmtTime(need)}</b> повече от нужното.
     Подсказките и грешките ядат време: всяка подсказка е 2 минути.</p>
+  </div>`;
+}
+
+/* събраните зърна пясък — винаги достъпни през бележника, и на телефон */
+function grainsBlock() {
+  if (act !== 2) return '';
+  const rows = ROOMS.filter(r => r.meta.grain != null)
+    .map(r => ({ title: r.meta.title, d: S.grains[r.meta.id] }))
+    .filter(x => x.d != null);
+  if (!rows.length) return '';
+  return `<div class="notes-grains">
+    <div class="ng-title">зърна пясък</div>
+    ${rows.map(x => `<div class="ng-row"><b>${x.d}</b><span>${x.title}</span></div>`).join('')}
   </div>`;
 }
 

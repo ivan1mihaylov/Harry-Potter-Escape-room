@@ -42,6 +42,7 @@ body[data-house="ravenclaw"] { --house:#3f6fd8; --house-2:#22407f; --house-ink:#
 body[data-house="hufflepuff"]{ --house:#e0b32a; --house-2:#8a6a10; --house-ink:#241a03; --house-glow:rgba(224,179,42,.45); }
 
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{height:100%}
 body{
   margin:0; background:var(--ink); color:var(--parch);

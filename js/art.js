@@ -129,23 +129,64 @@ export function hatSVG() {
 
 /* ---------- шишенца за отварите ---------- */
 export function bottleSVG(i, size, tint) {
-  const h = 60 + size * 46;
-  const w = 26 + size * 26;
+  const u = 'b' + (++_uid);
+  const h = 58 + size * 62;          // височина на стъклото
+  const w = 26 + size * 24;          // ширина
+  const half = w / 2;
+  const shoulder = h * 0.26;
+  const yTop = 138 - h;
+  const liq = h * 0.72;              // колко е пълно
   return `<svg viewBox="0 0 90 140" class="bottle-svg" preserveAspectRatio="xMidYMax meet">
     <defs>
-      <linearGradient id="liq${i}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${tint}" stop-opacity=".95"/>
-        <stop offset="1" stop-color="${tint}" stop-opacity=".55"/>
+      <linearGradient id="g${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#7fa8b8" stop-opacity=".38"/>
+        <stop offset=".16" stop-color="#e6f5fb" stop-opacity=".46"/>
+        <stop offset=".36" stop-color="#ffffff" stop-opacity=".30"/>
+        <stop offset=".68" stop-color="#5d8697" stop-opacity=".26"/>
+        <stop offset="1" stop-color="#22333c" stop-opacity=".48"/>
       </linearGradient>
+      <linearGradient id="l${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${tint}" stop-opacity=".95"/>
+        <stop offset=".3" stop-color="${tint}" stop-opacity=".7"/>
+        <stop offset=".62" stop-color="${tint}" stop-opacity="1"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+      </linearGradient>
+      <linearGradient id="c${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#5a4526"/><stop offset=".35" stop-color="#a8823f"/>
+        <stop offset=".7" stop-color="#7a5c2c"/><stop offset="1" stop-color="#42311a"/>
+      </linearGradient>
+      <clipPath id="k${u}">
+        <path d="M${45 - 5} ${yTop} h10 l${half - 5} ${shoulder} v${h - shoulder - half * 0.55}
+                 a${half} ${half * 0.62} 0 0 1 -${w} 0 v-${h - shoulder - half * 0.55} Z"/>
+      </clipPath>
     </defs>
-    <g transform="translate(45,${138 - h}) ">
-      <rect x="-5" y="-14" width="10" height="16" rx="2" fill="#6b5a3a" stroke="#3b301c"/>
-      <path d="M-6 0h12l${w / 2 - 6} ${h * 0.28} v${h * 0.66} a${w / 2} ${w / 2} 0 0 1 -${w} 0 v-${h * 0.66}Z"
-            fill="rgba(200,230,240,.16)" stroke="#cfe6ee" stroke-width="1.6" stroke-opacity=".55"/>
-      <path d="M-${w / 2} ${h * 0.42} v${h * 0.52} a${w / 2} ${w / 2} 0 0 0 ${w} 0 v-${h * 0.52}Z"
-            fill="url(#liq${i})" class="liquid"/>
-      <ellipse cx="-${w / 5}" cy="${h * 0.5}" rx="2.2" ry="${h * 0.16}" fill="rgba(255,255,255,.3)"/>
+
+    <!-- сянка на масата -->
+    <ellipse cx="45" cy="137" rx="${half * 1.25}" ry="3.4" fill="#000" opacity=".45"/>
+
+    <!-- течността (изрязана по формата на стъклото) -->
+    <g clip-path="url(#k${u})">
+      <rect x="${45 - half}" y="${138 - liq}" width="${w}" height="${liq}" fill="url(#l${u})"/>
+      <ellipse cx="45" cy="${138 - liq}" rx="${half}" ry="${half * 0.30}" fill="${tint}" opacity=".95"/>
+      <ellipse cx="45" cy="${138 - liq}" rx="${half * 0.72}" ry="${half * 0.20}" fill="#fff" opacity=".18"/>
+      <ellipse cx="${45 - half * 0.42}" cy="${138 - liq * 0.45}" rx="${half * 0.14}" ry="${liq * 0.3}"
+               fill="#fff" opacity=".22"/>
     </g>
+
+    <!-- стъклото -->
+    <path d="M${45 - 5} ${yTop} h10 l${half - 5} ${shoulder} v${h - shoulder - half * 0.55}
+             a${half} ${half * 0.62} 0 0 1 -${w} 0 v-${h - shoulder - half * 0.55} Z"
+          fill="url(#g${u})" stroke="#eaf7fd" stroke-opacity=".6" stroke-width="1.2"/>
+    <path d="M${45 - half * 0.55} ${yTop + shoulder + 3} v${(h - shoulder) * 0.62}"
+          stroke="#ffffff" stroke-opacity=".5" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M${45 + half * 0.62} ${yTop + shoulder + 8} v${(h - shoulder) * 0.4}"
+          stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+    <!-- гърло и тапа -->
+    <rect x="${45 - 5.6}" y="${yTop - 1}" width="11.2" height="5" rx="1.6" fill="#0e1519" opacity=".5"/>
+    <rect x="${45 - 5}" y="${yTop - 13}" width="10" height="13" rx="2" fill="url(#c${u})" stroke="#2e2211" stroke-width=".8"/>
+    <path d="M${45 - 3.4} ${yTop - 11.5} v10" stroke="#d9b877" stroke-opacity=".45" stroke-width="1.2"/>
+    <ellipse cx="45" cy="${yTop - 13}" rx="5" ry="1.7" fill="#c39a52"/>
   </svg>`;
 }
 
@@ -153,23 +194,81 @@ export function bottleSVG(i, size, tint) {
 export function gemSVG(color, glyph = '') {
   const u = 'g' + (++_uid);
   return `<svg viewBox="0 0 60 60">
-    <defs><linearGradient id="gm${u}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".35" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity=".55"/>
-    </linearGradient></defs>
-    <path d="M30 4 52 20 42 54H18L8 20 30 4Z" fill="url(#gm${u})" stroke="rgba(255,255,255,.6)" stroke-width="1.4"/>
-    <path d="M30 4 42 54M30 4 18 54M8 20h44" stroke="rgba(255,255,255,.35)" stroke-width="1" fill="none"/>
+    <defs>
+      <linearGradient id="a${u}" x1=".2" y1="0" x2=".8" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+        <stop offset=".45" stop-color="${color}"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".55"/>
+      </linearGradient>
+      <linearGradient id="b${u}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${color}"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".7"/>
+      </linearGradient>
+      <radialGradient id="s${u}" cx="34%" cy="26%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+        <stop offset=".5" stop-color="#fff" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="30" cy="55" rx="15" ry="3" fill="#000" opacity=".4"/>
+    <!-- корона -->
+    <path d="M30 5 12 19h36L30 5Z" fill="url(#a${u})"/>
+    <path d="M12 19h36l-6 8H18l-6-8Z" fill="${color}" opacity=".92"/>
+    <path d="M30 5 20 27M30 5l10 22M12 19l6 8M48 19l-6 8" stroke="#fff" stroke-opacity=".35" stroke-width=".9" fill="none"/>
+    <!-- павилион -->
+    <path d="M18 27h24l-12 26-12-26Z" fill="url(#b${u})"/>
+    <path d="M24 27 30 53M36 27 30 53M18 27l12 26M42 27 30 53" stroke="#fff" stroke-opacity=".22" stroke-width=".8" fill="none"/>
+    <!-- блясъци -->
+    <ellipse cx="30" cy="20" rx="17" ry="12" fill="url(#s${u})"/>
+    <path d="M22 13l5 4-5 4-5-4 5-4Z" fill="#fff" opacity=".5"/>
+    <path d="M30 5 12 19h36L30 5Zm-18 14h36l-6 8H18l-6-8Zm6 8h24l-12 26-12-26Z"
+          fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/>
   </svg>`;
 }
 
 /* ---------- пясъчен часовник ---------- */
 export function hourglassSVG(color, fill = 0.5) {
+  const u = 'h' + (++_uid);
+  const topH = 40 * fill;
+  const botH = 34 * (1 - fill) + 6;
   return `<svg viewBox="0 0 70 110">
-    <rect x="10" y="4" width="50" height="6" rx="3" fill="#8a6a2a"/>
-    <rect x="10" y="100" width="50" height="6" rx="3" fill="#8a6a2a"/>
-    <path d="M16 10h38l-19 45 19 45H16l19-45-19-45Z" fill="rgba(220,240,255,.10)" stroke="#cfe0ea" stroke-width="1.4" stroke-opacity=".5"/>
-    <path d="M35 55 ${16 + 19 * (1 - fill)} ${10 + 45 * (1 - fill)} h${38 * fill} L35 55Z" fill="${color}" opacity=".9"/>
-    <path d="M35 55 20 100h30L35 55Z" fill="${color}" opacity=".75"/>
-    <rect x="34.2" y="52" width="1.6" height="46" fill="${color}" opacity=".8"/>
+    <defs>
+      <linearGradient id="w${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#3d2b13"/><stop offset=".3" stop-color="#8a6a2a"/>
+        <stop offset=".62" stop-color="#c39a52"/><stop offset="1" stop-color="#3d2b13"/>
+      </linearGradient>
+      <linearGradient id="g${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#0b1116" stop-opacity=".5"/>
+        <stop offset=".2" stop-color="#cfe8f2" stop-opacity=".28"/>
+        <stop offset=".42" stop-color="#fff" stop-opacity=".14"/>
+        <stop offset="1" stop-color="#0b1116" stop-opacity=".5"/>
+      </linearGradient>
+      <linearGradient id="s${u}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${color}" stop-opacity=".65"/>
+        <stop offset=".45" stop-color="${color}"/>
+        <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+      </linearGradient>
+      <clipPath id="ct${u}"><path d="M17 11h36l-17 43h-2L17 11Z"/></clipPath>
+      <clipPath id="cb${u}"><path d="M35 56h2l17 43H17l18-43Z"/></clipPath>
+    </defs>
+    <ellipse cx="35" cy="107" rx="24" ry="3" fill="#000" opacity=".45"/>
+    <!-- колони -->
+    <rect x="12" y="8" width="5" height="94" rx="2" fill="url(#w${u})"/>
+    <rect x="53" y="8" width="5" height="94" rx="2" fill="url(#w${u})"/>
+    <!-- стъкло -->
+    <path d="M17 11h36l-17 43h-2L17 11Z" fill="url(#g${u})" stroke="#dbeef7" stroke-opacity=".38"/>
+    <path d="M35 56h2l17 43H17l18-43Z" fill="url(#g${u})" stroke="#dbeef7" stroke-opacity=".38"/>
+    <!-- пясък -->
+    <g clip-path="url(#ct${u})"><rect x="17" y="${54 - topH}" width="36" height="${topH}" fill="url(#s${u})"/></g>
+    <g clip-path="url(#cb${u})"><rect x="17" y="${99 - botH}" width="36" height="${botH}" fill="url(#s${u})"/></g>
+    <rect x="34.3" y="52" width="1.6" height="42" fill="${color}" opacity=".85"/>
+    <ellipse cx="35" cy="${99 - botH}" rx="${6 + botH * 0.45}" ry="2.6" fill="${color}" opacity=".9"/>
+    <!-- отблясъци -->
+    <path d="M23 14l9 22M22 96l9-22" stroke="#fff" stroke-opacity=".3" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- капаци -->
+    <rect x="8" y="2" width="54" height="8" rx="3" fill="url(#w${u})" stroke="#2e2211" stroke-width=".8"/>
+    <rect x="8" y="100" width="54" height="8" rx="3" fill="url(#w${u})" stroke="#2e2211" stroke-width=".8"/>
+    <rect x="10" y="3.4" width="50" height="1.6" rx="1" fill="#e6c17f" opacity=".55"/>
   </svg>`;
 }
 

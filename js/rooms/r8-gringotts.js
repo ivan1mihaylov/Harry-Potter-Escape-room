@@ -1,7 +1,7 @@
 /* ============================================================
    ЗАЛА VIII — Гринготс: ключалката със скъпоценни камъни
    ============================================================ */
-import { head, $, $$, el, shakeEl } from './common.js';
+import { head, $, $$, el, shakeEl, mountQuiz } from './common.js';
 import { gemSVG } from '../art.js';
 import { IMG, photo } from '../config.js';
 
@@ -14,6 +14,7 @@ export const meta = {
   bg: 'off',
   tint: '#d9b45b',
   hints: [
+    'Отговори първо на трите въпроса на гоблина — той плаща за знание с знание и ти издава един от камъните даром.',
     'Първият камък е „по-студен от огъня“ — сапфир, изумруд или аметист. Диамант не участва никъде.',
     'Точно един камък се повтаря два пъти и двете му копия не са съседни. Значи в петте гнезда има само четири различни вида.',
     'Комбинацията е: сапфир, рубин, топаз, рубин, изумруд.',
@@ -41,7 +42,8 @@ export function mount(root, api) {
     ${head(api)}
     <div class="panel vault-panel">
       ${photo(IMG.gold, 0.12)}
-      <div class="grid-2 tilt">
+      <div id="goblin-quiz"></div>
+      <div class="grid-2 tilt" id="vault-stage" hidden>
         <div>
           <p class="panel-title">Условията на гоблина Грипкук</p>
           <div class="parchment">
@@ -70,6 +72,28 @@ export function mount(root, api) {
         </div>
       </div>
     </div>`;
+
+  mountQuiz($('#goblin-quiz'), {
+    api, key: 'quiz',
+    title: 'Гоблинът Грипкук иска да те провери',
+    intro: 'Той не отваря трезори на непознати. Три въпроса — и ако ги издържиш, ще ти каже един от камъните даром.',
+    doneText: 'Грипкук изсумтява доволно: „Третият камък е <b>топаз</b>. Останалите ще си ги изкараш сам.“',
+    questions: [
+      { q: 'Кое същество пази най-дълбоките трезори на „Гринготс“?',
+        opts: [ { t: 'Сляп украински железокорем — дракон.', ok: true },
+                { t: 'Тристав пес.', ok: false, r: 'Пухчо пази друго и на друго място.' },
+                { t: 'Базилиск.', ok: false, r: 'Базилискът спи под училището, не под банката.' } ] },
+      { q: 'Какво представлява „Клеймото на крадеца“?',
+        opts: [ { t: 'Водопад, който отмива всяка магия и всяка маскировка.', ok: true },
+                { t: 'Печат, който изгаря дланта на крадеца.', ok: false, r: 'Гоблините са по-изобретателни.' },
+                { t: 'Заклинание, което заключва трезора завинаги.', ok: false, r: 'Не заключва — разсъблича.' } ] },
+      { q: 'Какво пази съкровището в трезора на Лестрейндж от докосване?',
+        opts: [ { t: 'Умножаващи и парещи заклинания.', ok: true },
+                { t: 'Отровен газ.', ok: false, r: 'Гоблините не хабят отрова, когато магията стига.' },
+                { t: 'Нищо — трезорът просто е дълбок.', ok: false, r: 'Ако беше така, Хари нямаше да излезе с изгорени ръце.' } ] },
+    ],
+    onDone: () => { const st = $('#vault-stage'); if (st) st.hidden = false; },
+  });
 
   renderSlots(api); renderTray(api); renderHistory(api);
   $('#try').addEventListener('click', () => attempt(api));
@@ -179,44 +203,9 @@ function renderHistory(api) {
 }
 
 function dragonSVG() {
-  return `<svg viewBox="0 0 320 170">
-    <defs>
-      <linearGradient id="drg" x1="0" y1="0" x2="0.2" y2="1">
-        <stop offset="0" stop-color="#948a6d"/><stop offset="1" stop-color="#403b2e"/>
-      </linearGradient>
-    </defs>
-    <g stroke="#221e17" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
-      <!-- опашка, увита около тялото -->
-      <path d="M44 142c-16-4-22-18-14-30 10-16 34-16 46-4" fill="none" stroke="#4b4536" stroke-width="15"/>
-      <path d="M30 118l-16-4 12-12 8 8-4 8Z" fill="#4b4536"/>
-      <!-- врат (рисуван преди тялото, за да се слее с него) -->
-      <path d="M170 92c22 4 42 6 60 14" fill="none" stroke="#5c5544" stroke-width="34"/>
-      <!-- тяло -->
-      <ellipse cx="132" cy="104" rx="76" ry="48" fill="url(#drg)"/>
-      <!-- гребен от шипове -->
-      <path d="M84 60l6-18 9 15M108 54l7-18 9 16M134 52l8-17 8 17M160 58l9-15 6 17" fill="#a2946d"/>
-      <!-- сгънато крило -->
-      <g class="dr-wing">
-        <path d="M96 100c-6-32 10-54 40-60-8 20-2 34 14 44-8 10-20 17-32 20-8 2-16 1-22-4Z" fill="#6d6552"/>
-        <path d="M118 44c1 16 6 28 18 36M130 42c-1 14 3 24 12 32" fill="none" stroke="#332f25" stroke-width="2"/>
-      </g>
-      <!-- глава -->
-      <path d="M226 92c14-4 30-2 42 6 10 6 12 16 4 22-10 8-28 8-42 2-10-4-14-10-14-16 0-6 4-11 10-14Z" fill="#6b6350"/>
-      <path d="M266 96c14-1 30 3 40 12-10 8-26 10-40 7-6-2-8-6-8-10s3-8 8-9Z" fill="#7d7460"/>
-      <!-- рога -->
-      <path d="M244 82l4-20 10 17M228 84l-2-18 12 14" fill="#a2946d"/>
-      <!-- око (затворено, отваря се при събуждане) -->
-      <ellipse class="dr-eye" cx="252" cy="102" rx="6" ry="4" fill="#e0a24a" stroke="none"/>
-      <path class="dr-lid" d="M245 101c5-4 11-4 15 0" fill="none" stroke="#221e17" stroke-width="3"/>
-      <!-- ноздра и уста -->
-      <circle cx="298" cy="104" r="2.2" fill="#221e17" stroke="none"/>
-      <path d="M270 114c12 3 24 3 32-1" fill="none" stroke="#221e17" stroke-width="2.4"/>
-      <!-- лапа -->
-      <path d="M150 148c-6-12 2-22 14-22s20 10 14 22" fill="#6b6350"/>
-      <path d="M155 148l2-10M164 148l1-11M173 148l-2-10" stroke="#332f25" stroke-width="2" fill="none"/>
-    </g>
-    <g class="dr-smoke" fill="rgba(200,190,175,.22)">
-      <circle cx="314" cy="110" r="5"/><circle cx="310" cy="96" r="8"/>
-    </g>
-  </svg>`;
+  return `<figure class="dragon-photo">
+    <img src="assets/dragon.jpg" alt="Драконът, който пази трезора" loading="lazy" decoding="async">
+    <span class="dragon-eye"></span>
+    <span class="dragon-smoke"><i></i><i></i><i></i></span>
+  </figure>`;
 }

@@ -183,25 +183,8 @@ function binSVG() {
 }
 
 function trainSVG() {
-  return `<svg viewBox="0 0 420 180" class="train">
-    <defs><linearGradient id="tr" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#b8332a"/><stop offset="1" stop-color="#63130f"/></linearGradient></defs>
-    <g>
-      <rect x="150" y="60" width="230" height="62" rx="8" fill="url(#tr)" stroke="#2b0a08" stroke-width="2"/>
-      <rect x="60" y="40" width="100" height="82" rx="10" fill="url(#tr)" stroke="#2b0a08" stroke-width="2"/>
-      <rect x="76" y="16" width="26" height="30" rx="4" fill="#2f2c2a" stroke="#151312" stroke-width="2"/>
-      <rect x="76" y="56" width="30" height="26" rx="4" fill="#f6d98a" opacity=".85"/>
-      <g fill="#f6d98a" opacity=".8">
-        <rect x="170" y="74" width="26" height="24" rx="3"/><rect x="212" y="74" width="26" height="24" rx="3"/>
-        <rect x="254" y="74" width="26" height="24" rx="3"/><rect x="296" y="74" width="26" height="24" rx="3"/>
-        <rect x="338" y="74" width="26" height="24" rx="3"/>
-      </g>
-      <rect x="40" y="122" width="350" height="9" rx="4" fill="#241f1c"/>
-      <g fill="#1b1817" stroke="#463f39" stroke-width="2">
-        <circle cx="90" cy="140" r="15"/><circle cx="140" cy="140" r="11"/>
-        <circle cx="210" cy="140" r="11"/><circle cx="270" cy="140" r="11"/><circle cx="340" cy="140" r="11"/>
-      </g>
-      <text x="265" y="52" text-anchor="middle" font-family="Cinzel, serif" font-size="15" fill="#f0d79a" letter-spacing="2">HOGWARTS EXPRESS</text>
-    </g>
-  </svg>`;
+  return `<figure class="train-photo">
+    <img src="assets/train.jpg" alt="Хогуортс експрес" loading="lazy" decoding="async">
+    <figcaption>ХОГУОРТС ЕКСПРЕС · 11:00</figcaption>
+  </figure>`;
 }

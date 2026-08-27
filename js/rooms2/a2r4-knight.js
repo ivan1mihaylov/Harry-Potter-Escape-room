@@ -246,66 +246,111 @@ function highlightMoves(api, clear) {
   });
 }
 
-/* ---------- прости фигури ---------- */
-function pedestal(T, mat, r = 0.42) {
-  const g = new T.Group();
-  const base = new T.Mesh(new T.CylinderGeometry(r, r * 1.25, 0.2, 18), mat);
-  base.position.y = 0.24; base.castShadow = true;
-  const stem = new T.Mesh(new T.CylinderGeometry(r * 0.5, r * 0.72, 0.7, 16), mat);
-  stem.position.y = 0.68; stem.castShadow = true;
-  g.add(base, stem);
-  return g;
+/* ---------- фигури, изтеглени на струг (както са истинските) ---------- */
+const STEM = [
+  [0.00, 0.00], [0.56, 0.00], [0.56, 0.07], [0.50, 0.17], [0.42, 0.24],
+  [0.45, 0.29], [0.36, 0.38], [0.29, 0.56],
+];
+
+function lathe(T, profile, mat, seg = 28) {
+  const pts = profile.map(([x, y]) => new T.Vector2(Math.max(0.0001, x), y));
+  const g = new T.LatheGeometry(pts, seg);
+  g.computeVertexNormals();
+  const m = new T.Mesh(g, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+
+function pieceMaterial(T, white) {
+  return white
+    ? new T.MeshStandardMaterial({ color: 0xf2eee4, roughness: 0.38, metalness: 0.08,
+        emissive: 0x2a3348, emissiveIntensity: 0.18 })
+    : new T.MeshStandardMaterial({ color: 0x24262f, roughness: 0.32, metalness: 0.35,
+        emissive: 0x16324f, emissiveIntensity: 0.42 });
 }
 
 function buildPiece(T, p) {
-  const mat = new T.MeshStandardMaterial({
-    color: 0xe8ebef, roughness: 0.45, metalness: 0.25,
-    emissive: 0x223047, emissiveIntensity: 0.25,
-  });
-  const g = pedestal(T, mat);
+  const mat = pieceMaterial(T, true);
+  const g = new T.Group();
+  let prof;
+
   if (p.t === 'K') {
-    const body = new T.Mesh(new T.CylinderGeometry(0.34, 0.44, 1.0, 16), mat);
-    body.position.y = 1.5; body.castShadow = true;
-    const crown = new T.Mesh(new T.SphereGeometry(0.3, 14, 12), mat);
-    crown.position.y = 2.1;
-    const c1 = new T.Mesh(new T.BoxGeometry(0.12, 0.55, 0.12), mat); c1.position.y = 2.55;
-    const c2 = new T.Mesh(new T.BoxGeometry(0.38, 0.12, 0.12), mat); c2.position.y = 2.45;
-    g.add(body, crown, c1, c2);
+    prof = [...STEM,
+      [0.33, 0.63], [0.39, 0.74], [0.36, 1.06], [0.29, 1.30], [0.34, 1.39],
+      [0.27, 1.47], [0.36, 1.57], [0.31, 1.68], [0.36, 1.77], [0.30, 1.86], [0.0, 1.90]];
+    g.add(lathe(T, prof, mat));
+    const v = new T.Mesh(new T.BoxGeometry(0.11, 0.46, 0.11), mat);
+    v.position.y = 2.08; v.castShadow = true;
+    const h = new T.Mesh(new T.BoxGeometry(0.34, 0.11, 0.11), mat);
+    h.position.y = 2.14; h.castShadow = true;
+    g.add(v, h);
   } else if (p.t === 'R') {
-    const body = new T.Mesh(new T.CylinderGeometry(0.4, 0.46, 1.1, 14), mat);
-    body.position.y = 1.55; body.castShadow = true;
-    g.add(body);
-    for (let i = 0; i < 4; i++) {
-      const b = new T.Mesh(new T.BoxGeometry(0.2, 0.3, 0.2), mat);
-      const a = (i / 4) * Math.PI * 2;
-      b.position.set(Math.sin(a) * 0.3, 2.2, Math.cos(a) * 0.3);
+    prof = [...STEM,
+      [0.33, 0.62], [0.38, 0.72], [0.37, 1.24], [0.43, 1.32], [0.45, 1.48],
+      [0.38, 1.52], [0.0, 1.52]];
+    g.add(lathe(T, prof, mat));
+    const tooth = new T.BoxGeometry(0.17, 0.24, 0.17);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const b = new T.Mesh(tooth, mat);
+      b.position.set(Math.sin(a) * 0.32, 1.62, Math.cos(a) * 0.32);
+      b.rotation.y = a; b.castShadow = true;
       g.add(b);
     }
   } else {
-    const body = new T.Mesh(new T.ConeGeometry(0.42, 1.5, 16), mat);
-    body.position.y = 1.75; body.castShadow = true;
-    const tip = new T.Mesh(new T.SphereGeometry(0.17, 12, 10), mat);
-    tip.position.y = 2.6;
-    g.add(body, tip);
+    prof = [...STEM,
+      [0.33, 0.62], [0.39, 0.73], [0.36, 0.98], [0.29, 1.18], [0.33, 1.28],
+      [0.25, 1.35], [0.32, 1.44], [0.27, 1.58], [0.17, 1.80], [0.10, 1.94],
+      [0.15, 2.00], [0.07, 2.08], [0.0, 2.12]];
+    g.add(lathe(T, prof, mat));
+    const knob = new T.Mesh(new T.SphereGeometry(0.10, 14, 12), mat);
+    knob.position.y = 2.18; knob.castShadow = true;
+    const slit = new T.Mesh(new T.BoxGeometry(0.05, 0.34, 0.30), pieceMaterial(T, true));
+    slit.material = new T.MeshStandardMaterial({ color: 0x9aa0ab, roughness: .6 });
+    slit.position.set(0, 1.80, 0.06); slit.rotation.z = 0.32;
+    g.add(knob, slit);
   }
-  g.position.set(wx(p.x), 0, wz(p.y));
+  g.position.set(wx(p.x), 0.14, wz(p.y));
+  g.scale.setScalar(1.28);
   return g;
 }
 
 function buildKnight(T) {
-  const mat = new T.MeshStandardMaterial({
-    color: 0x2b2f3a, roughness: 0.4, metalness: 0.55,
-    emissive: 0x1e3a5a, emissiveIntensity: 0.55,
-  });
-  const g = pedestal(T, mat, 0.44);
-  const neck = new T.Mesh(new T.BoxGeometry(0.5, 1.0, 0.42), mat);
-  neck.position.set(0, 1.5, -0.05); neck.rotation.x = -0.2; neck.castShadow = true;
-  const headM = new T.Mesh(new T.BoxGeometry(0.46, 0.5, 0.85), mat);
-  headM.position.set(0, 2.05, 0.2); headM.rotation.x = 0.22; headM.castShadow = true;
-  const ear1 = new T.Mesh(new T.ConeGeometry(0.1, 0.3, 8), mat); ear1.position.set(-0.14, 2.35, -0.1);
-  const ear2 = new T.Mesh(new T.ConeGeometry(0.1, 0.3, 8), mat); ear2.position.set(0.14, 2.35, -0.1);
-  const mane = new T.Mesh(new T.BoxGeometry(0.16, 0.9, 0.3), mat);
-  mane.position.set(0, 1.95, -0.32); mane.rotation.x = -0.35;
-  g.add(neck, headM, ear1, ear2, mane);
+  const mat = pieceMaterial(T, false);
+  const g = new T.Group();
+  g.add(lathe(T, [...STEM, [0.33, 0.62], [0.40, 0.72], [0.36, 0.86], [0.30, 0.94], [0.0, 0.96]], mat));
+
+  // главата: истински профил на кон, изтеглен в дълбочина
+  const sh = new T.Shape();
+  const pts = [
+    [-0.30, 0.00], [0.26, 0.00], [0.31, 0.30], [0.44, 0.52], [0.63, 0.64],
+    [0.68, 0.83], [0.52, 0.93], [0.33, 0.98], [0.22, 1.22], [0.10, 1.04],
+    [-0.02, 1.24], [-0.12, 0.98], [-0.30, 0.82], [-0.42, 0.54], [-0.36, 0.26],
+  ];
+  sh.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
+  sh.closePath();
+
+  const head = new T.Mesh(new T.ExtrudeGeometry(sh, {
+    depth: 0.34, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 3, curveSegments: 6,
+  }), mat);
+  head.position.set(0, 0.9, -0.17);
+  head.castShadow = true;
+  g.add(head);
+
+  // око и ноздра
+  const dot = new T.MeshStandardMaterial({ color: 0x0b0d12, roughness: .5 });
+  const eye = new T.Mesh(new T.SphereGeometry(0.055, 10, 8), dot);
+  eye.position.set(0.26, 1.72, 0.21); g.add(eye);
+  const eye2 = eye.clone(); eye2.position.z = -0.21; g.add(eye2);
+  const nos = new T.Mesh(new T.SphereGeometry(0.045, 8, 6), dot);
+  nos.position.set(0.60, 1.64, 0.10); g.add(nos);
+
+  // грива
+  const mane = new T.Mesh(new T.BoxGeometry(0.12, 0.62, 0.30), mat);
+  mane.position.set(-0.30, 1.52, 0); mane.rotation.z = -0.30; mane.castShadow = true;
+  g.add(mane);
+
+  g.scale.setScalar(1.28);
   return g;
 }
