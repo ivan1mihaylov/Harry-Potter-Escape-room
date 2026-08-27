@@ -1,6 +1,219 @@
-body[data-act="5"]{background:#070611}body[data-act="5"] #vignette{background:radial-gradient(ellipse at center,transparent 22%,rgba(3,2,10,.84) 100%)}
-.mystery-panel,.prophecy-panel{border-color:rgba(171,151,230,.28);background:linear-gradient(145deg,rgba(47,38,73,.36),rgba(8,7,18,.9))}
-.mystery-progress{display:flex;gap:8px;justify-content:center;margin-bottom:22px}.mystery-progress i{width:42px;height:3px;background:#383147;border-radius:3px}.mystery-progress i.now{background:#d9b45b;box-shadow:0 0 12px #d9b45b}.mystery-progress i.past{background:#8e7ec4}
-.mystery-clue{max-width:700px;margin:1rem auto 1.5rem;text-align:center;font-size:1.18rem}.mystery-options{display:grid;gap:10px;max-width:680px;margin:0 auto}.mystery-option{border:1px solid rgba(190,175,225,.3);background:rgba(15,12,28,.8);color:var(--parch);padding:15px 18px;border-radius:7px;font:600 1rem var(--font-body);cursor:pointer;transition:.2s}.mystery-option:hover{border-color:#b8a7ff;transform:translateY(-2px)}.mystery-option.right{border-color:#7fd6a1;background:rgba(60,130,90,.22)}.mystery-option.wrong{border-color:#e0625d;opacity:.58}.mystery-count{text-align:center;margin-top:16px}.mystery-done{text-align:center}.mystery-sigil{font:900 4rem var(--font-head);color:#d9b45b;text-shadow:0 0 28px #b8a7ff}
-.prophecy-orb{width:180px;height:180px;border-radius:50%;margin:0 auto 24px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.65);background:radial-gradient(circle at 35% 30%,#fff,rgba(194,180,255,.45) 12%,rgba(78,54,112,.5) 42%,rgba(5,4,12,.94) 72%);box-shadow:0 0 55px rgba(171,151,230,.42),inset 0 0 35px #fff}.prophecy-orb span{font:700 .75rem var(--font-head);letter-spacing:.18em;color:#100b20}.prophecy-runes{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px}.prophecy-runes b{display:grid;place-items:center;width:42px;height:48px;border:1px solid #7e6aa8;color:#f0dca0;background:#120e22;font:700 1.4rem var(--font-head)}
-@media(max-width:600px){.prophecy-orb{width:130px;height:130px}.mystery-clue{font-size:1.05rem}}
+/* ============================================================
+   rooms5.css — Пета част: Отделът на мистериите
+   ============================================================ */
+body[data-act="5"] { --act-accent: #a898e8; background: #06050f; }
+body[data-act="5"] #vignette {
+  background: radial-gradient(ellipse at center, transparent 24%, rgba(3, 2, 10, .86) 100%);
+}
+body[data-act="5"] .stage-panel,
+body[data-act="5"] .panel {
+  border-color: rgba(150, 130, 220, .22);
+  background: linear-gradient(155deg, rgba(34, 26, 58, .42), rgba(8, 6, 18, .88));
+}
+
+/* ---------------- I. Кабината ---------------- */
+.dial-readout { display: flex; gap: 8px; justify-content: center; margin: 14px 0 4px; }
+.dr-slot {
+  width: 42px; height: 54px; display: grid; place-items: center;
+  border: 1px solid rgba(160, 140, 220, .3); border-radius: 8px;
+  background: rgba(10, 8, 20, .8);
+  font-family: var(--font-head); font-size: 1.6rem; color: #4a4260;
+}
+.dr-slot.on { color: #ffe4a8; border-color: rgba(217, 180, 91, .55); box-shadow: 0 0 14px rgba(217, 180, 91, .2); }
+
+.keypad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin: 12px 0; }
+.kp-key {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 9px 2px 7px; border-radius: 9px;
+  border: 1px solid rgba(160, 140, 220, .25);
+  background: rgba(16, 12, 30, .85); color: var(--parch);
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.kp-key:hover { border-color: #a898e8; transform: translateY(-2px); }
+.kp-key b { font-size: 1.15rem; color: #e8ddff; }
+.kp-key i { font-style: normal; font-size: .56rem; letter-spacing: .08em; color: #8479b0; }
+
+.keymap { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
+.km-col {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 12px; border-radius: 9px;
+  border: 1px solid rgba(160, 140, 220, .25); background: rgba(12, 9, 24, .7);
+}
+.km-col b { font-family: var(--font-head); font-size: 1.3rem; color: #ffe4a8; }
+.km-col span { font-size: .78rem; line-height: 1.5; color: #a99dd0; text-align: center; }
+
+.levels { display: grid; gap: 8px; max-width: 520px; margin: 12px auto 0; }
+.level-btn {
+  display: flex; align-items: baseline; gap: 12px; text-align: left;
+  padding: 12px 16px; border-radius: 9px;
+  border: 1px solid rgba(160, 140, 220, .25);
+  background: rgba(14, 10, 28, .8); color: var(--parch);
+  font: inherit; cursor: pointer; transition: all .18s;
+}
+.level-btn:hover { border-color: #a898e8; transform: translateX(3px); }
+.level-btn b { font-family: var(--font-head); color: #e8ddff; white-space: nowrap; }
+.level-btn span { font-size: .92rem; opacity: .8; }
+.level-btn.right { border-color: #7fd6a1; background: rgba(50, 120, 85, .22); }
+.level-btn.wrong { border-color: #e0625d; opacity: .55; }
+
+/* ---------------- II. Вратите ---------------- */
+.doors-rule { font-size: 1rem; line-height: 1.7; margin: 6px 0 0; }
+.doors-ring {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  max-width: 330px; margin: 8px auto;
+}
+.door-cell {
+  position: relative; aspect-ratio: 2 / 3;
+  display: grid; place-items: center;
+  border: 1px solid rgba(160, 140, 220, .3); border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, rgba(38, 30, 64, .9), rgba(14, 10, 26, .9));
+  color: #8479b0; font: inherit; font-size: .78rem; cursor: pointer; transition: all .16s;
+}
+.door-cell:hover { border-color: #a898e8; transform: translateY(-2px); }
+.door-cell.marked { border-color: #f0ece0; box-shadow: inset 0 0 12px rgba(240, 236, 224, .12); }
+.door-cell i {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-style: normal; font-size: 1.5rem; color: #f2efe6; opacity: .85;
+}
+.doors-info, .brain-info, .shelf-info, .voice-sum {
+  text-align: center; font-size: .88rem; opacity: .85; margin-top: 10px;
+}
+.doors-help { font-size: .82rem; margin-top: 10px; }
+
+/* ---------------- III. Мозъците ---------------- */
+.brain-wrap { display: flex; justify-content: center; }
+.brain-circle { width: min(300px, 100%); height: auto; }
+.bc-node { cursor: pointer; }
+.bc-node:hover circle, .bc-node:hover rect { filter: brightness(1.35); }
+.bc-node.sel circle, .bc-node.sel rect { stroke: #fff; stroke-width: 3; }
+.bc-node.used { opacity: .95; }
+.brain-legend {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  font-size: .8rem; color: var(--parch-dim); margin-top: 8px;
+}
+.brain-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+/* ---------------- IV. Часовата зала ---------------- */
+.rings-read { margin: 14px 0 4px; }
+.rr-turns { text-align: center; font-size: .9rem; margin-bottom: 10px; color: var(--parch-dim); }
+.rr-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; margin-bottom: 6px; border-radius: 8px;
+  background: rgba(14, 10, 28, .6); border: 1px solid rgba(160, 140, 220, .16);
+}
+.rr-row.zero { border-color: #7fd6a1; background: rgba(50, 120, 85, .18); }
+.rr-name { flex: 0 0 84px; font-size: .84rem; color: #a99dd0; }
+.rr-dots { flex: 1; display: flex; gap: 4px; }
+.rr-dots i { width: 10px; height: 10px; border-radius: 50%; background: #2c2444; }
+.rr-dots i.mark { box-shadow: 0 0 0 1px rgba(217, 180, 91, .55); }
+.rr-dots i.on { background: #ffd88a; box-shadow: 0 0 8px rgba(255, 216, 138, .6); }
+.rr-val { font-family: var(--font-head); font-size: 1.1rem; color: #e8ddff; width: 1.2em; text-align: right; }
+
+/* ---------------- V. Планетите ---------------- */
+.clue-list { line-height: 1.9; padding-left: 1.4em; margin: 6px 0 0; }
+.label-row {
+  font-size: .66rem; letter-spacing: .16em; text-transform: uppercase;
+  color: #8479b0; text-align: center; margin-bottom: 8px;
+}
+.seq-slots { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.seq-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  min-width: 62px; padding: 7px 6px; border-radius: 8px;
+  border: 1px dashed rgba(160, 140, 220, .3);
+  background: rgba(12, 9, 24, .7); color: var(--parch-dim);
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.seq-slot b { font-size: .62rem; letter-spacing: .1em; color: #6f6498; }
+.seq-slot span { font-size: .78rem; }
+.seq-slot.filled { border-style: solid; border-color: #a898e8; color: #e8ddff; }
+.planet-pool { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
+.planet-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 20px;
+  border: 1px solid var(--pc); background: rgba(12, 9, 24, .8);
+  color: var(--parch); font: inherit; font-size: .82rem; cursor: pointer; transition: all .16s;
+}
+.planet-btn i { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); }
+.planet-btn:hover { transform: translateY(-2px); box-shadow: 0 0 14px var(--pc); }
+.planet-btn.used { opacity: .35; }
+
+/* ---------------- VI. Ним ---------------- */
+.piles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+.pile {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 8px; border-radius: 10px;
+  border: 1px solid rgba(160, 140, 220, .25);
+  background: rgba(14, 10, 28, .8); color: var(--parch);
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.pile:hover:not(:disabled) { border-color: #a898e8; transform: translateY(-2px); }
+.pile:disabled { opacity: .45; cursor: default; }
+.pile.sel { border-color: #ffd88a; box-shadow: 0 0 16px rgba(255, 216, 138, .25); }
+.pile.empty { opacity: .3; }
+.pile-stones { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 34px; align-items: center; }
+.pile-stones i { width: 11px; height: 11px; border-radius: 50%; background: #b0a8cc; box-shadow: inset 0 -2px 3px rgba(0,0,0,.4); }
+.pile b { font-family: var(--font-head); font-size: 1.2rem; color: #e8ddff; }
+.pile em { font-style: normal; font-size: .68rem; color: #8479b0; }
+.take-row { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.take-btn {
+  min-width: 34px; padding: 7px 10px; border-radius: 7px;
+  border: 1px solid rgba(217, 180, 91, .4); background: rgba(40, 32, 12, .6);
+  color: #ffe4a8; font: inherit; cursor: pointer; transition: all .16s;
+}
+.take-btn:hover { background: rgba(90, 72, 20, .7); transform: translateY(-1px); }
+.nim-turn { text-align: center; font-size: .88rem; padding: 8px; color: var(--parch-dim); }
+.nim-turn.them { color: #b8a7ff; }
+.nim-turn.lost { color: #e0625d; }
+.nim-log { margin-top: 10px; font-size: .82rem; }
+.nl-row { padding: 3px 8px; border-radius: 6px; color: var(--parch-dim); }
+.nl-row:nth-child(odd) { background: rgba(255,255,255,.03); }
+.nl-lost { margin-top: 6px; text-align: center; color: #e0625d; }
+
+/* ---------------- VII. Рафтът ---------------- */
+.shelf-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px;
+  max-width: 280px; margin: 10px auto;
+}
+.sh-cell {
+  aspect-ratio: 1; display: grid; place-items: center;
+  border: 1px solid rgba(160, 140, 220, .25); border-radius: 50%;
+  background: rgba(12, 9, 24, .8); color: #e8ddff;
+  font-family: var(--font-head); font-size: 1.05rem; cursor: pointer; transition: all .16s;
+}
+.sh-cell.set { background: var(--oc); color: #0d0a18; border-color: var(--oc); box-shadow: 0 0 12px var(--oc); }
+.sh-cell.fixed { cursor: default; box-shadow: 0 0 0 2px rgba(255,255,255,.35), 0 0 12px var(--oc); }
+.sh-cell.bad { outline: 2px solid #e0625d; outline-offset: 1px; }
+.sh-cell:hover:not(.fixed) { transform: scale(1.08); }
+.sh-warn { color: #e0625d; }
+
+/* ---------------- VIII. Любовта ---------------- */
+.resonance {
+  text-align: center; margin-top: 12px; font-size: .82rem;
+  letter-spacing: .12em; text-transform: uppercase; color: #d8a0b8;
+}
+.resonance b { font-family: var(--font-head); font-size: 1.5rem; letter-spacing: 0; color: #ffd0e0; }
+.voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 10px 0; }
+.voice {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 11px 6px; border-radius: 10px;
+  border: 1px solid rgba(220, 150, 180, .25);
+  background: rgba(24, 12, 22, .8); color: var(--parch);
+  font: inherit; cursor: pointer; transition: all .16s;
+}
+.voice:hover { border-color: #e08fa8; transform: translateY(-2px); }
+.voice b { font-family: var(--font-head); font-size: 1.25rem; color: #ffd0e0; }
+.voice span { font-size: .64rem; color: #a98494; }
+.voice.on { border-color: #e08fa8; background: rgba(110, 40, 70, .5); box-shadow: 0 0 16px rgba(224, 143, 168, .3); }
+.voice-sum b.good { color: #7fd6a1; }
+.voice-sum b.over { color: #e0625d; }
+
+/* ---------------- финал ---------------- */
+body[data-act="5"] .spell-slot { border-color: rgba(180, 150, 240, .4); }
+body[data-act="5"] .rune-tile { border-color: rgba(180, 150, 240, .35); }
+
+@media (max-width: 640px) {
+  .keypad { grid-template-columns: repeat(5, 1fr); }
+  .voices { grid-template-columns: repeat(3, 1fr); }
+  .piles { grid-template-columns: repeat(3, 1fr); }
+  .doors-ring { grid-template-columns: repeat(4, 1fr); max-width: 260px; }
+}
