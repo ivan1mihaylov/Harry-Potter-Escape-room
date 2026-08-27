@@ -9,6 +9,8 @@ import { readHistory, importRuns, clearHistory, playerName } from './state.js';
 import { ACTS, grade, fmtTime } from './acts.js';
 import { HOUSES } from './art.js';
 import { encodeRun, decodeMany, shareLink } from './share.js';
+import { isConfigured, activeForm, parsePrefilled, configSnippet,
+         saveLocalForm, clearLocalForm, outboxSize, flushOutbox } from './collect.js';
 import { sfx } from './audio.js';
 import { toast } from './fx.js';
 
@@ -48,12 +50,14 @@ export function renderStats() {
     <div id="stats-acts"></div>
     <div id="stats-board"></div>
     <div id="stats-runs"></div>
+    <div id="stats-collect"></div>
     <div id="stats-io"></div>`;
 
   drawSummary(all);
   drawActs(all);
   drawBoard(all);
   drawRuns(all);
+  drawCollect();
   drawIO(all);
 }
 
@@ -198,6 +202,97 @@ function drawRuns(all) {
   const mine = $('#sf-mine');
   if (mine) mine.addEventListener('click', () => {
     filterMine = !filterMine; sfx.click(); drawRuns(readHistory());
+  });
+}
+
+/* ---------------- автоматично събиране ---------------- */
+function drawCollect() {
+  const box = $('#stats-collect'); if (!box) return;
+  const on = isConfigured();
+  const cfg = activeForm();
+  const queued = outboxSize();
+
+  box.innerHTML = `
+    <section class="stats-card collect">
+      <h2>Автоматично събиране</h2>
+      ${on ? `
+        <p class="col-on">Включено. Всеки завършен пробег тръгва сам към твоята
+        Google Форма и се появява в прикачената таблица.</p>
+        <div class="col-url">${esc(cfg.url)}</div>
+        ${queued ? `<p class="muted">Чакат изпращане: <b>${queued}</b> — ще тръгнат при следващо отваряне.</p>` : ''}
+        <div class="flex flex-center mt">
+          <button class="btn btn-ghost btn-sm" id="col-flush"><span>Изпрати чакащите</span></button>
+          <button class="btn btn-ghost btn-sm" id="col-again"><span>Настрой отново</span></button>
+        </div>
+      ` : `
+        <p class="muted">Играта може да праща всеки завършен пробег направо в твоя
+        Google Sheet. Google Формата приема заявката от браузъра на играча — затова
+        не ти трябва нито сървър, нито база данни.</p>
+      `}
+      <details class="col-setup"${on ? '' : ' open'}>
+        <summary>Как се настройва (веднъж, около пет минути)</summary>
+        <ol class="col-steps">
+          <li>Направи нова <b>Google Форма</b> с <b>осем</b> въпроса от вида
+            «кратък отговор», точно в този ред:
+            <span class="col-fields">Име · Част · Секунди · Грешки · Подсказки · Оценка · Дом · Дата</span>
+          </li>
+          <li>От менюто ⋮ горе вдясно избери <b>«Get pre-filled link»</b>
+            (Вземи предварително попълнена връзка).</li>
+          <li>В осемте полета напиши просто <b>1, 2, 3, 4, 5, 6, 7, 8</b> — по едно число
+            във всяко, по реда отгоре. Натисни <b>Get link</b> и копирай.</li>
+          <li>Залепи връзката тук:</li>
+        </ol>
+        <input class="col-input" id="col-link" spellcheck="false"
+               placeholder="https://docs.google.com/forms/d/e/…/viewform?usp=pp_url&amp;entry.…=1&amp;…">
+        <div class="flex flex-center mt">
+          <button class="btn btn-house btn-sm" id="col-go"><span>Свържи</span></button>
+          <span class="imp-note" id="col-note"></span>
+        </div>
+        <div id="col-out"></div>
+      </details>
+    </section>`;
+
+  const flush = $('#col-flush');
+  if (flush) flush.addEventListener('click', async () => {
+    sfx.click();
+    const n = await flushOutbox();
+    toast(n ? `Изпратени: ${n}.` : 'Нямаше какво да се изпраща.', n ? 'good' : '');
+    renderStats();
+  });
+
+  const again = $('#col-again');
+  if (again) again.addEventListener('click', () => {
+    if (!confirm('Да изключа ли събирането на този браузър?')) return;
+    clearLocalForm(); sfx.click(); renderStats();
+  });
+
+  const go = $('#col-go');
+  if (go) go.addEventListener('click', () => {
+    const note = $('#col-note');
+    const res = parsePrefilled($('#col-link').value);
+    if (res.error) {
+      note.textContent = res.error;
+      note.className = 'imp-note bad';
+      sfx.bad();
+      return;
+    }
+    saveLocalForm(res.cfg);
+    sfx.chime();
+    note.textContent = 'Готово — на този браузър вече е включено.';
+    note.className = 'imp-note good';
+    const snippet = configSnippet(res.cfg);
+    $('#col-out').innerHTML = `
+      <p class="col-final">Остава едно нещо: за да праща <b>и от чуждите браузъри</b>,
+      залепи това в <code>js/collect.js</code> (върху сегашния <code>export const FORM</code>)
+      и качи промяната.</p>
+      <pre class="col-code" id="col-code">${esc(snippet)}</pre>
+      <div class="flex flex-center mt">
+        <button class="btn btn-ghost btn-sm" id="col-copy"><span>Копирай блока</span></button>
+      </div>`;
+    $('#col-copy').addEventListener('click', async () => {
+      toast(await copy(snippet) ? 'Блокът е в клипборда.' : 'Браузърът не позволи копиране.',
+            'good');
+    });
   });
 }
 

@@ -17,6 +17,7 @@ import * as UI from './ui.js';
 import { runSorting, nameFormHTML, wireNameForm } from './sorting.js';
 import { renderStats, importFromHash, copy } from './stats.js';
 import { encodeRun, shareLink } from './share.js';
+import { sendRun, flushOutbox, isConfigured, clearOutbox } from './collect.js';
 import { initBackground, setBgMode, setBgTint } from './three-bg.js';
 import { webglAvailable } from './three-stage.js';
 
@@ -53,6 +54,7 @@ function boot() {
   });
 
   renderActs();
+  flushOutbox();
   const brought = importFromHash();
   if (brought) setTimeout(() => {
     FX.toast(`Внесен${brought > 1 ? 'и са ' + brought + ' резултата' : ' е един резултат'} от връзката.`, 'good', 5000);
@@ -188,6 +190,7 @@ function wipeAll() {
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     clearProfile();
     clearHistory();
+    clearOutbox();
     location.reload();
   });
   $('#w-no').addEventListener('click', UI.closeModal);
@@ -412,6 +415,20 @@ function showSolvedFooter(room, silent, msg) {
 /* ============================================================
    Край
    ============================================================ */
+let sendState = 'off';
+const SEND_TEXT = {
+  sending: 'Изпращане към дневника на замъка…',
+  sent: 'Резултатът е изпратен в дневника на замъка.',
+  queued: 'Мрежата я нямаше — резултатът ще тръгне сам при следващо отваряне.',
+};
+function paintSendState() {
+  const el = $('#sc-sent');
+  if (!el) return;
+  el.hidden = sendState === 'off';
+  el.className = 'sc-sent ' + sendState;
+  el.textContent = SEND_TEXT[sendState] || '';
+}
+
 const TIMEOUT_LINE = {
   1: 'Печатът на Основателите се стяга.',
   2: 'Пясъкът тече все по-бързо.',
@@ -455,6 +472,12 @@ function finishAct() {
     points: housePoints(ms, S.mistakes, hintsUsed()),
   };
   writeRecord(act, rec);
+  sendState = isConfigured() ? 'sending' : 'off';
+  sendRun({
+    id: `${act}-${rec.at}`, name: playerName() || 'Незнаен магьосник', act,
+    ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
+    gradeKey: rec.gradeKey, house: S.house, at: rec.at,
+  }).then(state => { sendState = state; paintSendState(); });
   saveNow();
   UI.stopTimer();
   sfx.victory();
@@ -508,8 +531,10 @@ function showEnd(rec, g) {
 
     <div class="share-card">
       <div class="sc-title">Кодът на този пробег</div>
-      <p class="muted">Играта няма сървър — резултатът пътува като код. Прати го на този,
-      който събира статистиката, и той ще го добави при своите.</p>
+      <p class="muted">${isConfigured()
+        ? 'Резултатът тръгва сам към дневника на замъка. Кодът отдолу е резервният път — ако мрежата е капризна, прати него.'
+        : 'Играта няма сървър — резултатът пътува като код. Прати го на този, който събира статистиката, и той ще го добави при своите.'}</p>
+      <div class="sc-sent" id="sc-sent" hidden></div>
       <div class="sc-code" id="sc-code">${shareCode}</div>
       <div class="flex flex-center mt">
         <button class="btn btn-ghost btn-sm" id="sc-copy"><span>Копирай кода</span></button>
@@ -525,6 +550,7 @@ function showEnd(rec, g) {
 
   $('#end-home').addEventListener('click', goHome);
   $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
+  paintSendState();
   $('#sc-stats').addEventListener('click', goStats);
   $('#sc-copy').addEventListener('click', async () => {
     sfx.click();
