@@ -1,5 +1,5 @@
 /* ============================================================
-   acts.js — четирите части на историята и оценяването
+   acts.js — петте части на историята и оценяването
    ============================================================ */
 import { OUTSTANDING_MS } from './state.js';
 
@@ -94,6 +94,24 @@ export const ACTS = {
       import('./rooms4/a4r7-boat.js'),
       import('./rooms4/a4r8-numbers.js'),
       import('./rooms4/a4r9-occlumens.js'),
+    ]),
+  },
+  5: {
+    id: 5,
+    numeral: 'V',
+    title: 'Пророчеството без край',
+    tagline: 'девет камери · осем руни · шестдесет минути · бъдещето не е присъда',
+    spell: 'ИНСЕНДИО',
+    sealLine: 'Асансьорът потъва под Министерството',
+    endTitle: 'Краят е ненаписан',
+    endText: `Огънят не хвърля сянка. Стъклената сфера с твоето име се разпада без звук,
+              а думите вътре се превръщат в светлина. За пръв път пред теб няма начертан път.`,
+    load: () => Promise.all([
+      import('./rooms5/a5r1-entry.js'), import('./rooms5/a5r2-brains.js'),
+      import('./rooms5/a5r3-time.js'), import('./rooms5/a5r4-doors.js'),
+      import('./rooms5/a5r5-planets.js'), import('./rooms5/a5r6-death.js'),
+      import('./rooms5/a5r7-records.js'), import('./rooms5/a5r8-shelves.js'),
+      import('./rooms5/a5r9-prophecy.js'),
     ]),
   },
 };

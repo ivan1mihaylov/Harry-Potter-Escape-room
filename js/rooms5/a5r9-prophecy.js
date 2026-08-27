@@ -1,0 +1,8 @@
+import { head, $, answerBar, wireAnswer } from '../rooms/common.js';
+export const meta={id:'a5-prophecy',eyebrow:'Камера IX',title:'Пророчеството без край',sub:'Сферата с твоето име е топла. Осемте руни се въртят около нея и чакат да бъдат изречени като една дума.',rune:null,bg:'off',tint:'#8e5d32',hints:['Прочети руните по реда на камерите.','И Н С Е Н Д И О.','Заклинанието за огън е ИНСЕНДИО.'],done:'Пророчеството се превръща в светлина.'};
+export function mount(root,api){
+ root.innerHTML=`${head(api)}<div class="panel prophecy-panel"><div class="prophecy-orb"><span>{име|ТИ}</span></div><div class="prophecy-runes">${api.allRunes().map(r=>`<b>${r}</b>`).join('')}</div><p>Подреди руните и изречи огнената дума. После реши какво да направиш с бъдещето, което някой друг е написал.</p>${answerBar('prophecy-word','осемте руни','Изречи')}</div><div class="panel" id="prophecy-choice" hidden><p class="panel-title">Последният избор</p><p>Сферата се отваря. Можеш да чуеш пророчеството или да го унищожиш непрочетено.</p><div class="mystery-options"><button class="mystery-option" id="hear"><span>Изслушай го</span></button><button class="mystery-option" id="burn"><span>Изгори го</span></button></div></div>`;
+ wireAnswer(root,'prophecy-word',(v,input)=>{if(v!=='ИНСЕНДИО'){input.value='';api.fail('Руните не се събират в тази дума.');return;} api.sfx.unlock();$('#prophecy-choice').hidden=false;$('#prophecy-choice').scrollIntoView({behavior:'smooth'});});
+ $('#hear').addEventListener('click',()=>api.fail('Сферата прошепва първата дума и бъдещето започва да се затваря. Отказваш да слушаш нататък.',60000));
+ $('#burn').addEventListener('click',()=>{api.fx.flash('rgba(255,150,60,.35)',900);api.sfx.victory();api.solve(meta.done);});
+}

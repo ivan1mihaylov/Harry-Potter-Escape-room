@@ -77,7 +77,7 @@ function drawActs(all) {
   const box = $('#stats-acts'); if (!box) return;
   if (!all.length) { box.innerHTML = ''; return; }
 
-  const rows = [1, 2, 3, 4].map(a => {
+  const rows = [1, 2, 3, 4, 5].map(a => {
     const runs = all.filter(r => r.act === a);
     if (!runs.length) {
       return `<tr class="sa-none"><th>Част ${ACTS[a].numeral}</th>
@@ -118,7 +118,7 @@ function drawBoard(all) {
   const box = $('#stats-board'); if (!box) return;
   if (!all.length) { box.innerHTML = ''; return; }
 
-  const acts = [1, 2, 3, 4].filter(a => all.some(r => r.act === a));
+  const acts = [1, 2, 3, 4, 5].filter(a => all.some(r => r.act === a));
   box.innerHTML = `
     <section class="stats-card">
       <h2>Класация</h2>

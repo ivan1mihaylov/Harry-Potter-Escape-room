@@ -1,6 +1,6 @@
 /* ============================================================
    state.js — целият прогрес живее в localStorage. Без сървър.
-   Поддържа четири части (акта), всяка със собствен запис,
+   Поддържа пет части (акта), всяка със собствен запис,
    плюс общ дневник с постигнатите резултати.
    ============================================================ */
 
@@ -9,6 +9,7 @@ const ACT_KEYS = {
   2: 'hogwarts_escape_act2_v1',
   3: 'hogwarts_escape_act3_v1',
   4: 'hogwarts_escape_act4_v1',
+  5: 'hogwarts_escape_act5_v1',
 };
 const RECORDS_KEY = 'hogwarts_records_v1';
 const PROFILE_KEY = 'hogwarts_wizard_v1';
@@ -179,7 +180,7 @@ export function personalizeDOM(root) {
 (function adoptOldHouse() {
   const p = readProfile();
   if (p.house) return;
-  for (const a of [1, 2, 3, 4]) {
+  for (const a of [1, 2, 3, 4, 5]) {
     const d = peek(a);
     if (d && d.house) { writeProfile({ house: d.house }); return; }
   }
