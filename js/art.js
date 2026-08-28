@@ -1,6 +1,7 @@
 /* ============================================================
-   art.js — рисуваната ръчно SVG графика (гербове, шапка, предмети)
-   Всичко е вградено, за да няма счупени картинки.
+   art.js — SVG графиката (шапка, предмети, камъни).
+   Гербовете на домовете са истинските рисувани гербове и стоят
+   като картинки в assets/img/ — виж assets/CREDITS.md.
    ============================================================ */
 
 export const HOUSES = {
@@ -10,99 +11,23 @@ export const HOUSES = {
   hufflepuff: { name: 'Хафълпаф',  animal: 'Язовец', color: '#e0b32a', color2: '#2b2b2b', motto: 'Труд, вярност, търпение' },
 };
 
-const SHIELD = (fill, inner) => `
-  <defs>
-    <linearGradient id="g${inner.id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${fill.a}"/><stop offset="1" stop-color="${fill.b}"/>
-    </linearGradient>
-    <filter id="f${inner.id}"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".55"/></filter>
-  </defs>
-  <path d="M50 4 92 16v42c0 30-20 48-42 58C28 106 8 88 8 58V16L50 4Z"
-        fill="url(#g${inner.id})" stroke="#e7d29a" stroke-width="2.5" filter="url(#f${inner.id})"/>
-  <path d="M50 11 86 21v36c0 26-17 42-36 51C31 99 14 83 14 57V21L50 11Z"
-        fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/>
-  ${inner.svg}`;
-
-const LION = `
-  <g transform="translate(50,58)">
-    <path d="M0.0 -34.0 L5.3 -24.9 L13.8 -31.1 L15.0 -20.6 L25.3 -22.8 L22.1 -12.8 L32.3 -10.5 L25.4 -2.7 L33.8 3.6 L24.3 7.9 L29.4 17.0 L19.0 17.1 L20.0 27.5 L10.4 23.3 L7.1 33.3 L0.0 25.5 L-7.1 33.3 L-10.4 23.3 L-20.0 27.5 L-19.0 17.1 L-29.4 17.0 L-24.3 7.9 L-33.8 3.6 L-25.4 -2.7 L-32.3 -10.5 L-22.1 -12.8 L-25.3 -22.8 L-15.0 -20.6 L-13.8 -31.1 L-5.3 -24.9 Z" fill="#c98d2c" stroke="#5b3a12" stroke-width="1.4" stroke-linejoin="round"/>
-    <circle cx="0" cy="0" r="20" fill="#f6e2a8" stroke="#5b3a12" stroke-width="1.4"/>
-    <circle cx="-15" cy="-14" r="6.5" fill="#e8c878" stroke="#5b3a12" stroke-width="1.2"/>
-    <circle cx="15" cy="-14" r="6.5" fill="#e8c878" stroke="#5b3a12" stroke-width="1.2"/>
-    <circle cx="-7.5" cy="-4" r="2.6" fill="#3a2408"/>
-    <circle cx="7.5" cy="-4" r="2.6" fill="#3a2408"/>
-    <ellipse cx="-5" cy="9" rx="7" ry="5.5" fill="#fff5da"/>
-    <ellipse cx="5" cy="9" rx="7" ry="5.5" fill="#fff5da"/>
-    <path d="M-4 4h8l-4 4.5-4-4.5Z" fill="#8e3b2a"/>
-    <path d="M0 8.5v3.5M0 12c-2.6 2.6-6 2-7.5 0M0 12c2.6 2.6 6 2 7.5 0"
-          fill="none" stroke="#5b3a12" stroke-width="1.4" stroke-linecap="round"/>
-  </g>`;
-
-const SNAKE = `
-  <g transform="translate(50,60)">
-    <path d="M-2 32C24 26 28 8 8 1c-20-7-18-23 2-28" fill="none" stroke="#e4f6ec"
-          stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M-2 32C24 26 28 8 8 1c-20-7-18-23 2-28" fill="none" stroke="#9fd4b8"
-          stroke-width="4" stroke-linecap="round" stroke-dasharray="2 7"/>
-    <path d="M-4 32c-8 1-14 5-16 10 7 1 13-2 17-6" fill="#e4f6ec"/>
-    <path d="M6-30c9-4 20-1 24 6 3 6 0 12-7 14-8 2-17-1-20-7-2-5 0-11 3-13Z" fill="#e4f6ec"/>
-    <circle cx="22" cy="-25" r="2.4" fill="#0f7a4f"/>
-    <path d="M31-20c5 1 9 3 12 6M43-14l-5 1M43-14l-3 4" fill="none" stroke="#c4382f"
-          stroke-width="2" stroke-linecap="round"/>
-  </g>`;
-
-const EAGLE = `
-  <g transform="translate(50,58)">
-    <path d="M-4-30c-3-3-9-3-12 1 4 0 6 2 7 5-10 2-19 9-23 19 6-4 12-6 18-6-8 6-13 15-14 26 7-8 15-13 23-15-4 9-5 19-2 29 5-9 11-15 18-18v13h6V11c7 3 13 9 18 18 3-10 2-20-2-29 8 2 16 7 23 15-1-11-6-20-14-26 6 0 12 2 18 6-4-10-13-17-23-19 1-3 3-5 7-5-3-4-9-4-12-1"
-          fill="#dfe7f7" stroke="#1c2f60" stroke-width="1.5" stroke-linejoin="round"/>
-    <circle cx="-4.5" cy="-24" r="2" fill="#1c2f60"/>
-    <circle cx="4.5" cy="-24" r="2" fill="#1c2f60"/>
-    <path d="M0-22l5 6h-10l5-6Z" fill="#b98a3a"/>
-  </g>`;
-
-const BADGER = `
-  <g transform="translate(50,58)">
-    <path d="M0-28c17 0 29 13 29 29 0 14-13 24-29 24s-29-10-29-24c0-16 12-29 29-29Z"
-          fill="#f7f4ed" stroke="#1b1b1b" stroke-width="2"/>
-    <path d="M-24-14c-4-7-3-14 2-17 4-2 9 1 11 6M24-14c4-7 3-14-2-17-4-2-9 1-11 6"
-          fill="#f7f4ed" stroke="#1b1b1b" stroke-width="2"/>
-    <path d="M-14-24c-5 10-6 30-3 44 4 2 8 3 12 3l-2-47c-2 0-5 0-7 0Z" fill="#1b1b1b"/>
-    <path d="M14-24c5 10 6 30 3 44-4 2-8 3-12 3l2-47c2 0 5 0 7 0Z" fill="#1b1b1b"/>
-    <circle cx="-11" cy="-4" r="3" fill="#f7f4ed"/>
-    <circle cx="11" cy="-4" r="3" fill="#f7f4ed"/>
-    <ellipse cx="0" cy="15" rx="5.5" ry="4" fill="#1b1b1b"/>
-    <path d="M0 19v5M0 24c-3 3-7 2-9 0M0 24c3 3 7 2 9 0" fill="none" stroke="#1b1b1b"
-          stroke-width="1.8" stroke-linecap="round"/>
-  </g>`;
-
-const HOGWARTS_CREST = `
-  <g>
-    <path d="M50 4 92 16v42c0 30-20 48-42 58C28 106 8 88 8 58V16L50 4Z" fill="#151122" stroke="#d9b45b" stroke-width="2.5"/>
-    <path d="M50 6v110" stroke="#d9b45b" stroke-width="1" opacity=".55"/>
-    <path d="M9 46h82" stroke="#d9b45b" stroke-width="1" opacity=".55"/>
-    <g transform="translate(11,9.1) scale(.36)">${LION}</g>
-    <g transform="translate(53,9.1) scale(.36)">${SNAKE}</g>
-    <g transform="translate(11,53.1) scale(.36)">${EAGLE}</g>
-    <g transform="translate(53,53.1) scale(.36)">${BADGER}</g>
-    <text x="50" y="118" text-anchor="middle" font-family="Cinzel, serif" font-size="7" fill="#d9b45b" letter-spacing="1">HOGWARTS</text>
-  </g>`;
-
-const ANIMALS = { gryffindor: LION, slytherin: SNAKE, ravenclaw: EAGLE, hufflepuff: BADGER };
-const FILLS = {
-  gryffindor: { a: '#8e2019', b: '#4a0d0a' },
-  slytherin:  { a: '#0f7a4f', b: '#04331f' },
-  ravenclaw:  { a: '#2a4fa8', b: '#0d1c46' },
-  hufflepuff: { a: '#c99416', b: '#5f4406' },
-};
-
 let _uid = 0;
+const CREST_SRC = {
+  gryffindor: 'assets/img/crest-gryffindor.png',
+  slytherin:  'assets/img/crest-slytherin.png',
+  ravenclaw:  'assets/img/crest-ravenclaw.png',
+  hufflepuff: 'assets/img/crest-hufflepuff.png',
+};
+const HOGWARTS_SRC = 'assets/img/crest-hogwarts.png';
+
+/* Гербът остава <svg>, за да пасне на същите правила в CSS (svg{width:100%}),
+   но вътре е самата картинка — «meet» я вписва, без да я разтяга.        */
 export function crestSVG(house) {
-  const u = 'c' + (++_uid);
-  if (!house || !ANIMALS[house]) {
-    return `<svg viewBox="0 0 100 122" xmlns="http://www.w3.org/2000/svg">${HOGWARTS_CREST}</svg>`;
-  }
-  const inner = { id: u, svg: ANIMALS[house] };
-  return `<svg viewBox="0 0 100 122" xmlns="http://www.w3.org/2000/svg">${SHIELD(FILLS[house], inner)}</svg>`;
+  const src = CREST_SRC[house] || HOGWARTS_SRC;
+  const alt = house && HOUSES[house] ? HOUSES[house].name : 'Хогуортс';
+  return `<svg viewBox="0 0 100 122" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Герб на ${alt}">
+    <image href="${src}" x="0" y="0" width="100" height="122" preserveAspectRatio="xMidYMid meet"/>
+  </svg>`;
 }
 
 export function hatSVG() {

@@ -1,7 +1,7 @@
 # Откъде са изображенията
 
-Всичко тук е със свободен лиценз и е свалено локално, за да не зависи играта
-от чужд сървър. Проектът е фенски и некомерсиален.
+Всичко тук е свалено локално, за да не зависи играта от чужд сървър.
+Проектът е фенски, некомерсиален и за лично ползване.
 
 ## Текстури — `assets/tex/`
 
@@ -34,6 +34,23 @@
 | `figure-2.svg` | «Man standing silhouette.svg», Wikimedia Commons | обществено достояние |
 | `figure-3.svg` | «Silhouette of man standing and facing forward.svg», Wikimedia Commons | обществено достояние |
 | `dragon.jpg`, `train.jpg` | Wikimedia Commons | свободни лицензи |
+
+## Гербове — `assets/img/crest-*.png`
+
+Истинските рисувани гербове на четирите дома и на Хогуортс, свалени от
+**Harry Potter Wiki** (harrypotter.fandom.com) и смалени до 255 цвята,
+за да тежат по около 45 KB вместо по 200:
+
+| файл | оригинал |
+|------|----------|
+| `crest-gryffindor.png` | `File:Gryffindor™ Crest.png` |
+| `crest-slytherin.png` | `File:Slytherin™ Crest (Painting).png` |
+| `crest-ravenclaw.png` | `File:Ravenclaw™ Crest (Painting).png` |
+| `crest-hufflepuff.png` | `File:Hufflepuff™ Crest (Painting).png` |
+| `crest-hogwarts.png` | `File:Hogwarts coat of arms.png` |
+
+Гербовете и имената на домовете са запазени марки на Warner Bros. Стоят тук
+само защото стаята е лична и не се продава.
 
 Външните снимки, които се теглят на живо (фонове в Първа част), стоят в
 `js/config.js` — всяка има резервен вариант в CSS, ако линкът умре.
