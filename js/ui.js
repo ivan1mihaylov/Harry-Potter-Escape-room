@@ -280,8 +280,9 @@ export function credits() {
     <p>Фен-проект, вдъхновен от света на Хари Потър на Дж. К. Роулинг. Направен изцяло като статичен уебсайт:
     без сървър и без база данни — прогресът живее в <code>localStorage</code> на твоя браузър.</p>
     <p class="muted">3D сцените са с three.js, звуците са синтезирани в реално време с WebAudio,
-    гербовете и предметите са рисувани със SVG. Текстурите са CC0 от Poly Haven, а част от
-    снимките и силуетите идват от Wikimedia Commons — списъкът е в <code>assets/CREDITS.md</code>.</p>
+    предметите са рисувани със SVG. Гербовете на домовете са истинските. Текстурите са CC0
+    от Poly Haven, а част от снимките и силуетите идват от Wikimedia Commons — целият
+    списък е в <code>assets/CREDITS.md</code>.</p>
     <div class="flex flex-center mt"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-back').classList.remove('open')">Затвори</button></div>`);
 }
 
