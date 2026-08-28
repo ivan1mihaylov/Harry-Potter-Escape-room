@@ -209,41 +209,82 @@ async function boot(api) {
 }
 
 function buildStag(T) {
+  /* Сребърният елен: гледа към +X.  Всяка част носи собствен материал,
+     защото прозрачността им се вдига поотделно, докато се сглобява.   */
   const g = new T.Group();
   const mat = () => new T.MeshBasicMaterial({
     color: 0xdfe8ff, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false,
   });
-  const body = new T.Mesh(new T.CapsuleGeometry(0.62, 1.7, 6, 12), mat());
-  body.rotation.z = Math.PI / 2; body.position.y = 1.85;
-  const neck = new T.Mesh(new T.CylinderGeometry(0.24, 0.36, 1.3, 8), mat());
-  neck.position.set(1.05, 2.5, 0); neck.rotation.z = -0.75;
-  const head = new T.Mesh(new T.CapsuleGeometry(0.24, 0.62, 5, 10), mat());
-  head.position.set(1.75, 2.95, 0); head.rotation.z = -1.15;
-  g.add(body, neck, head);
+  const add = (m, x, y, z, rx = 0, ry = 0, rz = 0) => {
+    m.position.set(x, y, z); m.rotation.set(rx, ry, rz); g.add(m); return m;
+  };
 
-  [[-0.6, 0.38], [-0.6, -0.38], [0.6, 0.34], [0.6, -0.34]].forEach(([z, x]) => {
-    const leg = new T.Mesh(new T.CylinderGeometry(0.1, 0.07, 1.85, 6), mat());
-    leg.position.set(z, 0.92, x);
-    g.add(leg);
+  /* тяло */
+  const body = new T.Mesh(new T.CapsuleGeometry(0.52, 1.75, 8, 16), mat());
+  body.scale.set(1, 1, 0.86);
+  add(body, 0, 1.92, 0, 0, 0, Math.PI / 2);
+  const rump = new T.Mesh(new T.SphereGeometry(0.54, 12, 10), mat());
+  rump.scale.set(0.95, 1.05, 0.86);
+  add(rump, -1.0, 1.94, 0);
+  const chest = new T.Mesh(new T.SphereGeometry(0.5, 12, 10), mat());
+  chest.scale.set(1, 1.08, 0.9);
+  add(chest, 0.98, 1.9, 0);
+
+  /* крака на стави, с копита — еленът стъпва, не стои на пръчки */
+  [[0.82, 0.32, 1], [0.8, -0.34, 1], [-0.86, 0.3, 0], [-0.88, -0.32, 0]]
+    .forEach(([x, z, front], k) => {
+      const leg = new T.Group();
+      const up = new T.Mesh(new T.CylinderGeometry(0.13, 0.075, 1.0, 7), mat());
+      up.position.y = -0.5; leg.add(up);
+      const knee = new T.Group(); knee.position.y = -1.0;
+      const lo = new T.Mesh(new T.CylinderGeometry(0.06, 0.038, 0.86, 6), mat());
+      lo.position.y = -0.43; knee.add(lo);
+      const hoof = new T.Mesh(new T.CylinderGeometry(0.05, 0.075, 0.16, 6), mat());
+      hoof.position.y = -0.92; knee.add(hoof);
+      leg.add(knee);
+      leg.position.set(x, 1.86, z);
+      leg.rotation.x = front ? 0.12 - (k % 2) * 0.24 : -0.2 + (k % 2) * 0.28;
+      knee.rotation.x = front ? -0.18 : 0.34;
+      g.add(leg);
+    });
+
+  /* врат и глава */
+  const neck = new T.Mesh(new T.CylinderGeometry(0.2, 0.38, 1.35, 9), mat());
+  add(neck, 1.32, 2.55, 0, 0, 0, -0.66);
+  const skull = new T.Mesh(new T.SphereGeometry(0.24, 12, 10), mat());
+  skull.scale.set(1.25, 0.95, 0.88);
+  add(skull, 1.86, 3.16, 0);
+  const muzzle = new T.Mesh(new T.CylinderGeometry(0.085, 0.16, 0.56, 8), mat());
+  add(muzzle, 2.18, 3.0, 0, 0, 0, -Math.PI / 2 + 0.42);
+  const chin = new T.Mesh(new T.SphereGeometry(0.09, 8, 6), mat());
+  add(chin, 2.42, 2.88, 0);
+  [-1, 1].forEach(sz => {
+    const ear = new T.Mesh(new T.ConeGeometry(0.09, 0.3, 7), mat());
+    add(ear, 1.7, 3.32, sz * 0.16, sz * 0.5, 0, 0.35);
   });
 
-  // рога като клони
-  [1, -1].forEach(side => {
-    const base = new T.Mesh(new T.CylinderGeometry(0.06, 0.09, 1.1, 5), mat());
-    base.position.set(1.72, 3.6, side * 0.18);
-    base.rotation.set(side * 0.35, 0, -0.25);
-    g.add(base);
-    for (let k = 0; k < 3; k++) {
-      const tine = new T.Mesh(new T.CylinderGeometry(0.035, 0.05, 0.75 - k * 0.12, 5), mat());
-      tine.position.set(1.62 + k * 0.18, 3.95 + k * 0.32, side * (0.3 + k * 0.12));
-      tine.rotation.set(side * 0.8, 0, -0.9 + k * 0.25);
-      g.add(tine);
-    }
+  /* рогата: извит ствол и четири зъбера от всяка страна */
+  [1, -1].forEach(sz => {
+    const beam = [
+      [1.82, 3.5, sz * 0.12, 0.55, sz * 0.3, -0.3],
+      [1.72, 3.98, sz * 0.36, 0.6, sz * 0.5, 0.18],
+      [1.5, 4.4, sz * 0.62, 0.55, sz * 0.55, 0.55],
+    ];
+    beam.forEach(([x, y, z, len, rx, rz]) => {
+      const seg = new T.Mesh(new T.CylinderGeometry(0.045, 0.065, len, 6), mat());
+      add(seg, x, y, z, rx, 0, rz);
+    });
+    [[1.94, 3.78, 0.24, 0.5, -0.9], [1.78, 4.16, 0.5, 0.46, -0.6],
+     [1.5, 4.5, 0.76, 0.4, -0.2], [1.24, 4.68, 0.9, 0.34, 0.2]]
+      .forEach(([x, y, z, len, rz], k) => {
+        const tine = new T.Mesh(new T.CylinderGeometry(0.022, 0.04, len, 5), mat());
+        add(tine, x, y, sz * z, sz * (0.7 + k * 0.1), 0, rz);
+      });
   });
 
-  const tail = new T.Mesh(new T.ConeGeometry(0.16, 0.5, 6), mat());
-  tail.position.set(-1.05, 2.15, 0); tail.rotation.z = 1.2;
-  g.add(tail);
+  /* опашка */
+  const tail = new T.Mesh(new T.ConeGeometry(0.15, 0.46, 7), mat());
+  add(tail, -1.42, 2.14, 0, 0, 0, 1.05);
 
   g.scale.setScalar(1.15);
   return g;

@@ -331,7 +331,16 @@
   font-family:var(--font-head);font-size:.85rem;color:#4e6a5c;transition:.4s
 }
 .wt.gap{margin-left:12px}
-.wt.on{color:#c9ffe0;border-color:#2e9e6b;background:rgba(46,158,107,.22);box-shadow:0 0 14px rgba(46,158,107,.5)}
+/* празните плочки не издават буквата — само че я има */
+.wt::after{content:'·';color:#2c3f36;font-size:.9rem}
+.wt.on::after{content:none}
+.wt.on{color:#c9ffe0;border-color:#2e9e6b;background:rgba(46,158,107,.22);
+  box-shadow:0 0 14px rgba(46,158,107,.5);animation:wtPop .45s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes wtPop{
+  0%{transform:scale(.4) rotateX(-80deg);opacity:0;filter:brightness(3)}
+  60%{transform:scale(1.18) rotateX(0);opacity:1}
+  100%{transform:none}
+}
 
 .stone-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
 .stone{

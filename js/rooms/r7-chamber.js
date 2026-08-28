@@ -78,8 +78,13 @@ export function mount(root, api) {
 function renderTrack(api) {
   const t = $('#track');
   const n = api.data.pathDone ? WORD.length : api.data.path.length;
-  t.innerHTML = [...WORD].map((c, i) =>
-    `<span class="wt${i < n ? ' on' : ''}${i === 7 ? ' gap' : ''}">${c}</span>`).join('');
+  /* името стои скрито: всяка буква се показва чак когато я стъпиш */
+  t.innerHTML = [...WORD].map((c, i) => {
+    const on = i < n;
+    return `<span class="wt${on ? ' on' : ''}${i === 7 ? ' gap' : ''}"
+              ${on ? `style="animation-delay:${Math.min(i, 2) * 40}ms"` : ''}
+            >${on ? c : ''}</span>`;
+  }).join('');
 }
 
 function renderGrid(api) {
@@ -210,54 +215,132 @@ function turnTap(api) {
 }
 
 /* кранче: отдалеч всички са еднакви, гравюрата се чете само уголемена */
+/* Кранчето: бронзова розетка с кръстата ръкохватка. Гравюрата се рисува
+   два пъти — тъмно надолу и светло нагоре — за да изглежда изсечена в
+   метала, а не нарисувана върху него.                                  */
 function tapSVG(motif, seed, big) {
-  const w = big ? 2.4 : 1.1;
-  const op = big ? 0.92 : 0.32;
+  const w = big ? 3 : 1.5;
+  const op = big ? 1 : 0.5;
+  const uid = `${seed}${big ? 'b' : 's'}`;
+  /* драскотини от времето — всяко кранче е протрито различно */
   const wear = [];
-  for (let k = 0; k < 5; k++) {
+  for (let k = 0; k < 7; k++) {
     const a = (seed * 37 + k * 71) % 360 * Math.PI / 180;
-    const r1 = 22 + ((seed * 13 + k * 7) % 6);
+    const r1 = 20 + ((seed * 13 + k * 7) % 8);
     const x1 = 40 + Math.cos(a) * r1, y1 = 40 + Math.sin(a) * r1;
-    const x2 = 40 + Math.cos(a + 0.5) * (r1 - 4), y2 = 40 + Math.sin(a + 0.5) * (r1 - 4);
-    wear.push(`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="#6f7178" stroke-width="${big ? 1.4 : .7}" opacity=".45"/>`);
+    const x2 = 40 + Math.cos(a + 0.42) * (r1 - 3), y2 = 40 + Math.sin(a + 0.42) * (r1 - 3);
+    wear.push(`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}"
+      stroke="#2b2015" stroke-width="${big ? 1.2 : .6}" opacity=".4"/>`);
   }
+  const eng = engraving(motif, big, w);
   return `<svg viewBox="0 0 80 80">
     <defs>
-      <radialGradient id="tp${seed}${big ? 'b' : 's'}" cx="35%" cy="28%">
-        <stop offset="0" stop-color="#9aa0a8"/><stop offset=".55" stop-color="#5c6068"/>
-        <stop offset="1" stop-color="#2b2e34"/>
+      <radialGradient id="tb${uid}" cx="34%" cy="26%" r="78%">
+        <stop offset="0" stop-color="#e8c98a"/>
+        <stop offset=".38" stop-color="#b08a4a"/>
+        <stop offset=".72" stop-color="#6d5228"/>
+        <stop offset="1" stop-color="#33260f"/>
+      </radialGradient>
+      <linearGradient id="th${uid}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f0d9a4"/><stop offset=".5" stop-color="#a8813f"/>
+        <stop offset="1" stop-color="#5c451f"/>
+      </linearGradient>
+      <radialGradient id="tc${uid}" cx="42%" cy="34%" r="70%">
+        <stop offset="0" stop-color="#3a2c16"/><stop offset="1" stop-color="#0e0a05"/>
       </radialGradient>
     </defs>
-    <circle cx="40" cy="40" r="32" fill="url(#tp${seed}${big ? 'b' : 's'})" stroke="#1d1f24" stroke-width="2"/>
-    <circle cx="40" cy="40" r="24" fill="none" stroke="#7d828c" stroke-width="1.4" opacity=".55"/>
-    <circle cx="40" cy="40" r="12" fill="#20232a" stroke="#4a4e56" stroke-width="1.6"/>
-    <g stroke="#8d939c" stroke-width="${big ? 6 : 4}" stroke-linecap="round" opacity=".9">
-      <path d="M40 12v8M40 60v8M12 40h8M60 40h8"/>
+
+    <!-- розетката -->
+    <circle cx="40" cy="40" r="33" fill="url(#tb${uid})" stroke="#1a1208" stroke-width="2"/>
+    <circle cx="40" cy="40" r="33" fill="none" stroke="#f0dcae" stroke-width="1" opacity=".28"/>
+    <circle cx="40" cy="40" r="26.5" fill="none" stroke="#241a0c" stroke-width="2" opacity=".55"/>
+    <circle cx="40" cy="40" r="25" fill="none" stroke="#e0c489" stroke-width="1" opacity=".22"/>
+
+    <!-- кръстатата ръкохватка -->
+    <g stroke="url(#th${uid})" stroke-width="${big ? 8 : 6}" stroke-linecap="round">
+      <path d="M40 9v11M40 60v11M9 40h11M60 40h11"/>
     </g>
+    <g stroke="#1a1208" stroke-width="${big ? 1.4 : 1}" opacity=".5" fill="none">
+      <path d="M40 9v11M40 60v11M9 40h11M60 40h11"/>
+    </g>
+
+    <!-- гнездото, в което е изсечена гравюрата -->
+    <circle cx="40" cy="40" r="21" fill="url(#tc${uid})" stroke="#4a3a1c" stroke-width="1.6"/>
+    <circle cx="40" cy="40" r="21" fill="none" stroke="#000" stroke-width="3" opacity=".35"/>
     ${wear.join('')}
-    <g stroke="#8f959e" fill="none" stroke-width="${w}" stroke-linecap="round" opacity="${op}"
-       transform="translate(40,40) scale(${big ? 1.15 : 1})">
-      ${engraving(motif, big)}
+
+    <!-- гравюрата: тъмна бразда и светъл ръб -->
+    <g class="tap-engraving" data-motif="${motif}" transform="translate(40,40) scale(${big ? 1.28 : 1.05})">
+      <g fill="none" stroke="#080502" stroke-width="${w + 1.4}" stroke-linecap="round"
+         stroke-linejoin="round" opacity="${op * 0.85}" transform="translate(0,1)">${eng}</g>
+      <g fill="none" stroke="#f2dcae" stroke-width="${w}" stroke-linecap="round"
+         stroke-linejoin="round" opacity="${op * 0.9}" transform="translate(0,-0.6)">${eng}</g>
+      <g fill="none" stroke="#8a6c33" stroke-width="${w * 0.6}" stroke-linecap="round"
+         stroke-linejoin="round" opacity="${op * 0.8}">${eng}</g>
     </g>
   </svg>`;
 }
 
-function engraving(id, big) {
+/* Мотивите са истински фигури, а не заврънтулки: змията има глава, око,
+   раздвоен език и три навивки — за да може да се различи от лозата.   */
+function engraving(id, big, w = 2) {
   switch (id) {
     case 'snake':
-      return `<path d="M-13 9c9 3 14-2 11-7s-13-4-11-11 10-8 16-5"/>
-              <circle cx="16" cy="-14" r="1.6" fill="#8f959e" stroke="none"/>
-              <path d="M19-15l5-2M19-13l5 2"/>`;
-    case 'eel':   return `<path d="M-14 8c8 5 16-1 14-8s-12-6-12-13"/><path d="M-14 8l-4 4"/>`;
-    case 'vine':  return `<path d="M-12 12c6-6 4-14 10-18s10 2 14-3"/><path d="M-4 4l-5-3M2-2l5 3M8-8l-4-4"/>`;
-    case 'ivy':   return `<path d="M-12 10c8-4 8-12 16-16"/><path d="M-6 5c-3-3-7-3-9 0M2-3c-3-3-7-3-9 0M10-11c-3-3-7-3-9 0"/>`;
-    case 'fish':  return `<path d="M-14 0c6-8 18-8 24 0-6 8-18 8-24 0Z"/><path d="M10-6l7-6v12l-7-6"/><circle cx="-6" cy="-2" r="1.4" fill="#8f959e" stroke="none"/>`;
-    case 'wave':  return `<path d="M-16 4c5-8 11 8 16 0s11 8 16 0"/><path d="M-16-6c5-8 11 8 16 0s11 8 16 0" opacity=".6"/>`;
-    case 'chain': return `<ellipse cx="-10" cy="0" rx="6" ry="4"/><ellipse cx="0" cy="0" rx="6" ry="4"/><ellipse cx="10" cy="0" rx="6" ry="4"/>`;
-    case 'feather': return `<path d="M-12 12C-4 0 4-8 14-14"/><path d="M-6 6l-6 1M-2 0l-6 0M4-6l-6-1M10-11l-6-2"/>`;
-    case 'knot':  return `<path d="M-8-6c10 0 10 12 0 12s-10-12 0-12"/><path d="M8-6c-10 0-10 12 0 12s10-12 0-12"/>`;
-    case 'crack': return `<path d="M-12-12l6 9-4 5 8 6-3 6"/><path d="M-6-3l6 2"/>`;
-    case 'thorn': return `<path d="M-14 8L14-8"/><path d="M-6 2l-2-6M2-3l4-5M-10 5l-5-1M6-6l5 2"/>`;
-    default:      return `<path d="M0 0c0-5 5-5 5 0s-8 8-11 0 8-14 15-6"/>`;
+      /* Тялото се изтънява към опашката (три дъги с различна дебелина),
+         главата е плътна с око и раздвоен език — за да е змия, а не черта */
+      return `<path d="M-17 13Q-11 16-8 10" stroke-width="${(w * 0.5).toFixed(2)}"/>
+              <path d="M-8 10Q-3 4-6-2" stroke-width="${(w * 0.8).toFixed(2)}"/>
+              <path d="M-6-2Q-9-9-3-13" stroke-width="${(w * 1.05).toFixed(2)}"/>
+              <path d="M-3-13Q3-17 8-16" stroke-width="${(w * 1.3).toFixed(2)}"/>
+              <path d="M7.4-17.2c5.2-1 10.6.9 12.4 3.4-1.8 2.5-7.2 4.2-12.4 3.2
+                       -2.2-.4-3.2-1.5-3.2-3.3s1-2.9 3.2-3.3Z"
+                    fill="#f2dcae" stroke-width="${(w * 0.5).toFixed(2)}"/>
+              <circle cx="12.6" cy="-15.2" r="${(w * 0.4 + .45).toFixed(2)}" fill="#0a0703" stroke="none"/>
+              <path d="M19.8-13.8l5.4-3.2M19.8-13.8l5.6 1.4M19.8-13.8l3.4-.6"
+                    stroke-width="${(w * 0.5).toFixed(2)}"/>
+              <path d="M-17 13q-3 1-4.5 3" stroke-width="${(w * 0.42).toFixed(2)}"/>`;
+    case 'eel':
+      return `<path d="M-16 9c9 6 17-2 15-9s-13-7-13-14"/>
+              <path d="M-16 9l-5 5M-14 3l-6 2"/>
+              <circle cx="-13" cy="-16" r="1.2" fill="#f2dcae" stroke="none"/>`;
+    case 'vine':
+      return `<path d="M-13 14C-6 7-9-2-2-8s10 3 15-4"/>
+              <path d="M-6 6c-4-3-8-2-9 2 4 3 8 2 9-2Z"/>
+              <path d="M4-4c1-5 5-7 9-5-1 5-5 7-9 5Z"/>`;
+    case 'ivy':
+      return `<path d="M-13 12C-5 6-4-4 6-9s8-6 10-9"/>
+              <path d="M-7 4c-4-4-8-3-9 1 4 4 8 3 9-1ZM3-5c-4-4-8-3-9 1 4 4 8 3 9-1Z"/>`;
+    case 'fish':
+      return `<path d="M-15 0c7-9 19-9 26 0-7 9-19 9-26 0Z"/>
+              <path d="M11-7l8-7v14l-8-7"/>
+              <path d="M-4-5c3 3 3 7 0 10"/>
+              <circle cx="-7" cy="-2" r="1.4" fill="#f2dcae" stroke="none"/>`;
+    case 'wave':
+      return `<path d="M-17 6c5-9 12 9 17 0s12 9 17 0"/>
+              <path d="M-17-3c5-9 12 9 17 0s12 9 17 0"/>
+              <path d="M-17-12c5-9 12 9 17 0s12 9 17 0" opacity=".7"/>`;
+    case 'chain':
+      return `<ellipse cx="-12" cy="0" rx="6.5" ry="4.5"/><ellipse cx="0" cy="0" rx="6.5" ry="4.5"/>
+              <ellipse cx="12" cy="0" rx="6.5" ry="4.5"/>
+              <path d="M-6 0h1M5 0h2"/>`;
+    case 'feather':
+      return `<path d="M-13 14C-4 1 5-8 15-15"/>
+              <path d="M-7 8c2-5 6-8 10-9M-2 2c2-5 6-8 10-9M3-4c2-5 6-7 9-8"/>
+              <path d="M-9 11c-3 1-5 3-5 5"/>`;
+    case 'knot':
+      return `<path d="M-9-7c11 0 11 14 0 14s-11-14 0-14"/>
+              <path d="M9-7c-11 0-11 14 0 14s11-14 0-14"/>
+              <path d="M0-7v14"/>`;
+    case 'crack':
+      return `<path d="M-13-14l7 10-5 6 9 7-4 7"/>
+              <path d="M-6-4l7 3M-4 12l5 3"/>`;
+    case 'thorn':
+      return `<path d="M-15 9L15-9"/>
+              <path d="M-7 3l-3-7M2-2l5-6M-11 6l-6-1M7-6l6 2"/>`;
+    case 'spiral':
+      return `<path d="M0 0c0-4 4-4 4 0s-6 7-10 2-1-13 6-13 12 7 12 14"/>`;
+    default:
+      return `<path d="M0 0c0-5 5-5 5 0s-8 8-11 0 8-14 15-6"/>`;
   }
 }
+

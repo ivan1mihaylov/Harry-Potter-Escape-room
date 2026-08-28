@@ -241,26 +241,106 @@ function drawBeam(path, hit) {
 }
 
 function buildUnicorn(T) {
+  /* Еднорогът лежи ранен в тревата и гледа към +X. */
   const g = new T.Group();
-  const coat = new T.MeshStandardMaterial({ color: 0xf2f4f8, roughness: 0.55,
+  const coat = new T.MeshStandardMaterial({ color: 0xf2f4f8, roughness: 0.5,
     emissive: 0x50607a, emissiveIntensity: 0.45 });
-  const body = new T.Mesh(new T.CapsuleGeometry(0.46, 1.2, 5, 12), coat);
-  body.rotation.z = Math.PI / 2; body.position.y = 0.62;
-  body.rotation.x = 0.25;
-  const neck = new T.Mesh(new T.CylinderGeometry(0.18, 0.26, 1.0, 7), coat);
-  neck.position.set(0.8, 0.95, 0); neck.rotation.z = -0.9;
-  const head = new T.Mesh(new T.BoxGeometry(0.72, 0.3, 0.28), coat);
-  head.position.set(1.35, 1.15, 0); head.rotation.z = -0.15;
-  const horn = new T.Mesh(new T.ConeGeometry(0.07, 0.9, 8),
-    new T.MeshStandardMaterial({ color: 0xfff4d0, roughness: 0.2, metalness: 0.7,
-      emissive: 0x8a7a40, emissiveIntensity: 0.6 }));
-  horn.position.set(1.55, 1.6, 0); horn.rotation.z = -0.5;
-  g.add(body, neck, head, horn);
-  [[-0.45, 0.3], [-0.45, -0.3], [0.4, 0.28], [0.4, -0.28]].forEach(([z, x]) => {
-    const leg = new T.Mesh(new T.CylinderGeometry(0.08, 0.06, 0.7, 5), coat);
-    leg.position.set(z, 0.32, x); leg.rotation.x = 1.3;
-    g.add(leg);
+  const mane = new T.MeshStandardMaterial({ color: 0xdfe6f2, roughness: 0.35,
+    emissive: 0x6a7ea0, emissiveIntensity: 0.6 });
+  const hornMat = new T.MeshStandardMaterial({ color: 0xfff4d0, roughness: 0.18,
+    metalness: 0.7, emissive: 0x8a7a40, emissiveIntensity: 0.6 });
+  const hoofMat = new T.MeshStandardMaterial({ color: 0x2a2e38, roughness: 0.45, metalness: 0.2 });
+
+  const body = new T.Mesh(new T.CapsuleGeometry(0.44, 1.15, 8, 16), coat);
+  body.rotation.z = Math.PI / 2; body.position.set(0, 0.48, 0);
+  body.scale.set(1, 1, 0.82);
+  const rump = new T.Mesh(new T.SphereGeometry(0.44, 12, 10), coat);
+  rump.position.set(-0.7, 0.5, 0); rump.scale.set(0.95, 1, 0.82);
+  const chest = new T.Mesh(new T.SphereGeometry(0.42, 12, 10), coat);
+  chest.position.set(0.66, 0.5, 0); chest.scale.set(1, 1.02, 0.85);
+  g.add(body, rump, chest);
+
+  /* прегънатите крака под тялото */
+  [[0.52, 0.3], [0.5, -0.32], [-0.58, 0.28], [-0.56, -0.3]].forEach(([x, z], k) => {
+    const up = new T.Mesh(new T.CylinderGeometry(0.11, 0.075, 0.62, 7), coat);
+    up.position.set(x, 0.3, z * 1.15);
+    up.rotation.set(Math.PI / 2 - 0.25, 0, k < 2 ? 0.35 : -0.3);
+    const lo = new T.Mesh(new T.CylinderGeometry(0.06, 0.045, 0.56, 6), coat);
+    lo.position.set(x + (k < 2 ? 0.36 : -0.34), 0.12, z * 1.5);
+    lo.rotation.set(Math.PI / 2, 0, k < 2 ? -0.5 : 0.5);
+    const hoof = new T.Mesh(new T.CylinderGeometry(0.06, 0.075, 0.12, 7), hoofMat);
+    hoof.position.set(x + (k < 2 ? 0.62 : -0.58), 0.1, z * 1.7);
+    hoof.rotation.z = Math.PI / 2;
+    g.add(up, lo, hoof);
   });
+
+  /* извит врат — главата е вдигната, животното още диша */
+  const neck = new T.Group();
+  neck.position.set(0.72, 0.72, 0);
+  for (let k = 0; k < 5; k++) {
+    const v = new T.Mesh(new T.CylinderGeometry(0.15 - k * 0.012, 0.19 - k * 0.012, 0.24, 8), coat);
+    v.position.set(k * 0.1, k * 0.19, 0);
+    v.rotation.z = -0.48;
+    neck.add(v);
+    const tuft = new T.Mesh(new T.CylinderGeometry(0.055, 0.02, 0.34, 5), mane);
+    tuft.position.set(k * 0.1 - 0.11, k * 0.19 + 0.06, 0);
+    tuft.rotation.z = 0.75;
+    neck.add(tuft);
+  }
+  g.add(neck);
+
+  /* конска глава: череп, муцуна, ноздра, ухо, око */
+  const headG = new T.Group();
+  headG.position.set(1.22, 1.62, 0);
+  headG.rotation.z = -0.3;
+  const skull = new T.Mesh(new T.SphereGeometry(0.19, 12, 10), coat);
+  skull.scale.set(1.2, 0.95, 0.88);
+  const muzzle = new T.Mesh(new T.CylinderGeometry(0.075, 0.13, 0.46, 8), coat);
+  muzzle.rotation.z = Math.PI / 2 - 0.1; muzzle.position.set(0.3, -0.06, 0);
+  const chin = new T.Mesh(new T.SphereGeometry(0.085, 8, 6), coat);
+  chin.position.set(0.5, -0.09, 0);
+  headG.add(skull, muzzle, chin);
+  [-1, 1].forEach(sz => {
+    const ear = new T.Mesh(new T.ConeGeometry(0.055, 0.2, 6), coat);
+    ear.position.set(-0.12, 0.18, sz * 0.1); ear.rotation.set(sz * 0.3, 0, 0.25);
+    const eye = new T.Mesh(new T.SphereGeometry(0.035, 8, 6),
+      new T.MeshBasicMaterial({ color: 0x2b3550 }));
+    eye.position.set(0.08, 0.03, sz * 0.14);
+    const nos = new T.Mesh(new T.SphereGeometry(0.022, 6, 5),
+      new T.MeshBasicMaterial({ color: 0x8f9ab0 }));
+    nos.position.set(0.51, -0.04, sz * 0.05);
+    headG.add(ear, eye, nos);
+  });
+
+  /* витият рог: конус с пръстени, които правят спиралата */
+  const horn = new T.Mesh(new T.ConeGeometry(0.062, 0.86, 8), hornMat);
+  horn.position.set(0.06, 0.52, 0); horn.rotation.z = -0.22;
+  headG.add(horn);
+  const HT = -0.22, hdx = Math.sin(-HT), hdy = Math.cos(HT);   /* оста на рога */
+  for (let k = 0; k < 7; k++) {
+    const t = k / 6, along = 0.1 + t * 0.68;
+    const ring = new T.Mesh(
+      new T.TorusGeometry(0.062 * (1 - t * 0.82) + 0.006, 0.013, 5, 12), hornMat);
+    ring.position.set(0.06 + hdx * along, 0.09 + hdy * along, 0);
+    ring.rotation.set(Math.PI / 2, Math.PI + HT, 0);
+    headG.add(ring);
+  }
+  g.add(headG);
+
+  /* грива и опашка */
+  for (let k = 0; k < 6; k++) {
+    const str = new T.Mesh(new T.CylinderGeometry(0.035, 0.012, 0.6 + (k % 3) * 0.2, 5), mane);
+    str.position.set(-0.95 - k * 0.03, 0.5 - k * 0.05, (k - 2.5) * 0.06);
+    str.rotation.set(0, 0, 1.05 + k * 0.05);
+    g.add(str);
+  }
+
+  /* сребърната рана на хълбока — заради нея си тук */
+  const wound = new T.Mesh(new T.SphereGeometry(0.17, 10, 8),
+    new T.MeshBasicMaterial({ color: 0xcfe0ff, transparent: true, opacity: 0.75 }));
+  wound.position.set(-0.15, 0.62, 0.36); wound.scale.set(1.3, 0.7, 0.3);
+  g.add(wound);
+
   g.scale.setScalar(0.95);
   return g;
 }

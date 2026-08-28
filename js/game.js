@@ -302,7 +302,8 @@ function showPrologue(n, needSorting) {
   $('#story-title').textContent = A.title;
   $('#story-body').innerHTML = personalize({ 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4, 5: PROLOGUE_5, 6: PROLOGUE_6 }[n]);
   $('#story-go').querySelector('span').textContent =
-    { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата', 4: 'Слез в лодката', 5: 'Влез в Министерството' }[n];
+    { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата', 4: 'Слез в лодката',
+      5: 'Влез в Министерството', 6: 'Тръгни след първото парче' }[n] || 'Продължи';
   const go = $('#story-go');
   go.replaceWith(go.cloneNode(true));
   $('#story-go').addEventListener('click', () => {

@@ -191,38 +191,94 @@ export function bottleSVG(i, size, tint) {
 }
 
 /* ---------- скъпоценни камъни ---------- */
+/* Скъпоценният камък се строи от истински фасети: короната и павилионът
+   са осмостени и всяка стена получава своя стойност на светлината, а
+   отдолу камъкът хвърля цветно петно. Затова блести, вместо да е петно. */
+function mix(hex, other, k) {
+  const h = hex.replace('#', '');
+  const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const a = [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16));
+  const b = [0, 2, 4].map(i => parseInt(other.slice(i, i + 2), 16));
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * k)
+    .toString(16).padStart(2, '0')).join('');
+}
+const light = (c, k) => mix(c, 'ffffff', k);
+const dark  = (c, k) => mix(c, '000000', k);
+
 export function gemSVG(color, glyph = '') {
   const u = 'g' + (++_uid);
+  const N = 8;                       /* осем фасети в кръг */
+  const R = 22, GR = 19, TB = 9;     /* корона, поясче, маса */
+  const pt = (r, i, cy = 26) => {
+    const a = (i / N) * Math.PI * 2 - Math.PI / 2 + Math.PI / N;
+    return [30 + Math.cos(a) * r, cy + Math.sin(a) * r * 0.42];
+  };
+  /* светлината пада горе вляво: стойността на всяка фасета се смята от
+     ъгъла ѝ спрямо тази посока, не от индекса                          */
+  const LIGHT = -Math.PI * 0.75;
+  const mid = i => (i / N) * Math.PI * 2 - Math.PI / 2 + (Math.PI * 2) / N;
+  const lum = i => 0.5 + 0.5 * Math.cos(mid(i) - LIGHT);
+
+  const crown = [], pav = [], table = [];
+  for (let i = 0; i < N; i++) {
+    const a = pt(GR, i), b = pt(GR, (i + 1) % N);
+    const ta = pt(TB, i), tb = pt(TB, (i + 1) % N);
+    const k = lum(i);
+    crown.push(`<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${b[0].toFixed(1)} ${b[1].toFixed(1)}
+      L${tb[0].toFixed(1)} ${(tb[1] - 8).toFixed(1)}L${ta[0].toFixed(1)} ${(ta[1] - 8).toFixed(1)}Z"
+      fill="${k > 0.55 ? light(color, (k - 0.55) * 1.5) : dark(color, (0.55 - k) * 0.9)}"/>`);
+    table.push(`${ta[0].toFixed(1)},${(ta[1] - 8).toFixed(1)}`);
+    /* павилион: от поясчето към върха */
+    const kp = 1 - lum(i) * 0.85;   /* павилионът връща светлината обърнато */
+    pav.push(`<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${b[0].toFixed(1)} ${b[1].toFixed(1)}L30 54Z"
+      fill="${kp > 0.5 ? light(color, (kp - 0.5) * 0.9) : dark(color, (0.5 - kp) * 1.35)}"/>`);
+  }
+
   return `<svg viewBox="0 0 60 60">
     <defs>
-      <linearGradient id="a${u}" x1=".2" y1="0" x2=".8" y2="1">
-        <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
-        <stop offset=".45" stop-color="${color}"/>
-        <stop offset="1" stop-color="#000" stop-opacity=".55"/>
+      <radialGradient id="gl${u}" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="${color}" stop-opacity=".7"/>
+        <stop offset="1" stop-color="${color}" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="tb${u}" x1=".2" y1="0" x2=".8" y2="1">
+        <stop offset="0" stop-color="${light(color, 0.75)}"/>
+        <stop offset=".55" stop-color="${light(color, 0.25)}"/>
+        <stop offset="1" stop-color="${dark(color, 0.2)}"/>
       </linearGradient>
-      <linearGradient id="b${u}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${color}"/>
-        <stop offset="1" stop-color="#000" stop-opacity=".7"/>
-      </linearGradient>
-      <radialGradient id="s${u}" cx="34%" cy="26%">
-        <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
-        <stop offset=".5" stop-color="#fff" stop-opacity=".12"/>
+      <radialGradient id="sp${u}" cx="34%" cy="24%" r="52%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".85"/>
+        <stop offset=".55" stop-color="#fff" stop-opacity=".1"/>
         <stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </radialGradient>
     </defs>
-    <ellipse cx="30" cy="55" rx="15" ry="3" fill="#000" opacity=".4"/>
-    <!-- корона -->
-    <path d="M30 5 12 19h36L30 5Z" fill="url(#a${u})"/>
-    <path d="M12 19h36l-6 8H18l-6-8Z" fill="${color}" opacity=".92"/>
-    <path d="M30 5 20 27M30 5l10 22M12 19l6 8M48 19l-6 8" stroke="#fff" stroke-opacity=".35" stroke-width=".9" fill="none"/>
-    <!-- павилион -->
-    <path d="M18 27h24l-12 26-12-26Z" fill="url(#b${u})"/>
-    <path d="M24 27 30 53M36 27 30 53M18 27l12 26M42 27 30 53" stroke="#fff" stroke-opacity=".22" stroke-width=".8" fill="none"/>
-    <!-- блясъци -->
-    <ellipse cx="30" cy="20" rx="17" ry="12" fill="url(#s${u})"/>
-    <path d="M22 13l5 4-5 4-5-4 5-4Z" fill="#fff" opacity=".5"/>
-    <path d="M30 5 12 19h36L30 5Zm-18 14h36l-6 8H18l-6-8Zm6 8h24l-12 26-12-26Z"
-          fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/>
+
+    <!-- цветното петно, което камъкът хвърля -->
+    <ellipse cx="30" cy="50" rx="21" ry="8" fill="url(#gl${u})"/>
+    <ellipse cx="30" cy="56" rx="13" ry="2.6" fill="#000" opacity=".45"/>
+
+    <g>
+      ${pav.join('')}
+      ${crown.join('')}
+      <polygon points="${table.join(' ')}" fill="url(#tb${u})"/>
+      <!-- ръбове между фасетите -->
+      <g fill="none" stroke="#fff" stroke-opacity=".3" stroke-width=".7">
+        ${Array.from({ length: N }, (_, i) => {
+          const a = pt(GR, i), t = pt(TB, i);
+          return `<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${t[0].toFixed(1)} ${(t[1] - 8).toFixed(1)}"/>
+                  <path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}L30 54"/>`;
+        }).join('')}
+      </g>
+      <polygon points="${table.join(' ')}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".9"/>
+      <ellipse cx="30" cy="26" rx="${GR}" ry="${(GR * 0.42).toFixed(1)}"
+               fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1"/>
+    </g>
+
+    <!-- блясък и искра -->
+    <ellipse cx="30" cy="20" rx="16" ry="11" fill="url(#sp${u})"/>
+    <path d="M21 14l1.6 4.4L27 20l-4.4 1.6L21 26l-1.6-4.4L15 20l4.4-1.6L21 14Z"
+          fill="#fff" opacity=".75"/>
+    <path d="M40 30l.9 2.5L43.5 33l-2.6.9L40 36.5l-.9-2.6L36.5 33l2.6-.5L40 30Z"
+          fill="#fff" opacity=".45"/>
   </svg>`;
 }
 
