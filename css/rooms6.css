@@ -1,0 +1,475 @@
+/* ============================================================
+   rooms6.css — Шеста част: «Седемте»
+   Частта е гледка колкото и загадка: почти всичко тук се
+   движи, а две от местата нарочно чупят вида на играта.
+   ============================================================ */
+
+body[data-act="6"] { --act-accent: #d9b45b; background: #07060a; }
+body[data-act="6"] #vignette {
+  background: radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0,0,0,.82) 100%);
+}
+body[data-act="6"] .panel {
+  border-color: rgba(217,180,91,.24);
+  background: linear-gradient(180deg, rgba(24,20,16,.86), rgba(12,10,10,.92));
+}
+
+/* платната, които стаите закачат за фон */
+body[data-act="6"] .a6-canvas { position: absolute; inset: 0; pointer-events: none; }
+
+/* панел, който изниква след минала стъпка */
+body[data-act="6"] .a6-reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.9,.3,1); }
+body[data-act="6"] .a6-reveal.on { opacity: 1; transform: none; }
+
+/* пълноекранна изненада */
+body[data-act="6"] .a6-curtain {
+  position: fixed; inset: 0; z-index: 220; display: grid; place-items: center;
+  background: rgba(4,3,6,.92); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .6s ease; padding: 24px;
+}
+body[data-act="6"] .a6-curtain.on { opacity: 1; }
+
+/* ============================================================
+   I · Къщата на Гонт
+   ============================================================ */
+body[data-act="6"] .a6-hut { position: relative; overflow: hidden; }
+body[data-act="6"] .a6-hutbg { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 60% 50% at 50% 90%, rgba(70,110,70,.16), transparent 70%); }
+body[data-act="6"] .a6-hut-in { position: relative; }
+
+body[data-act="6"] .shades { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+body[data-act="6"] .shade {
+  margin: 0; padding: 14px 10px 16px; border-radius: 14px; text-align: center;
+  border: 1px solid rgba(150,200,160,.18); background: rgba(20,30,24,.5);
+  animation: shadeIn .9s both; animation-delay: calc(var(--i) * .22s);
+}
+@keyframes shadeIn { from { opacity: 0; transform: translateY(20px) scale(.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+body[data-act="6"] .shade.marked { border-color: rgba(217,180,91,.45); }
+body[data-act="6"] .shade.settled { opacity: .9; }
+body[data-act="6"] .ghost { width: 104px; height: 150px; display: block; margin: 0 auto 6px; animation: ghostFloat 5s ease-in-out infinite; }
+body[data-act="6"] .shade:nth-child(2) .ghost { animation-duration: 6.4s; }
+body[data-act="6"] .shade:nth-child(3) .ghost { animation-duration: 5.6s; }
+@keyframes ghostFloat { 0%,100% { transform: translateY(0) scaleX(1); } 50% { transform: translateY(-8px) scaleX(1.03); } }
+body[data-act="6"] .shade.settled .ghost { animation: ghostFade 2.4s ease forwards; }
+@keyframes ghostFade { to { opacity: .62; } }
+body[data-act="6"] .gbody { animation: gbodyPulse 3.2s ease-in-out infinite; }
+@keyframes gbodyPulse { 0%,100% { opacity: 1; } 50% { opacity: .78; } }
+body[data-act="6"] .geye { animation: gblink 6s infinite; }
+@keyframes gblink { 0%,94%,100% { transform: none; } 96% { transform: scaleY(.1); } }
+body[data-act="6"] .shade figcaption b { display: block; font-family: var(--font-title); color: var(--gold-100); font-size: 1.02rem; }
+body[data-act="6"] .shade figcaption > span { display: block; font-size: .74rem; color: var(--muted); margin-bottom: 8px; }
+body[data-act="6"] .shade ul { list-style: none; margin: 0 0 10px; padding: 0; text-align: left; }
+body[data-act="6"] .shade li { font-style: italic; font-size: .88rem; margin-bottom: 5px; color: #cfe0d2; line-height: 1.35; }
+body[data-act="6"] .shade-pick,
+body[data-act="6"] .cl-pick { display: flex; gap: 6px; justify-content: center; }
+body[data-act="6"] .sp {
+  flex: 1; padding: 6px 4px; border-radius: 8px; cursor: pointer; font-size: .78rem;
+  letter-spacing: .06em; background: rgba(255,255,255,.03); color: var(--muted);
+  border: 1px solid rgba(255,255,255,.12); transition: .18s;
+}
+body[data-act="6"] .sp:hover { color: var(--gold-100); border-color: rgba(217,180,91,.4); }
+body[data-act="6"] .sp.on { background: rgba(217,180,91,.16); color: var(--gold-100); border-color: var(--gold-dark); }
+
+body[data-act="6"] .place-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+body[data-act="6"] .place {
+  display: grid; gap: 6px; justify-items: center; padding: 14px 18px; min-width: 130px;
+  border-radius: 12px; cursor: pointer; color: #b9c9bd;
+  border: 1px solid rgba(150,200,160,.2); background: rgba(18,26,20,.6); transition: .2s;
+}
+body[data-act="6"] .place svg { width: 48px; height: 48px; }
+body[data-act="6"] .place:hover { transform: translateY(-3px); border-color: var(--gold-dark); color: var(--gold-100); }
+body[data-act="6"] .place.on { border-color: #7fd6a1; color: #9fe0b4; }
+
+/* пръстенът пита */
+body[data-act="6"] .ring-curtain .ring-scene { max-width: 560px; text-align: center; }
+body[data-act="6"] .ring-svg { width: min(58vw, 300px); height: auto; animation: ringSpin 9s linear infinite; }
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+body[data-act="6"] .ring-halo { animation: ringHalo 2.6s ease-in-out infinite; transform-origin: center; }
+@keyframes ringHalo { 0%,100% { opacity: .5; } 50% { opacity: 1; transform: scale(1.06); } }
+body[data-act="6"] .ring-line { font-family: var(--font-title); font-size: 1.35rem; color: var(--gold-100); margin: 14px 0 8px; }
+body[data-act="6"] .ring-sub { color: var(--muted); max-width: 460px; margin: 0 auto 18px; line-height: 1.6; }
+body[data-act="6"] .ring-choice { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+body[data-act="6"] .ring-scene.cursed .ring-svg { animation: ringSpin 9s linear infinite, ringCurse 1.2s ease forwards; }
+@keyframes ringCurse { to { filter: grayscale(1) brightness(.35); } }
+body[data-act="6"] .ring-svg.shatter { animation: ringShatter 1.4s cubic-bezier(.3,0,.2,1) forwards; }
+@keyframes ringShatter {
+  30% { transform: scale(1.14); filter: brightness(2.4); }
+  100% { transform: scale(.2) rotate(80deg); opacity: 0; filter: brightness(.2); }
+}
+
+/* ============================================================
+   II · Пещерата
+   ============================================================ */
+body[data-act="6"] .cave-panel { position: relative; overflow: hidden; padding-bottom: 92px; }
+body[data-act="6"] .cave-lake { position: absolute; inset: 0; pointer-events: none; }
+body[data-act="6"] .cave-lake.rising { animation: lakeRise 1.6s ease; }
+@keyframes lakeRise { 50% { filter: brightness(1.7) hue-rotate(-18deg); } }
+body[data-act="6"] .cave-in { position: relative; }
+
+body[data-act="6"] .vessels { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 6px 0 12px; }
+body[data-act="6"] .vessel {
+  display: grid; gap: 5px; justify-items: center; padding: 10px 14px; border-radius: 14px;
+  cursor: pointer; background: rgba(10,26,28,.55); border: 1px solid rgba(110,220,205,.22);
+  transition: .2s; color: var(--muted);
+}
+body[data-act="6"] .vessel:hover { transform: translateY(-3px); border-color: rgba(110,220,205,.6); }
+body[data-act="6"] .vessel.sel { border-color: #6edccd; box-shadow: 0 0 22px rgba(110,220,205,.3); }
+body[data-act="6"] .vessel.locked { pointer-events: none; opacity: .85; }
+body[data-act="6"] .vs-glass {
+  position: relative; display: block; width: 62px; height: 92px; overflow: hidden;
+  border: 2px solid rgba(190,235,230,.5); border-top: 0;
+  border-radius: 6px 6px 16px 16px; background: rgba(6,18,20,.7);
+}
+body[data-act="6"] .vessel.v0 .vs-glass { width: 92px; border-radius: 4px 4px 8px 8px; }
+body[data-act="6"] .vs-fill {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--pct);
+  background: linear-gradient(180deg, rgba(120,240,215,.85), rgba(30,140,130,.9));
+  transition: height .55s cubic-bezier(.3,.9,.3,1);
+  box-shadow: 0 0 22px rgba(110,230,210,.55) inset;
+}
+body[data-act="6"] .vs-fill::after {
+  content: ''; position: absolute; left: -10%; right: -10%; top: -5px; height: 10px; border-radius: 50%;
+  background: rgba(190,255,240,.75); animation: vsWave 2.4s ease-in-out infinite;
+}
+@keyframes vsWave { 0%,100% { transform: translateX(-4%) scaleY(1); } 50% { transform: translateX(4%) scaleY(.55); } }
+body[data-act="6"] .vs-num {
+  position: absolute; inset: 0; display: grid; place-items: center; font-style: normal;
+  font-family: var(--font-title); font-size: 1.5rem; color: #eafffb; text-shadow: 0 0 10px rgba(0,0,0,.9);
+}
+body[data-act="6"] .vs-name { font-size: .82rem; }
+body[data-act="6"] .vs-cap { font-size: .7rem; opacity: .65; }
+body[data-act="6"] .cave-status { text-align: center; color: var(--muted); font-size: .9rem; }
+
+/* ============================================================
+   III · Трезорът
+   ============================================================ */
+body[data-act="6"] .vault-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .vault-gold { position: absolute; inset: 0; pointer-events: none; transition: filter .5s; }
+body[data-act="6"] .vault-gold.gem { animation: gemFlash .5s ease; }
+body[data-act="6"] .vault-gold.plus { animation: plusFlash .4s ease; }
+@keyframes gemFlash { 0% { filter: brightness(2.4) saturate(1.6); transform: scale(1.02); } 100% { filter: none; transform: none; } }
+@keyframes plusFlash { 0% { filter: brightness(1.5); } 100% { filter: none; } }
+body[data-act="6"] .vault-gold.frozen { filter: saturate(.5) brightness(.8); }
+body[data-act="6"] .vault-gold.gone { opacity: 0; transition: opacity 1s; }
+body[data-act="6"] .vault-in { position: relative; }
+body[data-act="6"] .vault-count { display: grid; justify-items: center; gap: 2px; margin-bottom: 8px; }
+body[data-act="6"] .vc-n {
+  font-family: var(--font-title); font-size: clamp(2.6rem, 9vw, 4.2rem); line-height: 1;
+  color: var(--gold-100); text-shadow: 0 0 30px rgba(217,180,91,.5); transition: color .4s, text-shadow .4s;
+}
+body[data-act="6"] .vc-n.hot { color: #ffb060; text-shadow: 0 0 34px rgba(255,120,50,.7); }
+body[data-act="6"] .vc-of { color: var(--muted); font-size: .9rem; }
+body[data-act="6"] .vc-t { color: var(--gold-dark); font-size: .82rem; letter-spacing: .08em; }
+body[data-act="6"] .vault-tape {
+  display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center;
+  margin: 10px auto 4px; max-width: 620px; min-height: 26px;
+}
+body[data-act="6"] .vt-step {
+  padding: 2px 8px; border-radius: 6px; font-family: var(--font-title); font-size: .86rem;
+  background: rgba(217,180,91,.12); border: 1px solid rgba(217,180,91,.3); color: var(--gold-100);
+  animation: tpIn .3s both;
+}
+@keyframes tpIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+body[data-act="6"] .vt-op { font-size: .74rem; color: var(--muted); }
+body[data-act="6"] .vault-ops { flex-wrap: wrap; }
+
+/* ============================================================
+   IV · Стаята с нужното
+   ============================================================ */
+body[data-act="6"] .room-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .room-junk { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(150,110,200,.14), transparent 70%); }
+body[data-act="6"] .room-in { position: relative; }
+body[data-act="6"] .sok-wrap { display: grid; place-items: center; }
+body[data-act="6"] .sok {
+  position: relative; display: grid; gap: 3px;
+  grid-template-columns: repeat(var(--w), 1fr);
+  grid-template-rows: repeat(var(--h), 1fr);   /* иначе редовете с рисунка стават по-високи */
+  width: min(100%, 470px); aspect-ratio: var(--w) / var(--h);
+}
+body[data-act="6"] .sk-cell {
+  position: relative; border-radius: 6px; background: rgba(120,90,160,.05);
+  border: 1px solid rgba(255,255,255,.04); display: grid; place-items: center;
+}
+body[data-act="6"] .sk-cell.wall { background: linear-gradient(160deg, #3b2d4e, #211830); border-color: rgba(190,150,230,.3);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.06); }
+body[data-act="6"] .sk-cell.goal { background: rgba(200,140,230,.1); border-color: rgba(200,140,230,.45); }
+body[data-act="6"] .sk-rune { color: rgba(220,170,250,.7); font-style: normal; font-size: .9rem; animation: runePulse 2.6s ease-in-out infinite; }
+@keyframes runePulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+body[data-act="6"] .sk-box,
+body[data-act="6"] .sk-me { width: 82%; height: 82%; transition: transform .16s; }
+body[data-act="6"] .sk-cell.box.done .sk-box { filter: drop-shadow(0 0 8px rgba(220,160,250,.9)); }
+body[data-act="6"] .sk-cell.me .sk-me { animation: mePop .2s ease; }
+@keyframes mePop { from { transform: scale(.82); } to { transform: none; } }
+body[data-act="6"] .sok-status { text-align: center; color: var(--muted); margin-top: 10px; font-size: .9rem; }
+body[data-act="6"] .sok-pad { display: grid; justify-items: center; gap: 6px; margin-top: 10px; }
+body[data-act="6"] .pad-row { display: flex; gap: 6px; }
+body[data-act="6"] .pad {
+  width: 46px; height: 40px; border-radius: 9px; cursor: pointer; font-size: 1rem;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.14); color: var(--gold-100);
+  transition: .15s;
+}
+body[data-act="6"] .pad:hover { background: rgba(217,180,91,.16); border-color: var(--gold-dark); }
+body[data-act="6"] .pad:active { transform: scale(.92); }
+
+/* адският огън */
+body[data-act="6"] .ff-curtain { background: rgba(10,2,0,.96); }
+body[data-act="6"] .ff-scene { position: relative; width: min(94vw, 900px); height: min(70vh, 520px); }
+body[data-act="6"] .ff-canvas { position: absolute; inset: 0; }
+body[data-act="6"] .ff-line {
+  position: absolute; left: 0; right: 0; bottom: 8px; text-align: center;
+  font-family: var(--font-title); font-size: clamp(1rem, 3vw, 1.4rem); color: #ffe0b0;
+  text-shadow: 0 0 24px rgba(255,120,40,.9);
+}
+
+/* ============================================================
+   V · Змията
+   ============================================================ */
+body[data-act="6"] .snake-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .snake-bg { position: absolute; inset: 0; pointer-events: none; }
+body[data-act="6"] .snake-in { position: relative; }
+body[data-act="6"] .snake-round { text-align: center; color: var(--muted); font-size: .92rem; margin-bottom: 6px; }
+body[data-act="6"] .snake-stage { display: grid; place-items: center; }
+body[data-act="6"] .snake-svg { width: 100%; max-width: 780px; height: auto; transition: filter .3s;
+  filter: drop-shadow(0 8px 30px rgba(0,0,0,.8)); }
+body[data-act="6"] .snake-svg.hissing { filter: drop-shadow(0 0 22px rgba(120,220,160,.35)); }
+body[data-act="6"] .snake-svg.ready #snake-head { animation: headWatch 2.4s ease-in-out infinite; }
+@keyframes headWatch { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,4px); } }
+body[data-act="6"] .snake-svg.bite { animation: snakeBite .6s cubic-bezier(.3,0,.2,1); }
+@keyframes snakeBite { 40% { transform: scale(1.16) translateX(-4%); } 100% { transform: none; } }
+body[data-act="6"] .snake-svg.fall { animation: snakeFall 1.3s ease forwards; }
+@keyframes snakeFall { to { transform: translateY(40px) rotate(6deg); opacity: .4; filter: grayscale(.8); } }
+body[data-act="6"] #snake-body { stroke-dasharray: 6 0; animation: skinShift 6s linear infinite; }
+@keyframes skinShift { to { stroke-dashoffset: -120; } }
+body[data-act="6"] .ring { cursor: pointer; }
+body[data-act="6"] .ring ellipse { transition: fill .2s, stroke .2s, transform .2s; transform-box: fill-box; transform-origin: center; }
+body[data-act="6"] .ring:hover ellipse { stroke: var(--gold); }
+body[data-act="6"] .ring.lit ellipse { fill: rgba(140,235,175,.85); stroke: #eafff0; filter: drop-shadow(0 0 18px rgba(140,235,175,.9)); }
+body[data-act="6"] .ring.cut ellipse { fill: rgba(230,120,120,.75); stroke: #ffd0d0; }
+body[data-act="6"] .ring.miss ellipse { animation: ringMiss .5s ease; }
+@keyframes ringMiss { 0%,100% { transform: none; } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+body[data-act="6"] .snake-echo { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+body[data-act="6"] .ec {
+  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; font-style: normal;
+  border: 1px dashed rgba(140,220,170,.35); color: var(--muted); font-family: var(--font-title);
+}
+body[data-act="6"] .ec.on { border-style: solid; border-color: #7fd6a1; color: #cdeedb; background: rgba(127,214,161,.12); }
+
+/* ============================================================
+   VI · Ситото на спомените
+   ============================================================ */
+body[data-act="6"] .pens-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .pens-mist { position: absolute; inset: 0; pointer-events: none; }
+body[data-act="6"] .pens-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+body[data-act="6"] .memory { margin: 0; }
+body[data-act="6"] .memory figcaption {
+  text-align: center; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+body[data-act="6"] .mem-svg {
+  width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(160,190,255,.22);
+  box-shadow: 0 0 40px rgba(120,160,255,.1) inset;
+}
+body[data-act="6"] .memory.true .mem-svg { filter: saturate(.7) brightness(.92); }
+body[data-act="6"] .memory.fake .mem-svg { animation: memFlicker 6s ease-in-out infinite; }
+@keyframes memFlicker { 0%,100% { filter: none; } 47% { filter: brightness(1.12) hue-rotate(6deg); } 52% { filter: brightness(.94); } }
+/* Всички области изглеждат еднакво под мишката — включително примамките,
+   иначе разликите щяха да се намерят с разходка, а не с гледане.        */
+body[data-act="6"] .pdiff { cursor: crosshair; stroke: transparent; stroke-width: 1.5; transition: stroke .15s; }
+body[data-act="6"] .pdiff:hover { stroke: rgba(180,210,255,.4); }
+body[data-act="6"] .pdiff.found { fill: rgba(140,230,180,.16); stroke: rgba(140,230,180,.9); animation: diffFound .8s ease; }
+@keyframes diffFound { 0% { fill: rgba(255,255,255,.7); } 100% { fill: rgba(140,230,180,.16); } }
+body[data-act="6"] .pdiff.miss { stroke: #e0625d; animation: ringMiss .5s ease; }
+body[data-act="6"] .pens-score { text-align: center; margin-top: 10px; color: var(--muted); }
+body[data-act="6"] .pens-list { display: grid; gap: 6px; margin-top: 10px; }
+body[data-act="6"] .pd-row {
+  display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: baseline;
+  padding: 7px 12px; border-radius: 9px; background: rgba(160,190,255,.06);
+  border-left: 3px solid rgba(160,190,255,.4); animation: hintIn .5s both;
+}
+body[data-act="6"] .pd-row.hidden-row { opacity: .4; border-left-color: rgba(255,255,255,.1); }
+body[data-act="6"] .pd-row b { color: #cfe0ff; font-family: var(--font-title); }
+body[data-act="6"] .pd-row span { color: var(--muted); font-size: .9rem; }
+
+/* ============================================================
+   VII · Щитът
+   ============================================================ */
+body[data-act="6"] .shield-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .shield-sky { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(20,30,60,.5), transparent 65%); }
+body[data-act="6"] .shield-in { position: relative; }
+body[data-act="6"] .shield-svg { width: 100%; height: auto; }
+body[data-act="6"] .rune-pick { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+body[data-act="6"] .rp {
+  display: grid; justify-items: center; gap: 2px; padding: 8px 18px; border-radius: 11px; cursor: pointer;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.14); transition: .18s;
+}
+body[data-act="6"] .rp b { font-size: 1.5rem; color: var(--rc); line-height: 1; }
+body[data-act="6"] .rp span { font-size: .72rem; color: var(--muted); letter-spacing: .06em; }
+body[data-act="6"] .rp:hover { border-color: var(--rc); }
+body[data-act="6"] .rp.on { border-color: var(--rc); background: color-mix(in srgb, var(--rc) 14%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--rc) 30%, transparent); }
+body[data-act="6"] .sh-edge { stroke: rgba(150,190,255,.25); stroke-width: 2; }
+body[data-act="6"] .sh-edge.clash { stroke: #e0625d; stroke-width: 3.4; animation: clashPulse .9s ease-in-out infinite; }
+@keyframes clashPulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+body[data-act="6"] .seg { cursor: pointer; }
+body[data-act="6"] .seg .seg-disc { fill: color-mix(in srgb, var(--sc) 26%, #0b1020); stroke: var(--sc); stroke-width: 2.6; transition: .25s; }
+body[data-act="6"] .seg text { fill: var(--sc); font-family: 'Cinzel', serif; }
+body[data-act="6"] .seg:hover .seg-disc { filter: drop-shadow(0 0 12px var(--sc)); }
+body[data-act="6"] .seg.empty .seg-disc { stroke-dasharray: 4 4; }
+body[data-act="6"] .seg-lock { fill: none; stroke: rgba(217,180,91,.55); stroke-width: 1.6; stroke-dasharray: 3 5; }
+body[data-act="6"] .seg.fixed { cursor: not-allowed; }
+body[data-act="6"] .shield-svg.raised #dome { stroke: rgba(160,215,255,.9); stroke-width: 6; animation: domeUp 1s ease; }
+@keyframes domeUp { from { stroke-width: 2; opacity: .2; } to { stroke-width: 6; opacity: 1; } }
+body[data-act="6"] .shield-svg.under-siege { animation: siegeShake .28s linear 6; }
+@keyframes siegeShake { 0%,100% { transform: none; } 50% { transform: translateY(-2px); } }
+body[data-act="6"] .siege-layer { position: absolute; inset: 0; pointer-events: none; }
+body[data-act="6"] .shield-status { text-align: center; color: var(--muted); margin-top: 8px; font-size: .9rem; }
+
+/* ============================================================
+   VIII · Кингс Крос — тук играта побелява
+   ============================================================ */
+body.kx-white {
+  --ink: #1a1a20; --muted: #5c6070; --gold-100: #6b5a2a; --gold: #8a7434;
+  background: #f2f3f6;
+}
+body.kx-white #bg-canvas,
+body.kx-white #vignette { opacity: .12; filter: invert(1); }
+body.kx-white .panel {
+  background: rgba(255,255,255,.9) !important; border-color: rgba(40,44,60,.16) !important;
+  color: #22242e; box-shadow: 0 18px 60px rgba(60,70,110,.12);
+}
+body.kx-white .room-title,
+body.kx-white .panel-title { color: #2a2c38; }
+body.kx-white .room-sub,
+body.kx-white .muted { color: #5c6070; }
+body.kx-white .btn { color: #22242e; }
+body.kx-white .btn-ghost { border-color: rgba(40,44,60,.25); }
+body.kx-white #hud { background: rgba(255,255,255,.86); border-bottom-color: rgba(40,44,60,.12); }
+body.kx-white #progress-rail { background: rgba(255,255,255,.72); }
+body.kx-white .rail-node { background: #e7e9ef; border-color: rgba(40,44,60,.2); color: #6b7080; }
+body.kx-white .rail-node.done { background: linear-gradient(180deg, #d9c07a, #b99a45); color: #2a1e06; border-color: #c9ab5e; }
+body.kx-white .rail-link { background: rgba(40,44,60,.18); }
+body.kx-white .rail-link.done { background: #c9ab5e; box-shadow: none; }
+body.kx-white .rune-slot { border-color: rgba(40,44,60,.22); color: #8a8f9e; }
+body.kx-white .rune-slot.filled { color: #4a3d16; border-color: #c9ab5e; background: rgba(201,171,94,.22); }
+body.kx-white .room-eyebrow { color: #8a7434; }
+
+body[data-act="6"] .kx-panel { position: relative; }
+body[data-act="6"] .flapboard {
+  display: grid; gap: 6px; margin: 10px auto; max-width: 560px; padding: 16px 18px;
+  border-radius: 12px; background: #14161c; box-shadow: inset 0 0 40px rgba(0,0,0,.8);
+}
+body[data-act="6"] .fb-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+body[data-act="6"] .fb-key { font-size: .72rem; letter-spacing: .16em; color: #7d8496; text-transform: uppercase; }
+body[data-act="6"] .fb-val { display: flex; gap: 2px; }
+body[data-act="6"] .fb-c {
+  width: 17px; height: 24px; display: grid; place-items: center; font-style: normal;
+  font-family: var(--font-title); font-size: .95rem; color: #f0e6c8;
+  background: linear-gradient(180deg, #2a2d36 0 49%, #1b1e26 51% 100%);
+  border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.6);
+}
+body[data-act="6"] .fb-c.spin { animation: flapSpin .06s linear; }
+@keyframes flapSpin { from { transform: rotateX(-70deg); } to { transform: none; } }
+body[data-act="6"] .fb-c.set { color: #ffe9a8; }
+
+body[data-act="6"] .claims { display: grid; gap: 8px; margin-top: 10px; }
+body[data-act="6"] .claim {
+  display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center;
+  padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1); animation: hintIn .5s both;
+}
+body.kx-white .claim { background: rgba(30,34,48,.05); border-color: rgba(40,44,60,.14); }
+body[data-act="6"] .claim.marked { border-color: rgba(217,180,91,.5); }
+body[data-act="6"] .claim.locked { opacity: .8; pointer-events: none; }
+body[data-act="6"] .cl-n { font-family: var(--font-title); color: var(--gold-100); font-size: 1.1rem; text-align: center; }
+body[data-act="6"] .cl-t { line-height: 1.4; }
+body[data-act="6"] .cl-pick { display: flex; gap: 6px; }
+body.kx-white .sp { background: rgba(30,34,48,.05); border-color: rgba(40,44,60,.2); color: #5c6070; }
+body.kx-white .sp.on { background: rgba(138,116,52,.16); color: #4a3d16; border-color: #8a7434; }
+
+/* ============================================================
+   IX · Приори Инкантатем
+   ============================================================ */
+body[data-act="6"] .priori-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .priori-beam { position: absolute; inset: 0; pointer-events: none; }
+body[data-act="6"] .priori-in { position: relative; }
+body[data-act="6"] .ghosts-out { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 14px 0; }
+body[data-act="6"] .gh-out {
+  padding: 7px 16px; border-radius: 999px; font-family: var(--font-title); letter-spacing: .06em;
+  color: #d8ccae; border: 1px solid rgba(230,210,160,.3); background: rgba(230,210,160,.07);
+  animation: ghOut .8s both; animation-delay: calc(var(--i, 0) * .1s);
+}
+@keyframes ghOut { from { opacity: 0; transform: translateY(18px) scale(.86); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+body[data-act="6"] .gh-out.me {
+  color: #fff2d0; border-color: var(--gold); background: rgba(217,180,91,.2); font-size: 1.15rem;
+  box-shadow: 0 0 30px rgba(217,180,91,.4); animation: ghMe 1.6s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes ghMe {
+  0% { opacity: 0; transform: scale(2.4); filter: blur(14px); }
+  55% { opacity: 1; transform: scale(1.06); filter: none; }
+  100% { transform: none; }
+}
+body[data-act="6"] .face-line { line-height: 1.7; margin-bottom: 10px; }
+body[data-act="6"] .face-q { font-family: var(--font-title); font-size: 1.2rem; color: var(--gold-100); margin: 16px 0 10px; }
+
+body[data-act="6"] .letgo-curtain { background: rgba(250,246,236,.96); }
+body[data-act="6"] .letgo { text-align: center; max-width: 560px; }
+body[data-act="6"] .letgo .lg-figure {
+  width: 140px; height: 140px; margin: 0 auto 18px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,240,200,.9), rgba(255,240,200,0) 70%);
+  animation: lgFade 3s ease forwards;
+}
+@keyframes lgFade { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
+body[data-act="6"] .letgo .lg-line { font-family: var(--font-title); font-size: 1.6rem; color: #3a3222; margin-bottom: 10px; }
+body[data-act="6"] .letgo .lg-sub { color: #5a5240; line-height: 1.7; }
+
+/* ============================================================
+   Преход между местата на Шеста част — дим и въглени
+   ============================================================ */
+body[data-act="6"] .door {
+  background:
+    radial-gradient(ellipse 500px 340px at 22% 18%, rgba(90,30,10,.5), transparent 70%),
+    radial-gradient(ellipse 460px 400px at 76% 74%, rgba(60,20,8,.55), transparent 72%),
+    repeating-linear-gradient(112deg, rgba(0,0,0,.5) 0 24px, rgba(20,10,8,.4) 24px 48px),
+    #0b0706;
+  box-shadow: inset 0 0 180px rgba(0,0,0,.95);
+}
+body[data-act="6"] .door-edge {
+  width: 3px;
+  background: linear-gradient(180deg, transparent, #ff9440 18%, #ffd27a 50%, #ff7a2a 82%, transparent);
+  box-shadow: 0 0 26px rgba(255,140,50,.8);
+  opacity: 1;
+}
+body[data-act="6"] .door::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle 3px at 18% 82%, rgba(255,170,80,.9), transparent 60%),
+    radial-gradient(circle 2px at 34% 64%, rgba(255,140,60,.8), transparent 60%),
+    radial-gradient(circle 2.4px at 58% 88%, rgba(255,190,110,.85), transparent 60%),
+    radial-gradient(circle 2px at 72% 56%, rgba(255,150,60,.75), transparent 60%),
+    radial-gradient(circle 3px at 86% 78%, rgba(255,180,90,.8), transparent 60%);
+  animation: a6Ember 3.4s linear infinite;
+}
+@keyframes a6Ember {
+  from { transform: translateY(0); opacity: .2; }
+  35% { opacity: .9; }
+  to { transform: translateY(-70px); opacity: 0; }
+}
+
+/* ---------- телефони ---------- */
+@media (max-width: 720px) {
+  body[data-act="6"] .shades { grid-template-columns: 1fr; }
+  body[data-act="6"] .shade { display: grid; grid-template-columns: 68px 1fr; text-align: left; align-items: center; gap: 10px; }
+  body[data-act="6"] .ghost { width: 62px; height: 92px; margin: 0; }
+  body[data-act="6"] .pens-grid { grid-template-columns: 1fr; }
+  body[data-act="6"] .pd-row { grid-template-columns: 1fr; gap: 2px; }
+  body[data-act="6"] .vessels { gap: 10px; }
+  body[data-act="6"] .vs-glass { width: 52px; height: 76px; }
+  body[data-act="6"] .vessel.v0 .vs-glass { width: 74px; }
+  body[data-act="6"] .flapboard { padding: 12px 10px; }
+  body[data-act="6"] .fb-c { width: 13px; height: 20px; font-size: .78rem; }
+  body[data-act="6"] .fb-key { font-size: .62rem; letter-spacing: .1em; }
+  body[data-act="6"] .claim { grid-template-columns: 26px 1fr; }
+  body[data-act="6"] .cl-pick { grid-column: 1 / -1; }
+  body[data-act="6"] .sok { width: 100%; }
+  body[data-act="6"] .ff-scene { height: 60vh; }
+}

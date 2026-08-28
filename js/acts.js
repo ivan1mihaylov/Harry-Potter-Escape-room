@@ -1,5 +1,5 @@
 /* ============================================================
-   acts.js — петте части на историята и оценяването
+   acts.js — шестте части на историята и оценяването
    ============================================================ */
 import { OUTSTANDING_MS } from './state.js';
 
@@ -116,6 +116,29 @@ export const ACTS = {
       import('./rooms5/a5r7-prophecy.js'),
       import('./rooms5/a5r8-love.js'),
       import('./rooms5/a5r9-end.js'),
+    ]),
+  },
+  6: {
+    id: 6,
+    numeral: 'VI',
+    title: 'Седемте',
+    tagline: 'девет места · осем руни · шестдесет минути · последната част',
+    spell: 'ХОРКРУКС',
+    sealLine: 'Няма печат. Никой не те заключва',
+    endTitle: 'Нищо не остана цяло',
+    endText: `Седмото парче не беше в предмет. Стоеше зад очите ти и мълчеше от толкова
+              отдавна, че беше започнало да звучи като твой собствен глас. Пусна го —
+              и за пръв път в главата ти няма никого освен теб.`,
+    load: () => Promise.all([
+      import('./rooms6/a6r1-gaunt.js'),
+      import('./rooms6/a6r2-cave.js'),
+      import('./rooms6/a6r3-vault.js'),
+      import('./rooms6/a6r4-room.js'),
+      import('./rooms6/a6r5-nagini.js'),
+      import('./rooms6/a6r6-pensieve.js'),
+      import('./rooms6/a6r7-shield.js'),
+      import('./rooms6/a6r8-kingscross.js'),
+      import('./rooms6/a6r9-priori.js'),
     ]),
   },
 };

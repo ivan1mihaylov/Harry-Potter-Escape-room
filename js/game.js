@@ -69,7 +69,7 @@ function renderActs() {
   renderWizard();
   const box = $('#acts');
   box.innerHTML = '';
-  [1, 2, 3, 4, 5].forEach(n => box.appendChild(actCard(n)));
+  [1, 2, 3, 4, 5, 6].forEach(n => box.appendChild(actCard(n)));
 }
 
 /* името и домът стоят над картите, щом веднъж са определени */
@@ -186,7 +186,8 @@ function wipeAll() {
     </div>`);
   $('#w-yes').addEventListener('click', () => {
     ['hogwarts_escape_v1', 'hogwarts_escape_act2_v1', 'hogwarts_escape_act3_v1',
-     'hogwarts_escape_act4_v1', 'hogwarts_escape_act5_v1', 'hogwarts_records_v1']
+     'hogwarts_escape_act4_v1', 'hogwarts_escape_act5_v1', 'hogwarts_escape_act6_v1',
+     'hogwarts_records_v1']
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     clearProfile();
     clearHistory();
@@ -262,7 +263,7 @@ function showPrologue(n, needSorting) {
   UI.showScreen('screen-story');
   $('#story-numeral').textContent = A.numeral;
   $('#story-title').textContent = A.title;
-  $('#story-body').innerHTML = personalize({ 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4, 5: PROLOGUE_5 }[n]);
+  $('#story-body').innerHTML = personalize({ 1: PROLOGUE_1, 2: PROLOGUE_2, 3: PROLOGUE_3, 4: PROLOGUE_4, 5: PROLOGUE_5, 6: PROLOGUE_6 }[n]);
   $('#story-go').querySelector('span').textContent =
     { 1: 'Отвори портата', 2: 'Слез надолу', 3: 'Влез между дърветата', 4: 'Слез в лодката', 5: 'Влез в Министерството' }[n];
   const go = $('#story-go');
@@ -397,7 +398,8 @@ function showSolvedFooter(room, silent, msg) {
     <div class="flex flex-center mt">
       ${current > 0 ? '<button class="btn btn-ghost btn-sm" id="go-prev"><span>Предишна зала</span></button>' : ''}
       <button class="btn btn-primary" id="go-next"><span>${last
-        ? { 1: 'Излез от Хогуортс', 2: 'Затвори шева', 3: 'Тръгни след елена', 4: 'Излез през портата', 5: 'Изгори пророчеството' }[act]
+        ? { 1: 'Излез от Хогуортс', 2: 'Затвори шева', 3: 'Тръгни след елена', 4: 'Излез през портата',
+           5: 'Изгори пророчеството', 6: 'Пусни последното парче' }[act]
         : 'Продължи към следващата зала'}</span></button>
     </div>`;
   root.appendChild(box);
@@ -436,10 +438,11 @@ const TIMEOUT_LINE = {
   3: 'Дърветата се приближават с една крачка.',
   4: 'Студът е стигнал до последното стъпало.',
   5: 'Стъклените сфери започват да шепнат името ти.',
+  6: 'Нещо в главата ти се раздвижва — и то не е твое.',
 };
 const DOOR_LINE = {
   1: 'Портата се отваря', 2: 'Пясъкът спира',
-  3: 'Дърветата се разстъпват', 4: 'Морето се отдръпва', 5: 'Пророчеството изгаря',
+  3: 'Дърветата се разстъпват', 4: 'Морето се отдръпва', 5: 'Пророчеството изгаря', 6: 'Последното парче си отива',
 };
 let timedOut = false;
 function onTimeout() {
@@ -492,7 +495,7 @@ function showEnd(rec, g) {
   setBgMode('candles');
   const A = ACTS[act];
   const house = HOUSES[S.house] || { name: 'Хогуортс' };
-  const justUnlocked = act < 5 && rec.outstanding;
+  const justUnlocked = act < 6 && rec.outstanding;
   const shareCode = encodeRun({
     name: playerName() || 'Незнаен магьосник', act,
     ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
@@ -519,11 +522,11 @@ function showEnd(rec, g) {
       <p class="muted">${g.note}</p>
     </div>
 
-    ${act < 5 ? unlockBlock(rec) : `
+    ${act < 6 ? unlockBlock(rec) : `
       <div class="epilogue">
-        <p>Последната стъклена сфера се стопява в бяла светлина. Никой вече не държи написан
-        край за теб — нито Основателите, нито гората, нито Министерството.</p>
-        <p><b>Историята продължава, но оттук нататък перото е в твоята ръка.</b></p>
+        <p>Седем парчета. Седем места. Последното беше най-близо до теб от всички —
+        и ти го пусна, вместо да го задържиш.</p>
+        <p><b>Оттук нататък няма кой да пише вместо теб. И това е целият край.</b></p>
       </div>`}
 
     <div class="runes-final">
@@ -573,12 +576,13 @@ function showEnd(rec, g) {
   if (justUnlocked) setTimeout(() => FX.celebrate(4), 600);
 }
 
-const ORD = { 1: 'Първа', 2: 'Втора', 3: 'Трета', 4: 'Четвърта', 5: 'Пета' };
+const ORD = { 1: 'Първа', 2: 'Втора', 3: 'Трета', 4: 'Четвърта', 5: 'Пета', 6: 'Шеста' };
 const UNLOCK_LINE = {
   1: 'Печатът обаче не беше ключалка, а <b>шев</b>. И ти току-що го разпра.',
   2: 'Замъкът те забрави. Гората обаче помни всичко — и я чака да ѝ обясниш кой си.',
   3: 'Патронусът светна над гората като фар. И нещо в Северно море го видя.',
   4: 'Върнатите спомени сочат едно място: прашен рафт в Отдела на мистериите, където сфера носи твоето име.',
+  5: 'Сферата изгоря, но огънят освети нещо друго: седем неща по света, всяко с по едно парче душа.',
 };
 
 function unlockBlock(rec) {
@@ -707,5 +711,19 @@ const PROLOGUE_5 = `
   <p>Имаш шестдесет минути да стигнеш до рафта, да събереш огнената дума и да унищожиш единствения
   разказ, който никога не бива да бъде прочетен.</p>
   <p class="whisper">„Пророчеството показва врата. Само ти решаваш дали да минеш през нея.“</p>`;
+
+const PROLOGUE_6 = `
+  <p class="drop">Огънят изяде пророчеството за седем секунди, {име}. И за седем секунди ти показа
+  всичко останало.</p>
+  <p>В светлината му думите на сферата не се разпаднаха, а се <em>подредиха</em>: не един край,
+  а <strong>седем</strong>. Седем предмета, скрити на седем места, всеки с по едно парче от една
+  и съща разкъсана душа. Докато поне един стои цял, нищо в този свят не свършва наистина —
+  нито Азкабан, нито гората, нито ти.</p>
+  <p>Никой не ти е възлагал това. Няма печат, който да те държи вътре, и няма врата, която да се
+  затвори зад гърба ти. Тръгваш, защото си единственият, който знае къде да гледа.</p>
+  <p>Пръстенът в Мраколес. Медальонът под черното езеро. Чашата в трезора на Лестрейндж.
+  Диадемата, зазидана в стая, която се появява само при нужда. Змията, която никога не спи сама.
+  И още едно, за което дори огънят замълча.</p>
+  <p class="whisper">„Разкъсаната душа не боли. Затова е толкова опасна.“</p>`;
 
 document.addEventListener('DOMContentLoaded', boot);
