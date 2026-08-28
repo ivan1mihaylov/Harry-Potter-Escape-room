@@ -4,7 +4,7 @@
    и пари. Ключалката брои докосванията, не златото.
    ============================================================ */
 import { head, $, $$ } from '../rooms/common.js';
-import { canvasLayer, revealPanel, wait, rnd } from './common6.js';
+import { canvasLayer, revealPanel, wait, rnd, sprite } from './common6.js';
 
 export const meta = {
   id: 'a6-vault',
@@ -176,41 +176,56 @@ function openCup(api, silent) {
 }
 
 /* ---------- купчината злато ---------- */
+/* Монетите са истински галеон (римски аурей от Wikimedia), а не рисувани
+   елипси: въртят се, лежат под ъгъл и се нажежават заедно с купчината.   */
 function makePile(host) {
+  const COIN = sprite('assets/img/galleon.png');
   let coins = [], target = 1, frozen = false, heat = 0;
+
   const layer = canvasLayer(host, (g, t, W, H) => {
-    const show = Math.min(coins.length, 240);
+    if (!COIN.ready) return;
+    const show = Math.min(coins.length, 220);
+    const hot = frozen ? heat : Math.min(1, Math.max(0, target - 24) / 150);
+    heat += (hot - heat) * 0.06;
     for (let i = 0; i < show; i++) {
       const c = coins[i];
-      const k = Math.min(1, (layer.now() - c.t0) * 2.2);
+      const k = Math.min(1, (layer.now() - c.t0) * 2.4);
       if (k <= 0) continue;
-      const x = (c.x0 + (c.x - c.x0) * k) * W;
-      const y = (c.y0 + (c.y - c.y0) * k) * H + Math.sin(t * 1.3 + c.p) * 1.5;
-      const r = 5 + c.s * 4;
+      const e = 1 - Math.pow(1 - k, 3);
+      const x = (c.x0 + (c.x - c.x0) * e) * W;
+      const y = (c.y0 + (c.y - c.y0) * e) * H + Math.sin(t * 1.1 + c.p) * 1.2;
+      const r = 13 + c.s * 11;
       g.save();
       g.translate(x, y);
-      g.rotate(Math.sin(t * 0.6 + c.p) * 0.25);
-      g.scale(1, 0.42);
-      const hot = Math.min(1, heat);
-      g.fillStyle = `rgb(${226 + hot * 20},${186 - hot * 70},${86 - hot * 50})`;
-      g.beginPath(); g.arc(0, 0, r, 0, 7); g.fill();
-      g.strokeStyle = `rgba(${120 + hot * 90},80,30,.75)`;
-      g.lineWidth = 1.2; g.stroke();
+      g.rotate(c.rot + Math.sin(t * 0.4 + c.p) * 0.05);
+      g.scale(1, 0.5 + c.tilt * 0.42);           /* лежат, не висят */
+      g.globalAlpha = 0.5 + c.s * 0.5;
+      g.drawImage(COIN.img, -r, -r, r * 2, r * 2);
       g.restore();
     }
-    if (!frozen) heat = Math.min(1, target / 130);
+    /* колкото повече злато, толкова по-нажежено — фламгранте */
+    if (heat > 0.02) {
+      g.globalCompositeOperation = 'overlay';
+      g.fillStyle = `rgba(255,90,20,${(heat * 0.17).toFixed(3)})`;
+      g.fillRect(0, 0, W, H);
+      g.globalCompositeOperation = 'source-over';
+    }
   });
 
+  /* златото се сипе по краищата и надолу — средата остава за четене */
   const seed = i => ({
-    x0: 0.5, y0: 0.42, x: 0.08 + rnd(i * 5.1) * 0.84, y: 0.5 + rnd(i * 9.3) * 0.42,
-    s: rnd(i * 2.7), p: rnd(i * 3.9) * 6, t0: layer.now() + rnd(i * 1.7) * 0.25,
+    x0: 0.5, y0: 0.4,
+    x: (rnd(i * 5.1) < 0.5 ? 0.03 + rnd(i * 3.7) * 0.28 : 0.69 + rnd(i * 3.7) * 0.28),
+    y: 0.1 + rnd(i * 9.3) * 0.84,
+    s: rnd(i * 2.7), p: rnd(i * 3.9) * 6, rot: rnd(i * 7.7) * 6,
+    tilt: rnd(i * 4.3), t0: layer.now() + rnd(i * 1.7) * 0.3,
   });
 
   return {
     stop: layer.stop,
     set(n) {
       target = n;
-      const want = Math.min(240, n);
+      const want = Math.min(220, n);
       while (coins.length < want) coins.push(seed(coins.length));
       if (coins.length > want) coins.length = want;
     },

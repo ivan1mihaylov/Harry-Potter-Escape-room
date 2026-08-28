@@ -133,5 +133,5 @@ export function addMist(stage, { count = 14, radius = 15, color = 0x8fb8a0 } = {
 /* стандартните настройки на сцената за гората */
 export const FOREST_STAGE = {
   bg: 0x050a07, fogNear: 16, fogFar: 54,
-  groundColor: 0x101a12, ground: true,
+  groundColor: 0x101a12, ground: true, groundTex: 'cobble-floor', groundRepeat: 18,
 };

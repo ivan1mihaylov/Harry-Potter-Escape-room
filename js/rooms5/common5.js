@@ -1,3 +1,5 @@
+import { tex } from '../three-stage.js';
+
 /* ============================================================
    common5.js — Отделът на мистериите: черен камък, синьо
    пламъче, безброй свещи. Всяка камера стъпва върху това.
@@ -12,7 +14,7 @@ export function rnd(i) {
 /* стандартните настройки на сцената за Отдела */
 export const MYSTERY_STAGE = {
   bg: 0x0a0818, fogNear: 22, fogFar: 78,
-  groundColor: 0x171230, ground: true,
+  groundColor: 0x171230, ground: true, groundTex: 'slate-floor', groundRepeat: 16,
 };
 
 /* Отделът е тъмен по замисъл, но не и нечетлив: студен ключ отгоре,
@@ -39,6 +41,7 @@ export function addChamber(stage, { r = 12, h = 8, tint = 0x2b2350, seg = 24 } =
   const mat = new T.MeshStandardMaterial({
     color: tint, roughness: 0.5, metalness: 0.2, side: T.DoubleSide,
     emissive: 0x120e26, emissiveIntensity: 0.45,
+    map: tex(T, 'granite', 1, 1),      /* камък на Министерството, не гладка боя */
   });
   const root = new T.Group();
   const panels = [];

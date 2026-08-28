@@ -147,18 +147,17 @@ function scene(fake) {
       ${fake ? '' : '<path d="M133.4 136h19.2l-2 12h-15.2z" fill="#7a2a3a" opacity=".9"/>'}
       <rect x="140" y="148" width="6" height="4" fill="#cbd8ee"/>
     </g>
-    <!-- Слъгхорн -->
-    <g>
-      <ellipse cx="80" cy="168" rx="30" ry="26" fill="#3a4a2c"/>
-      <circle cx="80" cy="132" r="17" fill="#e8c9a0"/>
-      <path d="M66 128q14-12 28 0" stroke="#b09070" stroke-width="3" fill="none"/>
-      <path d="M70 140q10 7 20 0" stroke="#8a6a4a" stroke-width="2" fill="none"/>
+    <!-- Слъгхорн и Том: истински човешки силуети (Wikimedia, обществено
+         достояние), а не две петна с топка отгоре -->
+    <g opacity=".92">
+      <image href="assets/img/figure-2.svg" x="46" y="112" width="58" height="86"
+             preserveAspectRatio="xMidYMax meet" style="filter:brightness(0) saturate(100%)
+             invert(28%) sepia(24%) saturate(520%) hue-rotate(6deg) brightness(92%)"/>
     </g>
-    <!-- Том -->
-    <g>
-      <path d="M262 196c0-24 10-38 24-38s24 14 24 38z" fill="#1b2036"/>
-      <circle cx="286" cy="140" r="16" fill="#e6d8c8"/>
-      <path d="M270 134q16-14 32 0" fill="#241c18"/>
+    <g opacity=".95">
+      <image href="assets/img/figure-3.svg" x="250" y="98" width="70" height="102"
+             preserveAspectRatio="xMidYMax meet" style="filter:brightness(0) saturate(100%)
+             invert(14%) sepia(30%) saturate(700%) hue-rotate(196deg) brightness(88%)"/>
       <g>
         <path d="M264 176l-12 10" stroke="#e6d8c8" stroke-width="7" stroke-linecap="round"/>
         ${fake ? '' : '<circle cx="254" cy="184" r="4.4" fill="#141018" stroke="#d9b45b" stroke-width="2"/>'}

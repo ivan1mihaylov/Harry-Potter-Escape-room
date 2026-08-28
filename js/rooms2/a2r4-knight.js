@@ -166,7 +166,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 19, fov: 40, look: [0, 0.2, 0], theta: 0.1, phi: 0.72,
-    minPolar: 0.18, maxPolar: 1.3, ground: true, groundColor: 0x0b0a10,
+    minPolar: 0.18, maxPolar: 1.3, ground: true, groundColor: 0x0b0a10, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL, за да се покаже дъската.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

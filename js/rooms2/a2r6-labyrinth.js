@@ -142,7 +142,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 20, fov: 40, look: [0, 0.3, 0], theta: 0.12, phi: 0.66,
-    minPolar: 0.16, maxPolar: 1.3, ground: true, groundColor: 0x0a1110,
+    minPolar: 0.16, maxPolar: 1.3, ground: true, groundColor: 0x0a1110, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL. Бутоните вляво пак движат перлата.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

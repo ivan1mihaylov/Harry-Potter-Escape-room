@@ -96,6 +96,24 @@ export function embers(host, { count = 46, color = '220,120,60', speed = 1, size
 }
 
 /* ------------------------------------------------------------
+   Снимки за платната. Кешираме по път и не чакаме: докато
+   картинката се зареди, стаята рисува без нея и не се чупи,
+   ако файлът липсва.
+   ------------------------------------------------------------ */
+const IMG_CACHE = new Map();
+
+export function sprite(src) {
+  if (IMG_CACHE.has(src)) return IMG_CACHE.get(src);
+  const rec = { img: new Image(), ready: false, failed: false };
+  rec.img.decoding = 'async';
+  rec.img.onload = () => { rec.ready = true; };
+  rec.img.onerror = () => { rec.failed = true; };
+  rec.img.src = src;
+  IMG_CACHE.set(src, rec);
+  return rec;
+}
+
+/* ------------------------------------------------------------
    Плавен tween: pass(0..1) на всеки кадър, после done().
    Връща функция за отказ.
    ------------------------------------------------------------ */

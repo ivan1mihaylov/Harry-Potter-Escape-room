@@ -4,7 +4,7 @@
    отрова. Магията пуска само този, който я раздели поравно.
    ============================================================ */
 import { head, $, $$ } from '../rooms/common.js';
-import { canvasLayer, revealPanel, tween, wait, rnd } from './common6.js';
+import { canvasLayer, revealPanel, wait, rnd, sprite } from './common6.js';
 
 export const meta = {
   id: 'a6-cave',
@@ -187,77 +187,89 @@ function openDrink(api, silent) {
 }
 
 /* ---------- черното езеро ---------- */
+/* Ръцете вече не са драскулки: истинска изрязана ръка (Wikimedia, CC BY-SA),
+   пребоядисана в удавено сиво и с китка, която сама изтънява във водата.   */
 function makeLake(host) {
-  const hands = [];      // изплували ръце
+  const HAND = sprite('assets/img/inferi-hand.png');
+  const hands = [];
   let splash = 0;
+
   const layer = canvasLayer(host, (g, t, W, H) => {
-    const base = H * 0.84;   /* езерото е ивица най-долу, а не фон под текста */
-    /* вода */
-    g.save();
-    const grd = g.createLinearGradient(0, base - 40, 0, H);
-    grd.addColorStop(0, 'rgba(10,30,34,.9)');
-    grd.addColorStop(1, 'rgba(4,10,14,1)');
+    const base = H * 0.84;
+
+    /* водата */
+    const grd = g.createLinearGradient(0, base - 30, 0, H);
+    grd.addColorStop(0, 'rgba(12,34,38,.92)');
+    grd.addColorStop(1, 'rgba(3,8,11,1)');
     g.fillStyle = grd;
     g.beginPath();
     g.moveTo(0, H);
-    for (let x = 0; x <= W; x += 8) {
-      const y = base + Math.sin((x / W) * 7 + t * 0.9) * 4 + Math.sin(x * 0.03 - t * 1.7) * 2.5 * (1 + splash);
+    for (let x = 0; x <= W; x += 6) {
+      const y = base + Math.sin((x / W) * 7 + t * 0.9) * 4
+                     + Math.sin(x * 0.03 - t * 1.7) * 2.5 * (1 + splash);
       g.lineTo(x, y);
     }
     g.lineTo(W, H); g.closePath(); g.fill();
-    /* зелено сияние от басейна */
-    const gl = g.createRadialGradient(W / 2, base - 10, 4, W / 2, base - 10, W * 0.42);
-    gl.addColorStop(0, `rgba(90,230,200,${0.16 + 0.05 * Math.sin(t * 1.4)})`);
+
+    /* зеленото сияние на басейна ляга върху водата */
+    const gl = g.createRadialGradient(W / 2, base - 8, 4, W / 2, base - 8, W * 0.45);
+    gl.addColorStop(0, `rgba(90,230,200,${(0.14 + 0.05 * Math.sin(t * 1.4)).toFixed(3)})`);
     gl.addColorStop(1, 'rgba(90,230,200,0)');
     g.fillStyle = gl; g.fillRect(0, 0, W, H);
-    /* ръцете на инферите — китка, длан и пет пръста, а не гребло */
-    hands.forEach(hd => {
-      const k = Math.min(1, (t - hd.t0) / hd.dur);
-      if (k <= 0) return;
-      const y = base + 16 - k * hd.h;
-      g.save();
-      g.translate(hd.x * W, y);
-      g.globalAlpha = 0.22 + k * 0.5;
-      g.strokeStyle = 'rgba(196,220,218,.92)';
-      g.lineCap = 'round'; g.lineJoin = 'round';
-      /* предмишница */
-      g.lineWidth = 3.4;
-      g.beginPath(); g.moveTo(0, hd.h * 0.95); g.lineTo(0, 1); g.stroke();
-      /* длан */
-      g.lineWidth = 5.6;
-      g.beginPath(); g.moveTo(0, 1); g.lineTo(0, -4); g.stroke();
-      /* пръсти: различна дължина, палецът стои настрани */
-      g.lineWidth = 2.2;
-      const len = [7, 10.5, 11.5, 10, 7.5];
-      for (let f = 0; f < 5; f++) {
-        const sp = (f - 2) * 0.34 + Math.sin(t * 2.2 + f + hd.p) * 0.05;
-        const L = len[f];
+
+    /* ръцете */
+    if (HAND.ready) {
+      const iw = HAND.img.naturalWidth, ih = HAND.img.naturalHeight;
+      hands.forEach(hd => {
+        const k = Math.min(1, Math.max(0, (layer.now() - hd.t0) / hd.dur));
+        if (k <= 0) return;
+        const ease = 1 - Math.pow(1 - k, 3);
+        const hgt = hd.h * ease;
+        const w = hgt * (iw / ih);
+        const x = hd.x * W;
+        const y = base + 10 - hgt;
+        g.save();
+        g.translate(x, y + hgt);
+        g.rotate(hd.rot + Math.sin(t * 0.9 + hd.p) * 0.03);
+        g.globalAlpha = (0.35 + 0.55 * ease) * hd.a;
+        g.drawImage(HAND.img, -w / 2, -hgt, w, hgt);
+        g.restore();
+        /* кръгче, където китката пробива водата */
+        g.globalAlpha = 0.25 * ease;
+        g.strokeStyle = 'rgba(150,220,210,.8)';
+        g.lineWidth = 1.4;
         g.beginPath();
-        g.moveTo((f - 2) * 1.5, -4);
-        g.lineTo((f - 2) * 1.5 + Math.sin(sp) * L, -4 - Math.cos(sp) * L);
+        g.ellipse(x, base + 8, w * 0.42 * (1 + Math.sin(t * 2 + hd.p) * 0.06), 4, 0, 0, 7);
         g.stroke();
-      }
-      g.restore();
-    });
+        g.globalAlpha = 1;
+      });
+    }
     splash *= 0.94;
   });
+
+  const add = (n, big) => {
+    for (let i = 0; i < n; i++) {
+      const j = hands.length;
+      hands.push({
+        x: 0.06 + rnd(j * 4.7) * 0.88,
+        h: (big ? 78 : 54) + rnd(j * 8.1) * (big ? 60 : 34),
+        rot: (rnd(j * 2.3) - 0.5) * 0.5,
+        a: 0.55 + rnd(j * 6.1) * 0.45,
+        t0: layer.now() + (big ? rnd(j * 2.2) * 0.8 : 0),
+        dur: big ? 0.8 : 1.3,
+        p: rnd(j) * 6,
+      });
+    }
+  };
 
   return {
     stop: layer.stop,
     splash(m) {
       splash = Math.min(1.4, splash + m * 0.22);
-      /* всяко преливане вдига по една ръка — езерото брои заедно с теб */
-      if (hands.length < 9) {
-        const i = hands.length;
-        hands.push({ x: 0.08 + rnd(i * 4.7) * 0.84, h: 20 + rnd(i * 8.1) * 26,
-                     t0: layer.now(), dur: 1.2, p: rnd(i) * 6 });
-      }
+      if (hands.length < 8) add(1, false);     /* всяко преливане вдига по една ръка */
     },
     rise() {
-      for (let i = hands.length; i < 22; i++) {
-        hands.push({ x: 0.03 + rnd(i * 3.3) * 0.94, h: 34 + rnd(i * 6.9) * 46,
-                     t0: layer.now() + rnd(i * 2.2) * 0.7, dur: 0.9, p: rnd(i) * 6 });
-      }
+      add(Math.max(0, 20 - hands.length), true);
       host.classList.add('rising');
     },
   };

@@ -287,7 +287,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 15, fov: 42, look: [0, 3.4, 0], theta: 0.3, phi: 1.05,
-    minPolar: 0.3, maxPolar: 1.5, ground: true, groundColor: 0x14110c,
+    minPolar: 0.3, maxPolar: 1.5, ground: true, groundColor: 0x14110c, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL за часовника, но колелцата вляво работят.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

@@ -109,7 +109,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 21, fov: 44, look: [0, 2.6, 0], theta: 0.5, phi: 1.02,
-    minPolar: 0.22, maxPolar: 1.46, ground: true, groundColor: 0x120f14,
+    minPolar: 0.22, maxPolar: 1.46, ground: true, groundColor: 0x120f14, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL, за да се покаже купчината.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

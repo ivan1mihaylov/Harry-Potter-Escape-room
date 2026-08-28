@@ -31,7 +31,13 @@ body[data-act="6"] .a6-curtain.on { opacity: 1; }
 /* ============================================================
    I · Къщата на Гонт
    ============================================================ */
-body[data-act="6"] .a6-hut { position: relative; overflow: hidden; }
+body[data-act="6"] .a6-hut {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(12,16,12,.94), rgba(8,11,9,.88)),
+    url('../assets/tex/planks.jpg') center / 300px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .a6-hutbg { position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 60% 50% at 50% 90%, rgba(70,110,70,.16), transparent 70%); }
 body[data-act="6"] .a6-hut-in { position: relative; }
@@ -45,17 +51,39 @@ body[data-act="6"] .shade {
 @keyframes shadeIn { from { opacity: 0; transform: translateY(20px) scale(.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 body[data-act="6"] .shade.marked { border-color: rgba(217,180,91,.45); }
 body[data-act="6"] .shade.settled { opacity: .9; }
-body[data-act="6"] .ghost { width: 104px; height: 150px; display: block; margin: 0 auto 6px; animation: ghostFloat 5s ease-in-out infinite; }
-body[data-act="6"] .shade:nth-child(2) .ghost { animation-duration: 6.4s; }
-body[data-act="6"] .shade:nth-child(3) .ghost { animation-duration: 5.6s; }
-@keyframes ghostFloat { 0%,100% { transform: translateY(0) scaleX(1); } 50% { transform: translateY(-8px) scaleX(1.03); } }
-body[data-act="6"] .shade.settled .ghost { animation: ghostFade 2.4s ease forwards; }
-@keyframes ghostFade { to { opacity: .62; } }
-body[data-act="6"] .gbody { animation: gbodyPulse 3.2s ease-in-out infinite; }
-@keyframes gbodyPulse { 0%,100% { opacity: 1; } 50% { opacity: .78; } }
-body[data-act="6"] .geye { animation: gblink 6s infinite; }
-@keyframes gblink { 0%,94%,100% { transform: none; } 96% { transform: scaleY(.1); } }
-body[data-act="6"] .shade figcaption b { display: block; font-family: var(--font-title); color: var(--gold-100); font-size: 1.02rem; }
+/* Сянката: човешки силует като маска върху светлина. Главата свети,
+   краката се разтварят в нищо — фигурата „не стъпва“ на пода.        */
+body[data-act="6"] .shade-fig {
+  position: relative; width: 96px; height: 178px; margin: 0 auto 6px;
+  animation: ghostFloat 5.4s ease-in-out infinite;
+}
+body[data-act="6"] .shade:nth-child(2) .shade-fig { animation-duration: 6.6s; }
+body[data-act="6"] .shade:nth-child(3) .shade-fig { animation-duration: 5.8s; }
+body[data-act="6"] .sf-body {
+  position: absolute; inset: 0;
+  -webkit-mask-size: contain; -webkit-mask-position: center; -webkit-mask-repeat: no-repeat;
+          mask-size: contain;         mask-position: center;         mask-repeat: no-repeat;
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--gl) 92%, transparent) 0%,
+      color-mix(in srgb, var(--gl) 62%, transparent) 34%,
+      color-mix(in srgb, var(--gl) 26%, transparent) 68%,
+      transparent 96%);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gl) 55%, transparent))
+          drop-shadow(0 0 34px color-mix(in srgb, var(--gl) 28%, transparent));
+  animation: gbodyPulse 3.4s ease-in-out infinite;
+}
+/* лицето остава неразчетено: само сияние там, където е главата */
+body[data-act="6"] .sf-head {
+  position: absolute; left: 50%; top: 2%; width: 46px; height: 46px;
+  transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--gl) 45%, transparent) 0%, transparent 68%);
+  animation: gbodyPulse 3.4s ease-in-out infinite reverse;
+}
+@keyframes ghostFloat { 0%,100% { transform: translateY(0) scaleX(1); } 50% { transform: translateY(-9px) scaleX(1.02); } }
+@keyframes gbodyPulse { 0%,100% { opacity: 1; } 50% { opacity: .68; } }
+@keyframes gblink { 0%,94%,100% { transform: translateX(-50%) scaleY(1); } 96% { transform: translateX(-50%) scaleY(.15); } }
+body[data-act="6"] .shade.settled .shade-fig { animation: ghostFade 2.4s ease forwards; }
+@keyframes ghostFade { to { opacity: .5; filter: blur(1px); } }
 body[data-act="6"] .shade figcaption > span { display: block; font-size: .74rem; color: var(--muted); margin-bottom: 8px; }
 body[data-act="6"] .shade ul { list-style: none; margin: 0 0 10px; padding: 0; text-align: left; }
 body[data-act="6"] .shade li { font-style: italic; font-size: .88rem; margin-bottom: 5px; color: #cfe0d2; line-height: 1.35; }
@@ -99,10 +127,17 @@ body[data-act="6"] .ring-svg.shatter { animation: ringShatter 1.4s cubic-bezier(
 /* ============================================================
    II · Пещерата
    ============================================================ */
-body[data-act="6"] .cave-panel { position: relative; overflow: hidden; padding-bottom: 92px; }
+body[data-act="6"] .cave-panel {
+  position: relative; overflow: hidden; padding-bottom: 104px;
+  /* истинска скала зад стъклениците, а не още един градиент */
+  background:
+    linear-gradient(180deg, rgba(8,18,22,.93) 0%, rgba(6,14,18,.82) 46%, rgba(3,8,11,.96) 100%),
+    url('../assets/tex/rock-cave.jpg') center / 420px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .cave-lake { position: absolute; inset: 0; pointer-events: none; }
 body[data-act="6"] .cave-lake.rising { animation: lakeRise 1.6s ease; }
-@keyframes lakeRise { 50% { filter: brightness(1.7) hue-rotate(-18deg); } }
+@keyframes lakeRise { 50% { filter: brightness(1.22) saturate(1.15); } }
 body[data-act="6"] .cave-in { position: relative; }
 
 body[data-act="6"] .vessels { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin: 6px 0 12px; }
@@ -142,7 +177,13 @@ body[data-act="6"] .cave-status { text-align: center; color: var(--muted); font-
 /* ============================================================
    III · Трезорът
    ============================================================ */
-body[data-act="6"] .vault-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .vault-panel {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(16,12,8,.94), rgba(10,8,6,.88)),
+    url('../assets/tex/granite.jpg') center / 380px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .vault-gold { position: absolute; inset: 0; pointer-events: none; transition: filter .5s; }
 body[data-act="6"] .vault-gold.gem { animation: gemFlash .5s ease; }
 body[data-act="6"] .vault-gold.plus { animation: plusFlash .4s ease; }
@@ -176,8 +217,14 @@ body[data-act="6"] .vault-ops { flex-wrap: wrap; }
    IV · Стаята с нужното
    ============================================================ */
 body[data-act="6"] .room-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .room-panel {
+  background:
+    linear-gradient(180deg, rgba(16,12,24,.95), rgba(10,8,16,.9)),
+    url('../assets/tex/wood-dark.jpg') center / 400px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .room-junk { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(150,110,200,.14), transparent 70%); }
+  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(150,110,200,.16), transparent 70%); }
 body[data-act="6"] .room-in { position: relative; }
 body[data-act="6"] .sok-wrap { display: grid; place-items: center; }
 body[data-act="6"] .sok {
@@ -187,12 +234,31 @@ body[data-act="6"] .sok {
   width: min(100%, 470px); aspect-ratio: var(--w) / var(--h);
 }
 body[data-act="6"] .sk-cell {
-  position: relative; border-radius: 6px; background: rgba(120,90,160,.05);
-  border: 1px solid rgba(255,255,255,.04); display: grid; place-items: center;
+  position: relative; border-radius: 5px; display: grid; place-items: center;
+  border: 1px solid rgba(0,0,0,.45);
+  /* истински калдъръм под краката, а не сив квадрат */
+  background:
+    linear-gradient(180deg, rgba(30,22,44,.55), rgba(14,10,22,.72)),
+    url('../assets/tex/cobble-floor.jpg') center / 150% auto;
+  background-blend-mode: normal, luminosity;
 }
-body[data-act="6"] .sk-cell.wall { background: linear-gradient(160deg, #3b2d4e, #211830); border-color: rgba(190,150,230,.3);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.06); }
-body[data-act="6"] .sk-cell.goal { background: rgba(200,140,230,.1); border-color: rgba(200,140,230,.45); }
+body[data-act="6"] .sk-cell.wall {
+  background:
+    linear-gradient(160deg, rgba(96,74,132,.5), rgba(38,26,56,.72)),
+    url('../assets/tex/stone-mossy.jpg') center / 190% auto;
+  filter: none;
+  background-blend-mode: normal, luminosity;
+  border-color: rgba(190,150,230,.32);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.09), inset 0 -6px 12px rgba(0,0,0,.5);
+}
+body[data-act="6"] .sk-cell.goal {
+  background:
+    radial-gradient(circle, rgba(214,150,244,.3), rgba(30,20,44,.7) 72%),
+    url('../assets/tex/cobble-floor.jpg') center / 150% auto;
+  background-blend-mode: normal, luminosity;
+  border-color: rgba(200,140,230,.5);
+  box-shadow: inset 0 0 14px rgba(200,140,230,.35);
+}
 body[data-act="6"] .sk-rune { color: rgba(220,170,250,.7); font-style: normal; font-size: .9rem; animation: runePulse 2.6s ease-in-out infinite; }
 @keyframes runePulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 body[data-act="6"] .sk-box,
@@ -224,7 +290,13 @@ body[data-act="6"] .ff-line {
 /* ============================================================
    V · Змията
    ============================================================ */
-body[data-act="6"] .snake-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .snake-panel {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(8,16,11,.95), rgba(5,10,7,.9)),
+    url('../assets/tex/stone-mossy.jpg') center / 360px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .snake-bg { position: absolute; inset: 0; pointer-events: none; }
 body[data-act="6"] .snake-in { position: relative; }
 body[data-act="6"] .snake-round { text-align: center; color: var(--muted); font-size: .92rem; margin-bottom: 6px; }
@@ -257,7 +329,13 @@ body[data-act="6"] .ec.on { border-style: solid; border-color: #7fd6a1; color: #
 /* ============================================================
    VI · Ситото на спомените
    ============================================================ */
-body[data-act="6"] .pens-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .pens-panel {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(10,14,26,.95), rgba(7,10,20,.9)),
+    url('../assets/tex/dirty-carpet.jpg') center / 300px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .pens-mist { position: absolute; inset: 0; pointer-events: none; }
 body[data-act="6"] .pens-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 body[data-act="6"] .memory { margin: 0; }
@@ -294,8 +372,13 @@ body[data-act="6"] .pd-row span { color: var(--muted); font-size: .9rem; }
    VII · Щитът
    ============================================================ */
 body[data-act="6"] .shield-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .shield-panel {
+  background: linear-gradient(180deg, #0a0f22 0%, #0b1226 55%, #070a16 100%);
+}
 body[data-act="6"] .shield-sky { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(20,30,60,.5), transparent 65%); }
+  background: linear-gradient(180deg, rgba(24,36,74,.6), transparent 62%); }
+body[data-act="6"] .win rect { animation: winFlicker 4s ease-in-out infinite; }
+@keyframes winFlicker { 0%,100% { opacity: .8; } 45% { opacity: .35; } }
 body[data-act="6"] .shield-in { position: relative; }
 body[data-act="6"] .shield-svg { width: 100%; height: auto; }
 body[data-act="6"] .rune-pick { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
@@ -353,7 +436,14 @@ body.kx-white .rune-slot { border-color: rgba(40,44,60,.22); color: #8a8f9e; }
 body.kx-white .rune-slot.filled { color: #4a3d16; border-color: #c9ab5e; background: rgba(201,171,94,.22); }
 body.kx-white .room-eyebrow { color: #8a7434; }
 
-body[data-act="6"] .kx-panel { position: relative; }
+body[data-act="6"] .kx-panel {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.82), rgba(244,246,250,.9)),
+    url('../assets/tex/marble.jpg') center / 340px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
+body:not(.kx-white)[data-act="6"] .kx-panel { background: none; }
 body[data-act="6"] .flapboard {
   display: grid; gap: 6px; margin: 10px auto; max-width: 560px; padding: 16px 18px;
   border-radius: 12px; background: #14161c; box-shadow: inset 0 0 40px rgba(0,0,0,.8);
@@ -389,7 +479,13 @@ body.kx-white .sp.on { background: rgba(138,116,52,.16); color: #4a3d16; border-
 /* ============================================================
    IX · Приори Инкантатем
    ============================================================ */
-body[data-act="6"] .priori-panel { position: relative; overflow: hidden; }
+body[data-act="6"] .priori-panel {
+  position: relative; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(18,14,10,.95), rgba(10,8,7,.9)),
+    url('../assets/tex/granite.jpg') center / 380px auto repeat;
+  background-blend-mode: normal, luminosity;
+}
 body[data-act="6"] .priori-beam { position: absolute; inset: 0; pointer-events: none; }
 body[data-act="6"] .priori-in { position: relative; }
 body[data-act="6"] .ghosts-out { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 14px 0; }

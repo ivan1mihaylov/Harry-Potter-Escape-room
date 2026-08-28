@@ -163,14 +163,52 @@ function draw(api) {
     : `на плочи: <b>${placed}</b> от 3 · крачки: <b>${d.moves}</b>`;
 }
 
+/* сандъкът е истинско дърво: текстурата се слага като SVG шарка,
+   а не се имитира с два щриха                                    */
 const boxArt = () => `<svg viewBox="0 0 40 40" class="sk-box" aria-hidden="true">
-  <rect x="5" y="9" width="30" height="24" rx="3" fill="#5a3a2c" stroke="#c98b4a" stroke-width="2"/>
-  <path d="M5 19h30M20 9v24" stroke="#c98b4a" stroke-width="1.8" opacity=".8"/>
-  <circle cx="20" cy="19" r="3" fill="#e0a24a"/></svg>`;
+  <defs>
+    <pattern id="skwood" patternUnits="userSpaceOnUse" width="40" height="40">
+      <image href="assets/tex/planks.jpg" x="0" y="0" width="40" height="40"
+             preserveAspectRatio="xMidYMid slice"/>
+    </pattern>
+    <linearGradient id="skshade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+      <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".45"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="8" width="32" height="26" rx="2.5" fill="url(#skwood)"/>
+  <rect x="4" y="8" width="32" height="26" rx="2.5" fill="url(#skshade)"/>
+  <rect x="4" y="8" width="32" height="26" rx="2.5" fill="none" stroke="#2a1b12" stroke-width="2"/>
+  <path d="M4 20h32" stroke="#2a1b12" stroke-width="1.6" opacity=".7"/>
+  <path d="M6 10l28 22M34 10L6 32" stroke="#3a2618" stroke-width="1.3" opacity=".55"/>
+  <circle cx="20" cy="20" r="2.6" fill="#e0a24a" opacity=".9"/>
+</svg>`;
+/* магьосникът: качулка, наметало и пръчка — с обем, а не плоско петно */
 const meArt = () => `<svg viewBox="0 0 40 40" class="sk-me" aria-hidden="true">
-  <circle cx="20" cy="13" r="6" fill="#e8dcc0"/>
-  <path d="M11 34c0-7 4-12 9-12s9 5 9 12z" fill="#2b2440" stroke="#a898e8" stroke-width="1.6"/>
-  <path d="M27 22l7-9" stroke="#d9b45b" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+  <defs>
+    <linearGradient id="skcloak" x1=".2" y1="0" x2=".9" y2="1">
+      <stop offset="0" stop-color="#6a5aa8"/>
+      <stop offset=".5" stop-color="#3a3060"/>
+      <stop offset="1" stop-color="#1a1530"/>
+    </linearGradient>
+    <radialGradient id="skglow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffe9a8" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="20" cy="36" rx="11" ry="3" fill="#000" opacity=".45"/>
+  <path d="M20 6c5.4 0 8.6 4 8.6 9 0 3-1 4.6-1 6.4 0 4.6 4.4 6.2 4.4 12.6H8c0-6.4 4.4-8 4.4-12.6 0-1.8-1-3.4-1-6.4 0-5 3.2-9 8.6-9z"
+        fill="url(#skcloak)" stroke="#0d0a18" stroke-width="1.2"/>
+  <path d="M20 6c5.4 0 8.6 4 8.6 9 0 1.6-.3 2.8-.6 3.9-2-2.4-4.7-3.6-8-3.6s-6 1.2-8 3.6c-.3-1.1-.6-2.3-.6-3.9 0-5 3.2-9 8.6-9z"
+        fill="#0b0816" opacity=".85"/>
+  <ellipse cx="20" cy="17.5" rx="4.2" ry="3.4" fill="#0a0714"/>
+  <circle cx="18.4" cy="17.4" r=".9" fill="#cfe0ff" opacity=".85"/>
+  <circle cx="21.6" cy="17.4" r=".9" fill="#cfe0ff" opacity=".85"/>
+  <circle cx="33" cy="14" r="5" fill="url(#skglow)"/>
+  <path d="M27.5 23.5L33.5 14" stroke="#c9a25a" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="33.6" cy="13.8" r="1.7" fill="#fff3cf"/>
+</svg>`;
 
 /* ---------- изненадата: адският огън ---------- */
 function fiendfyre(api) {

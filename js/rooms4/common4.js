@@ -3,6 +3,8 @@
    сенки. Всяка зала от Четвърта част стъпва върху нея.
    ============================================================ */
 
+import { tex } from '../three-stage.js';
+
 /* детерминиран шум — крепостта изглежда еднакво при всяко зареждане */
 export function rnd(i) {
   const x = Math.sin(i * 91.7 + 4.113) * 21374.1953;
@@ -12,7 +14,7 @@ export function rnd(i) {
 /* стандартните настройки на сцената за Азкабан */
 export const AZK_STAGE = {
   bg: 0x05070c, fogNear: 14, fogFar: 52,
-  groundColor: 0x0d1017, ground: true,
+  groundColor: 0x0d1017, ground: true, groundTex: 'slate-floor', groundRepeat: 14,
 };
 
 /* студено море около крепостта — тъмна равнина с бавни вълни */
@@ -43,8 +45,12 @@ export function addSea(stage, { radius = 34, y = -0.35, color = 0x0a1420 } = {})
 }
 
 /* мокър гранит — материал, ползван из цялата част */
-export function stoneMat(T, tint = 0x2a2f38) {
-  return new T.MeshStandardMaterial({ color: tint, roughness: 0.92, metalness: 0.08 });
+export function stoneMat(T, tint = 0x2a2f38, repeat = 3) {
+  /* истинска зидария (CC0, Poly Haven) вместо равно сиво */
+  return new T.MeshStandardMaterial({
+    color: tint, roughness: 0.92, metalness: 0.08,
+    map: tex(T, 'castle-brick', repeat, repeat * 0.6),
+  });
 }
 
 /* стена от каменни блокове. Четирите стени са отделни групи и всяка
@@ -56,7 +62,7 @@ export function addWalls(stage, { w = 22, h = 9, d = 22, tint = 0x22262e, floor 
   const root = new T.Group();
 
   if (floor) {
-    const f = new T.Mesh(new T.PlaneGeometry(w, d), stoneMat(T, tint - 0x060606));
+    const f = new T.Mesh(new T.PlaneGeometry(w, d), stoneMat(T, tint - 0x060606, 6));
     f.rotation.x = -Math.PI / 2;
     f.position.y = -0.04;
     f.receiveShadow = true;

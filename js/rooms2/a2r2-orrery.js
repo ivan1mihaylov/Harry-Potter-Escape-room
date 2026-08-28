@@ -148,7 +148,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 18, fov: 42, look: [0, 1.4, 0], theta: 0, phi: 1.02,
-    minPolar: 0.25, maxPolar: 1.5, ground: true, groundColor: 0x100e18,
+    minPolar: 0.25, maxPolar: 1.5, ground: true, groundColor: 0x100e18, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Този браузър не може да покаже 3D (нужен е WebGL), но лостовете вляво работят.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

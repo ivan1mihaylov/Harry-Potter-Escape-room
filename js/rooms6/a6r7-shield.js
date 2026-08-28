@@ -60,14 +60,27 @@ export function mount(root, api) {
       <div class="shield-in">
         <svg viewBox="0 0 800 330" class="shield-svg" id="shield-svg" aria-hidden="true">
           <g id="castle">
-            <path d="M0 330h800V300q-40-10-70-30l-30 20-40-40-40 30-40-52-46 42-44-36-44 40-40-30-42 44-38-26-36 24-30-16-30 20z"
-                  fill="#0b1020" stroke="#2a3552" stroke-width="2"/>
-            <g fill="#f0d78a" opacity=".75">
-              <rect x="120" y="292" width="6" height="9"/><rect x="210" y="284" width="6" height="9"/>
-              <rect x="330" y="272" width="6" height="9"/><rect x="452" y="276" width="6" height="9"/>
-              <rect x="596" y="286" width="6" height="9"/><rect x="690" y="296" width="6" height="9"/>
-            </g>
+            <!-- истински замък в нощта (Бург Вишеринг, Wikimedia); маската маха
+                 правоъгълния ръб, за да не личи, че е снимка залепена отдолу -->
+            <image href="assets/img/castle-night.jpg" x="70" y="126" width="660" height="204"
+                   preserveAspectRatio="xMidYMax slice" mask="url(#castleMask)"/>
           </g>
+          </g>
+          <defs>
+            <linearGradient id="castleFade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0b1020" stop-opacity=".95"/>
+              <stop offset=".45" stop-color="#0b1020" stop-opacity=".25"/>
+              <stop offset="1" stop-color="#0b1020" stop-opacity=".8"/>
+            </linearGradient>
+            <radialGradient id="castleSoft" cx=".5" cy=".62" r=".62">
+              <stop offset=".38" stop-color="#fff" stop-opacity="1"/>
+              <stop offset=".72" stop-color="#fff" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+            <mask id="castleMask">
+              <ellipse cx="400" cy="258" rx="330" ry="118" fill="url(#castleSoft)"/>
+            </mask>
+          </defs>
           <path id="dome" d="M60 250A360 250 0 0 1 740 250" fill="none"
                 stroke="rgba(140,200,255,.18)" stroke-width="3"/>
           <g id="edges"></g>

@@ -164,7 +164,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 17, fov: 42, look: [0, 0.4, 0], theta: 0.34, phi: 0.72,
-    minPolar: 0.2, maxPolar: 1.32, ground: true, groundColor: 0x0d0c14,
+    minPolar: 0.2, maxPolar: 1.32, ground: true, groundColor: 0x0d0c14, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL. Бутоните вляво пак движат куба, но без картина.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

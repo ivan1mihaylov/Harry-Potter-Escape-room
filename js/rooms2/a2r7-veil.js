@@ -136,7 +136,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 17, fov: 44, look: [0, 3.2, 0], theta: 0, phi: 1.16,
-    minPolar: 0.4, maxPolar: 1.5, ground: true, groundColor: 0x0d0b16,
+    minPolar: 0.4, maxPolar: 1.5, ground: true, groundColor: 0x0d0b16, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL за арката, но шифърът вляво се решава и без нея.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

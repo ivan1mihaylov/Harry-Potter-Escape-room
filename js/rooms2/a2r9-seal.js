@@ -221,7 +221,7 @@ async function boot(api) {
   const box = $('#stage');
   stage = await createStage(box, {
     dist: 16, fov: 44, look: [0, 0.6, 0], theta: 0.2, phi: 0.66,
-    minPolar: 0.18, maxPolar: 1.36, ground: true, groundColor: 0x100d14,
+    minPolar: 0.18, maxPolar: 1.36, ground: true, groundColor: 0x100d14, groundTex: 'cobble-floor', groundRepeat: 16,
   });
   if (!stage) { box.innerHTML = '<div class="stage-loading">Нужен е WebGL за печата, но плочите вляво се въртят и без него.</div>'; return; }
   const ld = box.querySelector('.stage-loading'); if (ld) ld.remove();

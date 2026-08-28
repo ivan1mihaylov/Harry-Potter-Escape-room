@@ -5,7 +5,7 @@
    ============================================================ */
 import { head, $, $$ } from '../rooms/common.js';
 import { personalizeDOM } from '../state.js';
-import { embers, revealPanel, curtain, wait } from './common6.js';
+import { embers, revealPanel, curtain, wait, rnd } from './common6.js';
 
 export const meta = {
   id: 'a6-gaunt',
@@ -108,22 +108,18 @@ function drawShades(api) {
   }));
 }
 
+/* Сянка, извикана от камъка. Тялото е истински човешки силует (векторни
+   силуети от Wikimedia, обществено достояние), сложен като маска върху
+   светлина — затова пропорциите са човешки, а не рисувани от мен.      */
+const FIGURE = ['assets/img/figure-1.svg', 'assets/img/figure-3.svg', 'assets/img/figure-2.svg'];
+const GLOW = ['#a8d8b0', '#c6cfff', '#e8d6a8'];
+
 function ghost(i) {
-  const g = ['#a8d8b0', '#cfd6ff', '#e6d8b0'][i];
-  return `<svg viewBox="0 0 120 190" class="ghost" aria-hidden="true">
-    <defs>
-      <linearGradient id="gg${i}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="${g}" stop-opacity=".98"/>
-        <stop offset=".5" stop-color="${g}" stop-opacity=".7"/>
-        <stop offset=".82" stop-color="${g}" stop-opacity=".3"/>
-        <stop offset="1" stop-color="${g}" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <path class="gbody" fill="url(#gg${i})" d="M60 14c16 0 27 13 27 30 0 11-4 17-4 25 0 12 14 22 14 44 0 26-12 46-12 60 0 8 4 12 4 12H31s4-4 4-12c0-14-12-34-12-60 0-22 14-32 14-44 0-8-4-14-4-25 0-17 11-30 27-30z"/>
-    <ellipse class="geye" cx="50" cy="42" rx="5" ry="6.6" fill="#08121a"/>
-    <ellipse class="geye" cx="70" cy="42" rx="5" ry="6.6" fill="#08121a"/>
-    <path d="M50 60q10 8 20 0" stroke="#08121a" stroke-width="2.6" fill="none" opacity=".65"/>
-  </svg>`;
+  /* маската се задава на самия елемент: сложена в CSS променлива, пътят
+     се смята спрямо файла със стиловете, а не спрямо страницата         */
+  const m = `-webkit-mask-image:url('${FIGURE[i]}');mask-image:url('${FIGURE[i]}')`;
+  return `<div class="shade-fig" style="--gl:${GLOW[i]}">
+            <i class="sf-body" style="${m}"></i><i class="sf-head"></i></div>`;
 }
 
 function judge(api) {

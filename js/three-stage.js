@@ -12,7 +12,7 @@ export async function createStage(container, opts = {}) {
     fov = 45, dist = 14, height = 7, look = [0, 0, 0],
     bg = 0x07060a, fogNear = 24, fogFar = 62,
     orbit = true, minPolar = 0.15, maxPolar = 1.42,
-    autoSpin = 0, ground = true, groundColor = 0x14121c,
+    autoSpin = 0, ground = true, groundColor = 0x14121c, groundTex = null, groundRepeat = 12,
   } = opts;
 
   const W = () => container.clientWidth || 480;
@@ -57,7 +57,10 @@ export async function createStage(container, opts = {}) {
   if (ground) {
     const g = new THREE.Mesh(
       new THREE.CircleGeometry(26, 64),
-      new THREE.MeshStandardMaterial({ color: groundColor, roughness: 0.95, metalness: 0.05 })
+      new THREE.MeshStandardMaterial({
+        color: groundColor, roughness: 0.95, metalness: 0.05,
+        map: groundTex ? tex(THREE, groundTex, groundRepeat) : null,
+      })
     );
     g.rotation.x = -Math.PI / 2;
     g.position.y = -0.02;
@@ -209,6 +212,27 @@ export function labelTexture(THREE, text, {
   g.fillText(text, size / 2, size / 2 + size * 0.04);
   const t = new THREE.CanvasTexture(c);
   t.anisotropy = 4;
+  return t;
+}
+
+/* ------------------------------------------------------------
+   Текстури (CC0, Poly Haven) за материалите. Ако файлът липсва,
+   материалът си остава с плътния цвят — нищо не се чупи.
+   ------------------------------------------------------------ */
+const TEX_CACHE = new Map();
+
+export function tex(THREE, name, repeat = 1, repeatY = null) {
+  const key = `${name}|${repeat}|${repeatY}`;
+  if (TEX_CACHE.has(key)) return TEX_CACHE.get(key);
+  const t = new THREE.TextureLoader().load(
+    `assets/tex/${name}.jpg`, undefined, undefined,
+    () => { t.image = null; }          /* няма файл — просто няма шарка */
+  );
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeat, repeatY == null ? repeat : repeatY);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  TEX_CACHE.set(key, t);
   return t;
 }
 
