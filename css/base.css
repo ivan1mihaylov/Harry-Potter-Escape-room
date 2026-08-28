@@ -503,8 +503,35 @@ img.bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;o
 .act-card:hover{transform:translateY(-4px);border-color:rgba(217,180,91,.5);box-shadow:0 34px 80px rgba(0,0,0,.8)}
 .act-card.locked{opacity:.9;border-color:rgba(120,110,95,.3);background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.35)),#0b0a10}
 .act-card.locked:hover{transform:none}
-.ac-lock{position:absolute;top:18px;right:18px;width:26px;height:26px;color:#6f6656}
-.ac-lock svg{width:100%;height:100%}
+.ac-lock{position:absolute;top:18px;right:18px;width:26px;height:26px;color:#6f6656;
+  cursor:pointer;transition:color .2s,transform .2s}
+.ac-lock svg{width:100%;height:100%;pointer-events:none}
+.ac-lock:hover{color:var(--gold-deep)}
+/* катинарът пуска на оглед след десет клика — брои се от четвъртия нататък */
+.ac-peek-note{
+  position:absolute;top:-6px;right:-10px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;
+  display:grid;place-items:center;font-family:var(--font-head);font-size:.58rem;line-height:1;
+  color:#2a1e06;background:var(--gold-deep);pointer-events:none
+}
+.ac-peek-note:empty{display:none}
+.ac-lock.jig{animation:lockJig .22s ease}
+@keyframes lockJig{0%,100%{transform:none}30%{transform:rotate(-14deg) scale(1.14)}70%{transform:rotate(11deg) scale(1.08)}}
+.ac-lock.open{color:var(--gold);animation:lockOpen .5s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes lockOpen{0%{transform:none}45%{transform:translateY(-8px) rotate(-22deg) scale(1.3)}100%{transform:translateY(-4px) rotate(-16deg) scale(1.1);opacity:.4}}
+
+/* режим «оглед» — за да не се чуди човек защо нищо не се пази */
+.act-badge.peek{border-color:#7fd6a1;background:rgba(127,214,161,.14);color:#7fd6a1}
+.act-badge.peek::after{
+  content:'оглед';position:absolute;margin-top:30px;font-size:.5rem;letter-spacing:.12em;
+  color:#7fd6a1;white-space:nowrap
+}
+body.peeking #hud{box-shadow:inset 0 -1px 0 rgba(127,214,161,.35)}
+.peek-card{
+  max-width:640px;margin:22px auto 0;padding:16px 20px;border-radius:14px;text-align:left;
+  border:1px solid rgba(127,214,161,.35);background:rgba(127,214,161,.07)
+}
+.peek-title{font-family:var(--font-title);color:#9fe0b4;font-size:1.1rem;margin-bottom:6px}
+.peek-card p{color:var(--parch-dim);line-height:1.6;margin:0}
 .ac-num{font-family:var(--font-head);font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-deep)}
 .act-card.locked .ac-num{color:#6f6656}
 .ac-title{font-family:var(--font-title);font-size:clamp(1.15rem,2.6vw,1.5rem);color:var(--gold-100);margin:.1em 0 .15em;line-height:1.15}
@@ -554,6 +581,7 @@ img.bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;o
 
 /* ---------- значка на частта в HUD ---------- */
 .act-badge{
+  position:relative;
   display:grid;place-items:center;width:22px;height:22px;border-radius:6px;flex:none;
   border:1px solid rgba(217,180,91,.45);background:rgba(217,180,91,.12);
   font-family:var(--font-head);font-size:.66rem;color:var(--gold);margin-left:2px

@@ -44,6 +44,14 @@ const blank = (act = 1) => ({
   finishedAt: null,
 });
 
+/* ------------------------------------------------------------
+   Режим «оглед»: част, отворена през катинара, за да се разгледа.
+   Записът ѝ живее само в паметта — нищо не се пише в localStorage
+   и нищо не влиза в дневника с резултатите.
+   ------------------------------------------------------------ */
+let preview = false;
+export function isPreview() { return preview; }
+
 let act = 1;
 let data = load(1);
 
@@ -62,22 +70,28 @@ function load(a) {
 }
 
 /* превключване между частите */
-export function useAct(a) {
-  if (a === act) return;
-  saveNow();
+export function useAct(a, opts = {}) {
+  const wantPreview = !!opts.preview;
+  if (a === act && wantPreview === preview) return;
+  /* прибираме само истински започнат запис: празният акт няма какво да остави,
+     а огледът не пише изобщо                                                   */
+  if (!preview && data.started) saveNow();
   act = a;
-  data = load(a);
+  preview = wantPreview;
+  data = preview ? blank(a) : load(a);
 }
 export function currentAct() { return act; }
 
 let saveTimer = null;
 export function save() {
   data.lastSeen = Date.now();
+  if (preview) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveNow, 120);
 }
 export function saveNow() {
   data.lastSeen = Date.now();
+  if (preview) return;
   try { localStorage.setItem(keyFor(act), JSON.stringify(data)); }
   catch (e) { console.warn('Неуспешен запис в localStorage', e); }
 }
@@ -86,7 +100,7 @@ export const S = new Proxy({}, {
   get: (_, k) => (k === 'house' ? (playerHouse() || data.house) : data[k]),
   set: (_, k, v) => {
     data[k] = v;
-    if (k === 'house' && v) writeProfile({ house: v });
+    if (k === 'house' && v && !preview) writeProfile({ house: v });
     save();
     return true;
   },
@@ -94,7 +108,7 @@ export const S = new Proxy({}, {
 
 export function reset(a = act) {
   if (a === act) { data = blank(a); saveNow(); }
-  else { try { localStorage.removeItem(keyFor(a)); } catch (e) {} }
+  else if (!preview) { try { localStorage.removeItem(keyFor(a)); } catch (e) {} }
 }
 
 /* ---- надничане в другата част, без да я зареждаме ---- */
@@ -193,6 +207,7 @@ export function readRecords() {
   catch (e) { return {}; }
 }
 export function writeRecord(a, rec) {
+  if (preview) return recordFor(a);   /* огледът не оставя следа */
   const all = readRecords();
   const slot = all['act' + a] || {};
   slot.last = rec;

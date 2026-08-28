@@ -3,7 +3,7 @@
    ============================================================ */
 import { S, save, saveNow, remainingMs, TOTAL_MS, HINT_PENALTY_MS, addPenalty, isSolved,
          playerName, personalize, personalizeDOM,
-         openedHints, markHintOpened, getRoomData } from './state.js';
+         openedHints, markHintOpened, getRoomData, isPreview } from './state.js';
 import { crestSVG, HOUSES } from './art.js';
 import { sfx, setEnabled, isEnabled, startAmbient } from './audio.js';
 import { toast, shakeScreen, flash } from './fx.js';
@@ -21,8 +21,14 @@ let ACT = null;
 export function setAct(a) {
   ACT = a;
   const b = $('#act-badge');
-  if (b) { b.textContent = a.numeral; b.title = a.title; }
+  if (b) {
+    b.textContent = a.numeral;
+    /* в оглед значката казва това направо — иначе човек забравя къде е */
+    b.title = isPreview() ? a.title + ' — оглед, нищо не се записва' : a.title;
+    b.classList.toggle('peek', isPreview());
+  }
   document.body.dataset.act = a.id;
+  document.body.classList.toggle('peeking', isPreview());
 }
 
 /* ---------------- зърна пясък ---------------- */

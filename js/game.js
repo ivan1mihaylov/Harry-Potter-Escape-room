@@ -7,7 +7,7 @@ import {
   remainingMs, usedMs, hintsUsed, readRecords, writeRecord, recordFor,
   isActUnlocked, TOTAL_MS, WRONG_PENALTY_MS, OUTSTANDING_MS,
   playerName, playerHouse, hasName, clearProfile, writeProfile, clearHistory,
-  personalize, personalizeDOM,
+  personalize, personalizeDOM, isPreview,
 } from './state.js';
 import { ACTS, grade, housePoints, fmtTime } from './acts.js';
 import { HOUSES, crestSVG } from './art.js';
@@ -134,6 +134,7 @@ function actCard(n) {
              : `<div class="ac-progress"><span>още не си завършвал «${prev.title}»</span></div>`}
       </div>
       ${resultBlock}`;
+    wireLockPeek(card, n);
     return card;
   }
 
@@ -154,6 +155,39 @@ function actCard(n) {
     actions.appendChild(mkBtn(rec ? 'Изиграй отново' : 'Започни', 'btn-primary', () => startAct(n, true)));
   }
   return card;
+}
+
+/* ------------------------------------------------------------
+   Катинарът пуска на оглед. Десет клика върху него отварят
+   частта в режим «оглед»: нищо не се записва, нищо не влиза в
+   статистиката — само за да могат новите стаи да се разгледат.
+   ------------------------------------------------------------ */
+const PEEK_CLICKS = 10;
+
+function wireLockPeek(card, n) {
+  const lock = card.querySelector('.ac-lock');
+  if (!lock) return;
+  let hits = 0;
+  const note = document.createElement('span');
+  note.className = 'ac-peek-note';
+  lock.appendChild(note);
+
+  lock.addEventListener('click', e => {
+    e.stopPropagation();
+    hits++;
+    lock.classList.remove('jig'); void lock.offsetWidth; lock.classList.add('jig');
+    if (hits >= PEEK_CLICKS) {
+      note.textContent = '';
+      lock.classList.add('open');
+      sfx.unlock();
+      FX.sparksFrom(lock, { count: 20, color: '#d9b45b', spread: 120 });
+      setTimeout(() => startAct(n, true, true), 380);
+      return;
+    }
+    sfx.tick();
+    const left = PEEK_CLICKS - hits;
+    if (hits >= 4) note.textContent = left;
+  });
 }
 
 function mkBtn(text, cls, fn) {
@@ -200,9 +234,9 @@ function wipeAll() {
 /* ============================================================
    Пускане на част
    ============================================================ */
-async function startAct(n, fresh) {
+async function startAct(n, fresh, preview = false) {
   act = n;
-  useAct(n);
+  useAct(n, { preview });
   if (fresh) reset(n);
   UI.setAct(ACTS[n]);
 
@@ -219,8 +253,11 @@ async function startAct(n, fresh) {
   }
 
   /* домът се пази в профила; ако липсва, Първа част минава през шапката */
-  const needSorting = !playerHouse();
+  /* в оглед не пускаме шапката — тя пише в профила, а огледът не пише нищо */
+  const needSorting = !playerHouse() && !preview;
+  if (preview && !playerHouse()) S.house = 'gryffindor';
 
+  if (preview) FX.toast('Оглед на «' + ACTS[n].title + '». Нищо оттук нататък не се записва.', 'good', 5200);
   const go = () => {
     if (fresh || !S.started) { showPrologue(n, needSorting); return; }
     if (needSorting) { goSorting(n); return; }
@@ -228,7 +265,7 @@ async function startAct(n, fresh) {
   };
 
   /* заварен напредък без име — питаме, преди да продължим */
-  if (!needSorting && !hasName()) { askNameGate(go); return; }
+  if (!needSorting && !hasName() && !preview) { askNameGate(go); return; }
   go();
 }
 
@@ -298,6 +335,7 @@ function goHome() {
   UI.stopTimer();
   if (currentApi && currentApi.onLeave) { try { currentApi.onLeave(); } catch (e) {} }
   saveNow();
+  document.body.classList.remove('peeking');
   renderActs();
   UI.showScreen('screen-intro');
   setBgMode('dim');
@@ -476,13 +514,18 @@ function finishAct() {
     house: S.house, at: Date.now(),
     points: housePoints(ms, S.mistakes, hintsUsed()),
   };
-  writeRecord(act, rec);
-  sendState = isConfigured() ? 'sending' : 'off';
-  sendRun({
-    id: `${act}-${rec.at}`, name: playerName() || 'Незнаен магьосник', act,
-    ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
-    gradeKey: rec.gradeKey, house: S.house, at: rec.at,
-  }).then(state => { sendState = state; paintSendState(); });
+  /* огледът не оставя следа: нито в дневника, нито във формата */
+  if (isPreview()) {
+    sendState = 'off';
+  } else {
+    writeRecord(act, rec);
+    sendState = isConfigured() ? 'sending' : 'off';
+    sendRun({
+      id: `${act}-${rec.at}`, name: playerName() || 'Незнаен магьосник', act,
+      ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
+      gradeKey: rec.gradeKey, house: S.house, at: rec.at,
+    }).then(state => { sendState = state; paintSendState(); });
+  }
   saveNow();
   UI.stopTimer();
   sfx.victory();
@@ -495,7 +538,8 @@ function showEnd(rec, g) {
   setBgMode('candles');
   const A = ACTS[act];
   const house = HOUSES[S.house] || { name: 'Хогуортс' };
-  const justUnlocked = act < 6 && rec.outstanding;
+  const peeking = isPreview();
+  const justUnlocked = !peeking && act < 6 && rec.outstanding;
   const shareCode = encodeRun({
     name: playerName() || 'Незнаен магьосник', act,
     ms: rec.ms, mistakes: rec.mistakes, hints: rec.hints,
@@ -522,7 +566,13 @@ function showEnd(rec, g) {
       <p class="muted">${g.note}</p>
     </div>
 
-    ${act < 6 ? unlockBlock(rec) : `
+    ${peeking ? `
+      <div class="peek-card">
+        <div class="peek-title">Това беше оглед</div>
+        <p>Минал си «${A.title}» през катинара, за да я разгледаш. Затова нищо от този
+        пробег не е записано: нито времето, нито оценката, нито точките. Част ${A.numeral}
+        си остава заключена, а статистиката не го е видяла.</p>
+      </div>` : act < 6 ? unlockBlock(rec) : `
       <div class="epilogue">
         <p>Седем парчета. Седем места. Последното беше най-близо до теб от всички —
         и ти го пусна, вместо да го задържиш.</p>
@@ -534,7 +584,7 @@ function showEnd(rec, g) {
       <div class="muted" style="width:100%;margin-top:8px;font-size:.9rem">руните, които те изведоха</div>
     </div>
 
-    <div class="share-card">
+    ${peeking ? '' : `<div class="share-card">
       <div class="sc-sent" id="sc-sent" hidden></div>
       ${isConfigured() ? '' : `
         <div class="sc-title">Кодът на този пробег</div>
@@ -548,7 +598,7 @@ function showEnd(rec, g) {
       <div class="flex flex-center mt">
         <button class="btn btn-ghost btn-sm" id="sc-stats"><span>Виж статистиката</span></button>
       </div>
-    </div>
+    </div>`}
 
     <div class="flex flex-center mt-lg">
       <button class="btn btn-primary" id="end-home"><span>Към началото</span></button>
@@ -556,9 +606,10 @@ function showEnd(rec, g) {
     </div>`);
 
   $('#end-home').addEventListener('click', goHome);
-  $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true); });
+  $('#end-again').addEventListener('click', () => { reset(act); startAct(act, true, isPreview()); });
   paintSendState();
-  $('#sc-stats').addEventListener('click', goStats);
+  const scStats = $('#sc-stats');
+  if (scStats) scStats.addEventListener('click', goStats);
   const scCopy = $('#sc-copy');
   if (scCopy) scCopy.addEventListener('click', async () => {
     sfx.click();
