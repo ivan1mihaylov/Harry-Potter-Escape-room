@@ -116,15 +116,15 @@ async function boot(api) {
   const T = stage.THREE;
 
   const picks = [];
-  const junkMats = [0x4a4438, 0x3c3a44, 0x55483a, 0x3a4a44, 0x4e3f4a, 0x2f3a48, 0x5a5040]
+  JUNK_MATS = [0x4a4438, 0x3c3a44, 0x55483a, 0x3a4a44, 0x4e3f4a, 0x2f3a48, 0x5a5040]
     .map(c => new T.MeshStandardMaterial({ color: c, roughness: 0.88, metalness: 0.08 }));
 
-  const geos = [
-    new T.BoxGeometry(1.2, 0.9, 0.8), new T.BoxGeometry(0.6, 1.8, 0.6),
-    new T.CylinderGeometry(0.45, 0.45, 1.4, 10), new T.SphereGeometry(0.55, 10, 8),
-    new T.ConeGeometry(0.5, 1.2, 9), new T.TorusGeometry(0.5, 0.16, 8, 16),
-    new T.BoxGeometry(1.6, 0.24, 1.1), new T.CylinderGeometry(0.2, 0.5, 1.1, 8),
-  ];
+  /* Купчината вече не е от голи призми: всяка вещ е сглобена от няколко
+     части и прилича на нещо. Между тях стоят и примамки — втора метла,
+     втора диадема, второ яйце — за да има какво да се търси наистина.  */
+  const JUNK = [junkChair, junkBooks, junkBottle, junkCandle, junkCauldron,
+                junkCrate, junkFrame, junkJar, junkStool, junkScroll,
+                decoyBroom, decoyTiara, decoyEgg, decoyCabinet];
 
   const targets = {
     diadem: { pos: [4.6, 1.3, 2.4], build: buildDiadem },
@@ -135,23 +135,23 @@ async function boot(api) {
   };
   const clear = Object.values(targets).map(t => t.pos);
   const tooClose = (x, y, z) => clear.some(c =>
-    Math.hypot(c[0] - x, (c[1] - y) * 0.65, c[2] - z) < 2.6);
+    Math.hypot(c[0] - x, (c[1] - y) * 0.65, c[2] - z) < 2.4);
 
-  for (let i = 0; i < 150; i++) {
-    const g = geos[Math.floor(rnd(i * 3) * geos.length)];
-    const m = new T.Mesh(g, junkMats[Math.floor(rnd(i * 7 + 1) * junkMats.length)]);
+  for (let i = 0; i < 92; i++) {
+    const make = JUNK[Math.floor(rnd(i * 3) * JUNK.length)];
     const a = rnd(i * 11) * Math.PI * 2;
     const rad = Math.pow(rnd(i * 13 + 2), 0.55) * 7.2;
     const hMax = Math.max(0.4, 6.4 * (1 - rad / 7.6));
     const px = Math.sin(a) * rad, py = rnd(i * 17 + 3) * hMax + 0.3, pz = Math.cos(a) * rad;
     if (tooClose(px, py, pz)) continue;   // около петте вещи оставяме въздух
-    m.position.set(px, py, pz);
-    m.rotation.set(rnd(i * 19) * 6, rnd(i * 23) * 6, rnd(i * 29) * 6);
-    m.scale.setScalar(0.7 + rnd(i * 31) * 0.9);
-    m.castShadow = true; m.receiveShadow = true;
-    m.userData = { pick: true, id: 'junk' };
-    stage.add(m);
-    picks.push(m);
+    const g = make(T, i);
+    g.position.set(px, py, pz);
+    g.rotation.set((rnd(i * 19) - 0.5) * 1.6, rnd(i * 23) * 6, (rnd(i * 29) - 0.5) * 1.6);
+    g.scale.setScalar(0.62 + rnd(i * 31) * 0.5);
+    g.traverse(c => { c.castShadow = true; c.receiveShadow = true; });
+    g.userData = { pick: true, id: 'junk' };
+    stage.add(g);
+    picks.push(g);
   }
 
   Object.entries(targets).forEach(([id, t]) => {
@@ -179,6 +179,139 @@ async function boot(api) {
       o.group.position.y += Math.sin(t * 2 + i) * 0.004;
     });
   });
+}
+
+
+/* ============================================================
+   Купчината: всяка вещ е сглобена от няколко части, за да прилича
+   на нещо. Между тях има и примамки, много близки до търсеното.
+   ============================================================ */
+let JUNK_MATS = [];
+const jm = i => JUNK_MATS[Math.floor(rnd(i * 5.7) * JUNK_MATS.length)] || JUNK_MATS[0];
+const wood = (T, c = 0x5a4530) => new T.MeshStandardMaterial({ color: c, roughness: 0.9 });
+const metal = (T, c = 0x6a6a72) => new T.MeshStandardMaterial({ color: c, roughness: 0.45, metalness: 0.6 });
+const glassy = (T, c = 0x7aa8b8) => new T.MeshStandardMaterial({ color: c, roughness: 0.2,
+  metalness: 0.1, transparent: true, opacity: 0.55 });
+
+function part(T, geo, mat, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
+  const m = new T.Mesh(geo, mat);
+  m.position.set(x, y, z); m.rotation.set(rx, ry, rz);
+  return m;
+}
+
+function junkChair(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x4d3a26);
+  g.add(part(T, new T.BoxGeometry(1.1, 0.12, 1.1), w, 0, 0, 0));
+  [[-.45,-.45],[.45,-.45],[-.45,.45],[.45,.45]].forEach(([x, z]) =>
+    g.add(part(T, new T.BoxGeometry(0.11, 0.9, 0.11), w, x, -0.5, z)));
+  g.add(part(T, new T.BoxGeometry(1.1, 0.9, 0.1), w, 0, 0.5, -0.5));
+  g.add(part(T, new T.BoxGeometry(0.9, 0.1, 0.1), w, 0, 0.72, -0.44));
+  return g;
+}
+function junkBooks(T, i) {
+  const g = new T.Group();
+  for (let k = 0; k < 3 + Math.floor(rnd(i) * 3); k++) {
+    const c = [0x6a2a2a, 0x2a4a6a, 0x4a5a2a, 0x5a3a5a][k % 4];
+    g.add(part(T, new T.BoxGeometry(0.95 - k * 0.05, 0.16, 0.7),
+      new T.MeshStandardMaterial({ color: c, roughness: 0.92 }),
+      (rnd(i + k) - 0.5) * 0.14, k * 0.17, (rnd(i + k * 3) - 0.5) * 0.12, 0, rnd(i + k * 7) * 0.4));
+  }
+  return g;
+}
+function junkBottle(T, i) {
+  const g = new T.Group(); const gl = glassy(T, [0x6a8f5a, 0x8a6a4a, 0x5a6a8f][i % 3]);
+  g.add(part(T, new T.CylinderGeometry(0.3, 0.34, 0.75, 12), gl, 0, 0, 0));
+  g.add(part(T, new T.CylinderGeometry(0.11, 0.22, 0.4, 10), gl, 0, 0.56, 0));
+  g.add(part(T, new T.CylinderGeometry(0.12, 0.12, 0.12, 8), wood(T, 0x8a6a3a), 0, 0.8, 0));
+  return g;
+}
+function junkCandle(T, i) {
+  const g = new T.Group(); const br = metal(T, 0x8a7038);
+  g.add(part(T, new T.CylinderGeometry(0.34, 0.42, 0.1, 14), br, 0, 0, 0));
+  g.add(part(T, new T.CylinderGeometry(0.07, 0.09, 0.7, 10), br, 0, 0.4, 0));
+  g.add(part(T, new T.CylinderGeometry(0.2, 0.18, 0.06, 12), br, 0, 0.76, 0));
+  g.add(part(T, new T.CylinderGeometry(0.1, 0.11, 0.5, 10),
+    new T.MeshStandardMaterial({ color: 0xe6dcc0, roughness: 0.85 }), 0, 1.04, 0));
+  return g;
+}
+function junkCauldron(T, i) {
+  const g = new T.Group(); const m = metal(T, 0x3a3a40);
+  g.add(part(T, new T.SphereGeometry(0.55, 14, 10, 0, Math.PI * 2, Math.PI * 0.42, Math.PI * 0.58), m, 0, 0, 0));
+  g.add(part(T, new T.TorusGeometry(0.52, 0.06, 8, 20), m, 0, 0.2, 0, Math.PI / 2));
+  [0, 2.1, 4.2].forEach(a =>
+    g.add(part(T, new T.CylinderGeometry(0.05, 0.05, 0.3, 6), m,
+      Math.sin(a) * 0.34, -0.44, Math.cos(a) * 0.34)));
+  return g;
+}
+function junkCrate(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x63492c);
+  g.add(part(T, new T.BoxGeometry(1.1, 0.85, 0.9), w));
+  g.add(part(T, new T.BoxGeometry(1.16, 0.07, 0.96), wood(T, 0x3a2a18), 0, 0.28, 0));
+  g.add(part(T, new T.BoxGeometry(1.16, 0.07, 0.96), wood(T, 0x3a2a18), 0, -0.28, 0));
+  return g;
+}
+function junkFrame(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x7a5a2a);
+  const W = 1.1, H = 0.85, t = 0.09;
+  g.add(part(T, new T.BoxGeometry(W, t, 0.08), w, 0, H / 2, 0));
+  g.add(part(T, new T.BoxGeometry(W, t, 0.08), w, 0, -H / 2, 0));
+  g.add(part(T, new T.BoxGeometry(t, H, 0.08), w, -W / 2, 0, 0));
+  g.add(part(T, new T.BoxGeometry(t, H, 0.08), w, W / 2, 0, 0));
+  g.add(part(T, new T.BoxGeometry(W - t, H - t, 0.02),
+    new T.MeshStandardMaterial({ color: 0x1a1a22, roughness: 1 })));
+  return g;
+}
+function junkJar(T, i) {
+  const g = new T.Group(); const gl = glassy(T, 0x9ab0a8);
+  g.add(part(T, new T.CylinderGeometry(0.32, 0.32, 0.6, 14), gl));
+  g.add(part(T, new T.CylinderGeometry(0.34, 0.34, 0.09, 14), metal(T, 0x7a7a68), 0, 0.34, 0));
+  return g;
+}
+function junkStool(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x55402a);
+  g.add(part(T, new T.CylinderGeometry(0.46, 0.46, 0.11, 14), w));
+  [0, 2.1, 4.2].forEach(a =>
+    g.add(part(T, new T.CylinderGeometry(0.07, 0.05, 0.75, 7), w,
+      Math.sin(a) * 0.3, -0.42, Math.cos(a) * 0.3, 0.12, 0, 0.12)));
+  return g;
+}
+function junkScroll(T, i) {
+  const g = new T.Group();
+  const pm = new T.MeshStandardMaterial({ color: 0xc9b88a, roughness: 0.95 });
+  g.add(part(T, new T.CylinderGeometry(0.13, 0.13, 1.0, 12), pm, 0, 0, 0, 0, 0, Math.PI / 2));
+  g.add(part(T, new T.CylinderGeometry(0.06, 0.06, 1.16, 8), wood(T, 0x6a4a28), 0, 0, 0, 0, 0, Math.PI / 2));
+  return g;
+}
+
+/* --- примамките: приличат на търсеното, но не са то --- */
+function decoyBroom(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x4a3a24);
+  g.add(part(T, new T.CylinderGeometry(0.07, 0.08, 2.6, 8), w, 0, 0, 0, 0, 0, Math.PI / 2));
+  g.add(part(T, new T.ConeGeometry(0.3, 1.0, 9),
+    new T.MeshStandardMaterial({ color: 0x6a5a3a, roughness: 1 }), 1.6, 0, 0, 0, 0, -Math.PI / 2));
+  return g;
+}
+function decoyTiara(T, i) {
+  const g = new T.Group(); const m = metal(T, 0x9a8a5a);
+  g.add(part(T, new T.TorusGeometry(0.5, 0.045, 8, 26, Math.PI * 1.2), m, 0, 0, 0, Math.PI / 2));
+  g.add(part(T, new T.ConeGeometry(0.07, 0.22, 6), m, 0, 0.5, 0));
+  return g;
+}
+function decoyEgg(T, i) {
+  const g = new T.Group();
+  const e = part(T, new T.SphereGeometry(0.42, 14, 11),
+    new T.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 0.7, metalness: 0.2 }));
+  e.scale.set(1, 1.32, 1);
+  g.add(e);
+  return g;
+}
+function decoyCabinet(T, i) {
+  const g = new T.Group(); const w = wood(T, 0x46331f);
+  g.add(part(T, new T.BoxGeometry(0.9, 2.0, 0.7), w));
+  g.add(part(T, new T.BoxGeometry(1.02, 0.16, 0.8), w, 0, 1.06, 0));
+  g.add(part(T, new T.BoxGeometry(0.38, 1.6, 0.05),
+    new T.MeshStandardMaterial({ color: 0x2e2114, roughness: 0.9 }), -0.2, -0.05, 0.36));
+  return g;
 }
 
 /* ---------- предметите ---------- */

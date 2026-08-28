@@ -2,7 +2,7 @@
    ВТОРА ЧАСТ · ЗАЛА IX — Прековаването на печата
    ============================================================ */
 import { head, $, $$, el, shakeEl, norm } from '../rooms/common.js';
-import { createStage, labelTexture } from '../three-stage.js';
+import { createStage, tex } from '../three-stage.js';
 
 export const meta = {
   id: 'a2-seal',
@@ -33,6 +33,9 @@ export function mount(root, api) {
   const d = api.data;
   const runes = api.allRunes();
   if (!d.rot) d.rot = [...INITIAL];
+  /* `spin` брои завъртанията без остатък: 3 → 4, а не 3 → 0. Иначе
+     плочата се връщаше назад през три четвърти оборот и подскачаше. */
+  if (!d.spin) d.spin = d.rot.map(r => r);
   if (!d.slots) d.slots = Array(SPELL.length).fill(null);
   if (d.sealed == null) d.sealed = false;
   if (d.spelled == null) d.spelled = false;
@@ -76,9 +79,9 @@ function renderPlates(api) {
 function turnPlate(api, i) {
   const d = api.data;
   if (d.sealed) return;
-  d.rot[i] = (d.rot[i] + 1) % 4;
+  d.rot[i] = (d.rot[i] + 1) % 4;  d.spin[i]++;
   const j = (i + 1) % 4;
-  d.rot[j] = (d.rot[j] + 1) % 4;
+  d.rot[j] = (d.rot[j] + 1) % 4;  d.spin[j]++;
   api.saveData();
   api.sfx.click();
   renderPlates(api);
@@ -95,7 +98,7 @@ function turnPlate(api, i) {
 }
 
 function syncPlates(api) {
-  plates.forEach((p, i) => { p.target = -api.data.rot[i] * Math.PI / 2; });
+  plates.forEach((p, i) => { p.target = -api.data.spin[i] * Math.PI / 2; });
 }
 
 /* ---------- заклинанието ---------- */
@@ -228,7 +231,7 @@ async function boot(api) {
   const T = stage.THREE;
 
   const gold = new T.MeshStandardMaterial({ color: 0xd9b45b, metalness: 0.9, roughness: 0.28 });
-  const core = new T.Mesh(new T.CylinderGeometry(2.1, 2.1, 0.4, 40), gold);
+  const core = new T.Mesh(new T.CylinderGeometry(2.1, 2.0, 0.42, 48), gold);
   core.position.y = 0.2; core.castShadow = true; core.receiveShadow = true;
   stage.add(core);
   const coreGlow = new T.Mesh(
@@ -241,31 +244,45 @@ async function boot(api) {
   FOUNDERS.forEach((f, i) => {
     const a = (i / 4) * Math.PI * 2;
     const g = new T.Group();
+    /* каменна плоча със златен обков — не шестоъгълна хайка */
     const plate = new T.Mesh(
-      new T.CylinderGeometry(1.7, 1.7, 0.36, 6),
-      new T.MeshStandardMaterial({ color: COLORS[i], metalness: 0.55, roughness: 0.42,
-        emissive: COLORS[i], emissiveIntensity: 0.18 })
+      new T.CylinderGeometry(1.7, 1.62, 0.34, 40),
+      new T.MeshStandardMaterial({
+        color: COLORS[i], metalness: 0.28, roughness: 0.72,
+        emissive: COLORS[i], emissiveIntensity: 0.16,
+        map: tex(T, 'granite', 2, 2),
+      })
     );
     plate.castShadow = true; plate.receiveShadow = true;
     g.add(plate);
+    /* обков и вътрешен пръстен */
+    const rim = new T.Mesh(new T.TorusGeometry(1.71, 0.11, 10, 44), gold);
+    rim.rotation.x = Math.PI / 2; rim.position.y = 0.02;
+    g.add(rim);
+    const inner = new T.Mesh(new T.TorusGeometry(1.24, 0.045, 8, 40), gold);
+    inner.rotation.x = Math.PI / 2; inner.position.y = 0.18;
+    g.add(inner);
+    /* четири нита по обиколката */
+    for (let k = 0; k < 4; k++) {
+      const nail = new T.Mesh(new T.SphereGeometry(0.11, 10, 8), gold);
+      const na = (k / 4) * Math.PI * 2 + Math.PI / 4;
+      nail.position.set(Math.sin(na) * 1.45, 0.19, Math.cos(na) * 1.45);
+      g.add(nail);
+    }
     // зъбецът, който трябва да сочи към средата
-    const tooth = new T.Mesh(new T.ConeGeometry(0.42, 1.1, 4), gold);
-    tooth.position.set(0, 0.1, -1.6);
+    const tooth = new T.Mesh(new T.ConeGeometry(0.44, 1.15, 4), gold);
+    tooth.position.set(0, 0.1, -1.68);
     tooth.rotation.x = -Math.PI / 2;
+    tooth.rotation.z = Math.PI / 4;
+    tooth.castShadow = true;
     g.add(tooth);
-    const lbl = new T.Mesh(
-      new T.PlaneGeometry(1.9, 0.6),
-      new T.MeshBasicMaterial({ map: labelTexture(T, f, { size: 256, color: '#fff4d0', font: '600 54px Cinzel, Georgia, serif' }), transparent: true })
-    );
-    lbl.rotation.x = -Math.PI / 2; lbl.position.set(0, 0.2, 0.55);
-    g.add(lbl);
 
     const holder = new T.Group();
     holder.position.set(Math.sin(a) * 4.0, 0.2, Math.cos(a) * 4.0);
     holder.rotation.y = a;         // плочата гледа към центъра при завъртане 0
     holder.add(g);
     stage.add(holder);
-    plates.push({ g, target: -api.data.rot[i] * Math.PI / 2, cur: -api.data.rot[i] * Math.PI / 2, sealed: false, plate });
+    plates.push({ g, target: -api.data.spin[i] * Math.PI / 2, cur: -api.data.spin[i] * Math.PI / 2, sealed: false, plate });
   });
   plates.forEach(p => { p.g.rotation.y = p.cur; });
 
@@ -285,8 +302,12 @@ async function boot(api) {
   stage.add(sand);
 
   stage.onFrame((t, dt) => {
+    /* независим от кадровата честота преход — на слаба машина се движеше
+       на пресекулки                                                      */
+    const k = 1 - Math.pow(0.86, Math.min(3, dt * 60));
     plates.forEach(p => {
-      p.cur += (p.target - p.cur) * 0.14;
+      p.cur += (p.target - p.cur) * k;
+      if (Math.abs(p.target - p.cur) < 0.0015) p.cur = p.target;
       p.g.rotation.y = p.cur;
       if (p.sealed) p.plate.material.emissiveIntensity = 0.35 + Math.sin(t * 3) * 0.25;
     });

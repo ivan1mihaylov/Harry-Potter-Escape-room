@@ -24,24 +24,35 @@ export const meta = {
 
 /* --------- очертанията, които отломките изписват --------- */
 const GLYPHS = [
-  { // пясъчен часовник
+  { // пясъчен часовник — две чинии и пясъчният кръст между тях
     name: 'пясъчен часовник',
-    segs: [[-2.2, 2.4, 2.2, 2.4], [-2.2, -2.4, 2.2, -2.4], [-2.2, 2.4, 2.2, -2.4], [2.2, 2.4, -2.2, -2.4]],
-    dir: [0.62, 0.55, 0.56], tol: 0.20, n: 46,
+    segs: [[-2.3, 2.6, 2.3, 2.6], [-2.3, -2.6, 2.3, -2.6],
+           [-1.9, 2.5, -0.15, 0.15], [1.9, 2.5, 0.15, 0.15],
+           [-1.9, -2.5, -0.15, -0.15], [1.9, -2.5, 0.15, -0.15],
+           [-0.15, 0.15, 0.15, 0.15], [-0.15, -0.15, 0.15, -0.15],
+           [-2.3, 2.6, -1.9, 2.5], [2.3, 2.6, 1.9, 2.5],
+           [-2.3, -2.6, -1.9, -2.5], [2.3, -2.6, 1.9, -2.5]],
+    dir: [0.62, 0.55, 0.56], tol: 0.20, n: 128,
   },
-  { // руната „С“ с прекъсване
-    name: 'счупена руна',
-    segs: [[1.8, 2.0, -0.6, 2.4], [-0.6, 2.4, -2.0, 0.9], [-2.0, 0.9, -0.7, -0.2],
-           [-0.7, -0.2, 1.4, -0.9], [1.4, -0.9, 1.9, -2.2], [1.9, -2.2, -0.9, -2.5]],
-    dir: [-0.70, 0.16, -0.69], tol: 0.125, n: 52,
+  { // ключ — глава, стъбло и две зъбчета
+    name: 'ключ',
+    segs: [[-0.95, 2.05, 0.0, 2.5], [0.0, 2.5, 0.95, 2.05], [0.95, 2.05, 0.95, 1.15],
+           [0.95, 1.15, 0.0, 0.7], [0.0, 0.7, -0.95, 1.15], [-0.95, 1.15, -0.95, 2.05],
+           [-0.42, 1.85, 0.0, 2.05], [0.0, 2.05, 0.42, 1.85], [0.42, 1.85, 0.42, 1.4],
+           [0.42, 1.4, 0.0, 1.2], [0.0, 1.2, -0.42, 1.4], [-0.42, 1.4, -0.42, 1.85],
+           [0.0, 0.7, 0.0, -2.6],
+           [0.0, -1.5, 1.15, -1.5], [1.15, -1.5, 1.15, -0.95],
+           [0.0, -2.35, 0.95, -2.35], [0.95, -2.35, 0.95, -1.85]],
+    dir: [-0.70, 0.16, -0.69], tol: 0.125, n: 132,
   },
-  { // окото на печата — вижда се само отдолу
+  { // око — клепачи, ирис и зеница
     name: 'окото на печата',
-    segs: [[-2.6, 0, -1.3, 1.5], [-1.3, 1.5, 1.3, 1.5], [1.3, 1.5, 2.6, 0],
-           [2.6, 0, 1.3, -1.5], [1.3, -1.5, -1.3, -1.5], [-1.3, -1.5, -2.6, 0],
-           [-0.9, 0, -0.45, 0.75], [-0.45, 0.75, 0.45, 0.75], [0.45, 0.75, 0.9, 0],
-           [0.9, 0, 0.45, -0.75], [0.45, -0.75, -0.45, -0.75], [-0.45, -0.75, -0.9, 0]],
-    dir: [0.18, -0.60, 0.78], tol: 0.105, n: 58,
+    segs: [[-2.8, 0, -1.5, 1.25], [-1.5, 1.25, 0, 1.6], [0, 1.6, 1.5, 1.25], [1.5, 1.25, 2.8, 0],
+           [2.8, 0, 1.5, -1.25], [1.5, -1.25, 0, -1.6], [0, -1.6, -1.5, -1.25], [-1.5, -1.25, -2.8, 0],
+           [-1.05, 0, -0.75, 0.75], [-0.75, 0.75, 0, 1.05], [0, 1.05, 0.75, 0.75], [0.75, 0.75, 1.05, 0],
+           [1.05, 0, 0.75, -0.75], [0.75, -0.75, 0, -1.05], [0, -1.05, -0.75, -0.75], [-0.75, -0.75, -1.05, 0],
+           [-0.34, 0, 0.34, 0], [0, -0.34, 0, 0.34]],
+    dir: [0.18, -0.60, 0.78], tol: 0.105, n: 140,
   },
 ];
 
@@ -123,7 +134,7 @@ async function boot(api) {
 
   stage.onFrame((t, dt) => {
     groups.forEach((g, i) => g.tick(t, i === current));
-    if (current >= GLYPHS.length) return;
+    if (current >= GLYPHS.length) { groups.forEach(g => g.setDim(0.75)); return; }
 
     const gl = GLYPHS[current];
     const dir = new T.Vector3(...gl.dir).normalize();
@@ -142,7 +153,14 @@ async function boot(api) {
       lab.textContent = h.t;
       lab.classList.toggle('hot', step >= HEAT.length - 1);
     }
-    groups[current].setFocus(Math.pow(close, 3));
+    const f = Math.pow(close, 3);
+    groups[current].setFocus(f);
+    /* колкото по-близо си до верния ъгъл, толкова по-малко ти пречат
+       другите две фигури                                              */
+    groups.forEach((g, i) => {
+      if (i === current) g.setDim(1);
+      else g.setDim(Math.max(0.05, (api.data.done > i ? 0.5 : 0.42) * (1 - f * 0.95)));
+    });
 
     if (ang < gl.tol) {
       holdT += dt;
@@ -167,6 +185,8 @@ function lockIn(api, groups, i) {
   }
 }
 
+const CAM_DIST = 17;      /* същото като dist на сцената */
+
 /* ---------- строене на една фигура от отломки ---------- */
 function buildGlyph(T, gl, gi) {
   const group = new T.Group();
@@ -177,20 +197,25 @@ function buildGlyph(T, gl, gi) {
   const v = new T.Vector3().crossVectors(dir, u).normalize();
 
   const pts = samplePoints(gl.segs, gl.n, gi * 977);
-  const geo = new T.IcosahedronGeometry(0.3, 0);
+  const geo = new T.OctahedronGeometry(0.19, 0);   /* дребен кристал, не топка */
   const shards = [];
 
   pts.forEach((p, i) => {
-    const depth = (rnd(i + gi * 31) - 0.5) * 13;
+    const depth = (rnd(i + gi * 31) - 0.5) * 12;
+    /* Камерата е перспективна: за да легнат отломките точно върху линията,
+       всяка се плъзга по лъча през своята точка — колкото по-близо е до
+       окото, толкова по-близо до оста. Без това фигурата все се размазва. */
+    const k = (CAM_DIST - depth) / CAM_DIST;
     const pos = new T.Vector3()
-      .addScaledVector(u, p[0]).addScaledVector(v, p[1]).addScaledVector(dir, depth);
+      .addScaledVector(u, p[0] * k).addScaledVector(v, p[1] * k).addScaledVector(dir, depth);
     const mat = new T.MeshStandardMaterial({
-      color: 0x6f6a86, roughness: 0.72, metalness: 0.25,
-      emissive: 0x2a2440, emissiveIntensity: 0.4,
+      color: 0x8f88ad, roughness: 0.45, metalness: 0.3,
+      emissive: 0x3a2f66, emissiveIntensity: 0.5,
+      flatShading: true, transparent: true, opacity: 1,
     });
     const m = new T.Mesh(geo, mat);
     m.position.copy(pos);
-    m.scale.setScalar(0.55 + rnd(i * 7 + gi) * 0.85);
+    m.scale.setScalar((0.42 + rnd(i * 7 + gi) * 0.5) * k);
     m.rotation.set(rnd(i) * 6, rnd(i + 3) * 6, rnd(i + 5) * 6);
     group.add(m);
     shards.push({ m, mat, ph: rnd(i + 11) * 6.28, sp: 0.4 + rnd(i + 13) * 0.7, base: pos.clone() });
@@ -200,6 +225,9 @@ function buildGlyph(T, gl, gi) {
   return {
     group,
     setFocus: (f) => { focus = f; },
+    /* чуждите отломки избледняват, докато се прицелваш — иначе три фигури
+       стоят в един и същи обем и никоя не се разчита                    */
+    setDim: (v) => { shards.forEach(s => { s.mat.opacity = v; }); },
     setSolved: () => {
       solved = true;
       shards.forEach(s => {
@@ -212,7 +240,7 @@ function buildGlyph(T, gl, gi) {
     tick: (t, isCurrent) => {
       shards.forEach((s, i) => {
         if (solved) { s.m.rotation.y += 0.0016; return; }
-        const wob = isCurrent ? 0.16 * (1 - focus) : 0.3;
+        const wob = isCurrent ? 0.11 * (1 - focus) : 0.26;
         s.m.position.copy(s.base);
         s.m.position.x += Math.sin(t * s.sp + s.ph) * wob;
         s.m.position.y += Math.cos(t * s.sp * 0.8 + s.ph) * wob;

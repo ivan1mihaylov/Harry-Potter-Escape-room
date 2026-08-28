@@ -3,8 +3,8 @@
    Шестнайсет изправени камъка. Пипнеш ли един, будиш и съседите му.
    ============================================================ */
 import { head, $, $$, el } from '../rooms/common.js';
-import { createStage } from '../three-stage.js';
-import { plantForest, addFireflies, addMoonshaft, FOREST_STAGE } from './common3.js';
+import { createStage, tex } from '../three-stage.js';
+import { plantForest, addFireflies, addMoonshaft, FOREST_STAGE, rnd } from './common3.js';
 
 export const meta = {
   id: 'a3-stones',
@@ -124,21 +124,29 @@ async function boot(api) {
   addFireflies(stage, { count: 55, color: 0xa8f0c0 });
   addMoonshaft(stage, { r: 6.5, h: 24, color: 0xcfe8d8 });
 
+  const mossMat = new T.MeshStandardMaterial({
+    color: 0x54a05e, roughness: 1, map: tex(T, 'stone-mossy', 1, 1), flatShading: true });
+
   const picks = [];
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
     const g = new T.Group();
-    const mat = new T.MeshStandardMaterial({ color: 0x6a6a62, roughness: 0.95,
-      emissive: 0x1a3a26, emissiveIntensity: 0.2 });
-    const stone = new T.Mesh(new T.CylinderGeometry(0.55, 0.75, 3.1, 7), mat);
-    stone.position.y = 1.55;
-    stone.rotation.y = (i * 7 + j * 3) * 0.4;
+    const mat = new T.MeshStandardMaterial({
+      color: [0x74787c, 0x82857f, 0x6b7076, 0x7d7f78][(i + j) % 4], roughness: 0.97,
+      flatShading: true, emissive: 0x1a3a26, emissiveIntensity: 0.2 });
+    const stone = menhir(T, mat, i * 4 + j);
     stone.castShadow = true; stone.receiveShadow = true;
-    const cap = new T.Mesh(new T.SphereGeometry(0.58, 10, 6, 0, 6.3, 0, 1.2), mat);
-    cap.position.y = 3.05;
-    const moss = new T.Mesh(new T.TorusGeometry(0.78, 0.16, 6, 16),
-      new T.MeshStandardMaterial({ color: 0x2e5a38, roughness: 1 }));
-    moss.rotation.x = Math.PI / 2; moss.position.y = 0.12;
-    g.add(stone, cap, moss);
+    /* лишеи и мъх в основата — камъкът стъпва в тревата, не в нищото */
+    const moss = new T.Mesh(new T.TorusGeometry(0.82, 0.19, 6, 18), mossMat);
+    moss.rotation.x = Math.PI / 2; moss.position.y = 0.1;
+    moss.scale.set(1, 1, 0.55 + rnd(i * 9 + j) * 0.5);
+    g.add(stone, moss);
+    for (let k = 0; k < 3; k++) {          /* петна лишей по самия камък */
+      const lp = new T.Mesh(new T.SphereGeometry(0.16 + rnd(i * 13 + j + k) * 0.14, 6, 5), mossMat);
+      const a = rnd(i * 17 + j * 3 + k) * Math.PI * 2;
+      lp.position.set(Math.sin(a) * 0.56, 0.5 + rnd(i * 19 + k) * 2.1, Math.cos(a) * 0.5);
+      lp.scale.set(1, 0.5, 0.4);
+      g.add(lp);
+    }
     g.position.set(px(j), 0, pz(i));
     g.userData = { pick: true, i, j };
     g.traverse(c => { c.userData.pick = c.userData.pick || false; });
@@ -167,4 +175,27 @@ async function boot(api) {
       o.mat.emissive.setHex(up ? 0x2e7a4a : 0x101a12);
     });
   });
+}
+
+/* Изправен камък: наченките на икосаедър, разбутани на ръка, за да
+   няма два еднакви и никой да не прилича на тръба.                */
+function menhir(T, mat, seed) {
+  const geo = new T.IcosahedronGeometry(1, 1);
+  const pos = geo.attributes.position;
+  /* Геометрията е разцепена по стени, затова разместването се смята от
+     самата посока на върха — иначе съседните стени се разделят на шипове. */
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const h = Math.round(x * 97) * 131 + Math.round(y * 97) * 17 + Math.round(z * 97);
+    const k = 0.88 + rnd(seed * 31 + h) * 0.24;
+    pos.setXYZ(i, x * k, y * k, z * k);
+  }
+  geo.computeVertexNormals();
+  const m = new T.Mesh(geo, mat);
+  m.scale.set(0.78 + rnd(seed * 7) * 0.2, 1.65 + rnd(seed * 11) * 0.45,
+              0.6 + rnd(seed * 13) * 0.22);
+  m.position.y = 1.55;
+  m.rotation.set((rnd(seed * 17) - 0.5) * 0.16, rnd(seed * 19) * 3.14,
+                 (rnd(seed * 23) - 0.5) * 0.16);
+  return m;
 }
